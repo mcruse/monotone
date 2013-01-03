@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="vertical" 
+	title="New Schedule"
+	width="400" minHeight="100"
+	creationComplete="{stage.focus = tiName;}">
+<mx:Script>
+	<![CDATA[
+		import mx.core.Application;
+		import mx.controls.Alert;
+		import mx.core.IFlexDisplayObject;
+		import mx.managers.PopUpManager;
+		import mx.events.FlexEvent;
+		import mx.core.UIComponent;
+		import mx.events.CloseEvent;
+		import mx.managers.ISystemManager;
+		import mx.collections.ArrayCollection;
+		import com.cisco.nbm.scheduler.HierarchicalScheduleManager;
+		import com.cisco.nbm.scheduler.HierarchicalSchedule;
+		import mx.utils.StringUtil;
+		
+		public var newName:String;
+		
+		[Bindable]
+		private var isNameValid:Boolean = false;
+		
+		public var parentSchedule:HierarchicalSchedule;
+		
+		public var scheduleManager:HierarchicalScheduleManager;
+		
+		private var closeHandler:Function;
+		
+		private function handleOK():void
+		{
+			close(Alert.OK);
+		}
+		
+		private function handleCancel():void
+		{
+			close(Alert.CANCEL);
+		}
+		
+		private function close(reason:int):void
+		{
+			var event:CloseEvent = new CloseEvent(CloseEvent.CLOSE);
+	    	event.detail = reason;
+	    	
+	    	dispatchEvent(event);
+	    	
+	    	if (closeHandler != null)
+	    	{
+	    		removeEventListener(CloseEvent.CLOSE, closeHandler);
+	    	}
+	    	
+	    	destroy();
+		}
+		
+	    private function destroy():void
+	    {
+	    	PopUpManager.removePopUp(this);
+			parentSchedule = null;
+			scheduleManager = null;
+			closeHandler = null;
+	    }
+		
+		private function updateValid():void
+		{
+			var val:String = StringUtil.trim(tiName.text);
+			
+			newName = val;
+			
+			// Added for CSCtk76889 Exception schedules ignored if there is a "/" in the name
+			if (newName.indexOf("/") != -1) {
+				isNameValid = false;
+				setValid(false, "The name cannot contain '/'", true);
+				return;
+			}
+			
+			
+			if (newName.indexOf("#") != -1 ||
+				newName.indexOf("%") != -1 ||
+				newName.indexOf(";") != -1)
+			{
+				isNameValid = false;
+				setValid(false, "The name cannot contain '#','%' or ';'", true);
+				return;
+			}
+
+			if (newName.indexOf("[") != -1 ||
+				newName.indexOf("]") != -1)
+				{
+					isNameValid = false;
+					setValid(false, "The name cannot contain '[' or ']'", true);
+					return;
+				}
+			
+			var children:ArrayCollection = null;
+			
+			if (parentSchedule != null)
+			{
+				children = parentSchedule.children;
+			}
+			else
+			{
+				children = scheduleManager.rootSchedules;
+			}
+			
+			for each (var schedule:HierarchicalSchedule in children)
+			{
+				if (schedule.name == newName)
+				{
+					isNameValid = false;
+					setValid(false, "That name is being used by another schedule", true);
+					return;
+				}
+				
+			}
+			
+			setValid(val.length > 0, "", false);
+			
+		}
+		
+		private function setValid(value:Boolean, message:String, error:Boolean=false):void
+		{
+			isNameValid = value;
+			
+			if (isNameValid || !error)
+			{
+				boxInstructions.visible = true;
+				boxError.visible = false;
+			}
+			else
+			{
+				boxInstructions.visible = false;
+				boxError.visible = true;
+				labelError.text = message;
+			}
+		}
+		
+		public static function show(
+				panelParent:DisplayObject,
+				parentSchedule:HierarchicalSchedule, 
+				manager:HierarchicalScheduleManager,
+				closeHandler:Function):AddSchedulePopup
+		{
+			var panel:AddSchedulePopup = new AddSchedulePopup();
+			
+			panel.parentSchedule = parentSchedule;
+			panel.scheduleManager = manager;
+			
+			var sm:ISystemManager = ISystemManager(Application.application.systemManager);
+            if (sm.useSWFBridge())
+                panelParent = Sprite(sm.getSandboxRoot());
+            else
+                panelParent = Sprite(Application.application);
+			
+			if (closeHandler != null)
+			{
+				panel.closeHandler = closeHandler;
+				panel.addEventListener(CloseEvent.CLOSE, closeHandler);
+			}
+			
+			if (panelParent is UIComponent)
+    			panel.moduleFactory = UIComponent(panelParent).moduleFactory;
+    	
+    		panel.setActualSize(panel.getExplicitOrMeasuredWidth(),
+                        panel.getExplicitOrMeasuredHeight());
+    		panel.addEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+    	
+    		PopUpManager.addPopUp(panel, panelParent, true);
+			
+			return panel;
+		}
+		
+		private static function static_creationCompleteHandler(event:FlexEvent):void
+	    {
+	        if (event.target is IFlexDisplayObject && event.eventPhase == EventPhase.AT_TARGET)
+	        {
+	            event.target.removeEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+	            PopUpManager.centerPopUp(IFlexDisplayObject(event.target));
+	        }
+	    }
+	]]>
+</mx:Script>
+	<mx:HBox width="100%" paddingTop="10" paddingBottom="0" paddingLeft="10" paddingRight="10">
+		<mx:Canvas width="100%">
+			<mx:HBox id="boxInstructions" width="100%" x="0" y="0">
+				<mx:Label text="Enter new schedule name" />
+			</mx:HBox>
+			<mx:HBox id="boxError" width="100%" x="0" y="0" visible="false">
+				<mx:Label id="labelError" text="" color="0xff0000" fontWeight="bold" />
+			</mx:HBox>
+		</mx:Canvas>
+	</mx:HBox>
+		
+	<mx:Form width="100%" height="100%">
+		<mx:FormItem label="Name" direction="horizontal" width="100%">
+			<mx:TextInput id="tiName" width="100%" change="updateValid()"  restrict="^;%#?/]["/>
+		</mx:FormItem>
+		<mx:HRule width="100%" />
+		<mx:HBox width="100%">
+			<mx:Spacer width="100%" />
+			<mx:Button label="OK" click="handleOK()" enabled="{isNameValid}" />
+			<mx:Button label="Cancel" click="handleCancel()" />
+		</mx:HBox>
+	</mx:Form>
+</mx:Panel>

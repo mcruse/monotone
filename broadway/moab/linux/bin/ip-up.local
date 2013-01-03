@@ -1,0 +1,55 @@
+#!/usr/bin/env python-mpx
+#
+# Copyright (c) 2003 Envenergy, Inc.
+#
+# $Revision: 20101 $
+#
+
+import sys, os
+
+###
+# pppd sets up the environment as shown in the following example, where os.environ is:
+#
+#    {'TERM': 'dumb', 'IPLOCAL': '12.65.163.130', 'IPREMOTE': '12.67.7.55', 'SHLVL': '1',
+#     'PPPLOGNAME': 'root', 'PPPD_PID': '968', 'HOSTNAME': 'chetmoe.envenergy.com',
+#     'HOSTTYPE': 'i386', 'ORIG_UID': '0', 'OSTYPE': 'linux-gnu', 'PWD': '/',
+#     'SHELL': '/bin/bash', 'DEVICE': '/dev/ttyS1', 'PATH': '/sbin:/usr/sbin:/bin:/usr/bin',
+#     'IFNAME': 'ppp0', 'MACHTYPE': 'i386-redhat-linux-gnu', 'SPEED': '57600',
+#     '_': '/etc/ppp/ip-up.local'}
+#
+# In accordance with the above example, sys.argv is as follows:
+#
+#    ['/etc/ppp/ip-up.local', 'ppp0', '/dev/ttyS1', '57600', '12.65.163.130', '12.67.7.55']
+#
+# Finally, sys.path looks like this (NOTE: no path to broadway):
+#
+#    ['/etc/ppp', '/usr/lib/python2.2', '/usr/lib/python2.2/plat-linux2',
+#     '/usr/lib/python2.2/lib-dynload', '/usr/lib/python2.2/site-packages']
+#
+###
+
+# First, check to see if a flag file exists.  If this file exists, it
+# means that we don't want to override any existing default route.
+
+# The following module needs to be found in the default module search path (see above).
+from routing import RoutingTable, flag_filename
+
+if os.path.isfile(flag_filename):
+    # OK, the flag file exists, don't override the default route.
+
+    # Remove the flag file.
+    #os.remove( flag_filename )
+    # Note: For now, don't remove the flag file.  We need a more granular way
+    #       to set this option, but right now it is basically a global option.
+    pass
+else:
+    ppp_interface = sys.argv[1]
+    gateway = sys.argv[4]
+    
+    # Save the current default routes for the ethernet interfaces, and add the ppp interface
+    # if it's not already a default route.
+    rt = RoutingTable( ppp_interface )
+    rt.saveDefaultRoutes( ['eth0','eth1'] )
+    rt.deleteDefaultRoutes( ['eth0','eth1'] )
+    if not rt.isDefaultRoute():
+        rt.addDefaultRoute( gateway, ppp_interface )

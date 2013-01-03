@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#
+# Runs update_makefile.py on every Makefile.in file from the current
+# directory and all subdirectories.  The update_makefile.py script
+# cuts out the section between the "DO NOT DO NOT CHANGE ANYTHING
+# BELOW THIS LINE" through the "DO NOT CHANGE ANYTHING ABOVE THIS
+# LINE" and replaces it with the a constant string.
+# 
+#
+
+find . -name Makefile.in -o -name "Makefile.*.in" | while read F
+do
+	python update_makefile.py $F > ${F}.new
+	chmod a+w ${F}
+	mv -f ${F}.new $F
+done

@@ -1,0 +1,85 @@
+@CHARSET "UTF-8";
+
+ul.button-menu {
+    padding: 4px 0;
+    margin: 0 10px;
+    font-size: 11px;
+    font-style: inherit;
+    list-style: none;
+    list-style-type: none;
+    background-color: transparent;
+}
+
+ul.button-menu li.button {
+    position: relative;
+    height: 23px;
+    color: #FFFFFF;
+    overflow: hidden;
+    margin: 0;
+    font-weight: normal;
+    line-height: normal;
+    background-color: transparent;
+}
+
+ul.button-menu li.button a {
+    color: #FFFFFF;
+    height: 9px;
+    margin: 0 10px;
+    display: block;
+    padding: 7px 4px;
+    text-decoration: none;
+    background: transparent;
+}
+
+ul.button-menu li.button img {
+    position: absolute;
+    top: 0;
+    bottom: auto;
+    width: 10px;
+    height: 23px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;    
+}
+
+ul.button-menu li.button img.prefix {
+    right: auto;
+    left: 0;
+}
+
+ul.button-menu li.button img.suffix {
+    right: 0;
+    left: auto;
+}
+
+ul.button-menu li.button.selected {
+    font-weight: bold;
+}
+
+ul.button-menu li.button.selected a {
+    background: url(/public/images/tabs/tab_primary_selected.png);
+}
+
+ul.button-menu li.button.selected a img.prefix {
+    background: url(/public/images/tabs/tab_primary_selected_left.png);    
+}
+
+ul.button-menu li.button.selected a img.suffix {
+    background: url(/public/images/tabs/tab_primary_selected_right.png);    
+}
+
+ul.button-menu li.button a:hover {
+    color: #000000;
+    background: url(/public/images/tabs/tab_primary_hvr.png);
+}
+
+ul.button-menu li.button a:hover img.prefix {
+    background: url(/public/images/tabs/tab_primary_hvr_left.png);    
+}
+
+ul.button-menu li.button a:hover img.suffix {
+    background: url(/public/images/tabs/tab_primary_hvr_right.png);    
+}
+
+

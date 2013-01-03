@@ -1,0 +1,8 @@
+Copyright (c) 2009 by Cisco Systems, Inc.
+
+PLEASE READ CAREFULLY BEFORE DOWNLOADING OR USING THE SOFTWARE.
+
+BY OPENING THE PACKAGE, DOWNLOADING THE PRODUCT, OR USING THE EQUIPMENT THAT CONTAINS THIS PRODUCT, YOU ARE CONSENTING TO BE BOUND BY THIS AGREEMENT. IF YOU DO NOT AGREE TO ALL OF THE TERMS OF THIS AGREEMENT, RETURN THE PRODUCT, OR DO NOT DOWNLOAD THE PRODUCT. 
+
+Licensee acknowledges and agrees that: (a) the Software has not been commercially released for sale by Cisco; (b) the Software may not be in final form or fully functional and it is expected that it may contain errors, design flaws or other problems which cannot or will not be corrected by Cisco; (c) the Software and its use may result in unexpected results, loss of data, project delays or other unpredictable damage or loss to Licensee; (d) Cisco is under no obligation to release a commercial version of the Software and any commercial product released may not be backward compatible and or the programming interfaces may change; and (e) Cisco has the right to unilaterally abandon development of the Software at any time and without any obligation or liability to Licensee or any third Party. Licensee further agrees that THE SOFTWARE IS BEING SUPPLIED TO LICENSEE ON AN "AS IS" BASIS. ALL EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS, AND WARRANTIES INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NONINFRINGEMENT OR ARISING FROM A COURSE OF DEALING, USAGE, OR TRADE PRACTICE, ARE HEREBY EXCLUDED TO THE EXTENT ALLOWED BY APPLICABLE LAW. Licensee shall make no claim against Cisco for lost data, re-run time, inaccurate output, work delays or lost profits resulting from the use or operation of the Software. 
+

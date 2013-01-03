@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE XServeConfig SYSTEM "./xserve_config.dtd">
+<XServeConfig>
+	<XFieldExtractor name="LightPoint Config - Schedule Events (2 at a time)" order="3">
+		<XFields>
+			<XField name="amtype" byteoffset="2" length="1" type="uint8"/>
+			<XField name="firmware_id" byteoffset="7" length="2" type="uint16" specialtype="nodeid"/>
+			<XField name="parent" byteoffset="14" length="2" type="uint16" specialtype="parentid"/>
+			<XField name="group" byteoffset="3" length="1" type="uint8"/>
+			<XField name="socketid" byteoffset="11" length="1" type="uint8"/>
+			<XField name="board_id" byteoffset="12" length="1" type="uint8" specialtype="boardid"/>
+			<XField name="packet_id" byteoffset="13" length="1" type="uint8"/>
+			<XField name="elem1" byteoffset="16" length="1" type="uint8"/>
+			<XField name="elem2" byteoffset="16" length="1" type="uint8">
+				<XConversion function="x+1" returntype="int">
+					<XConvParam variablename="x" fieldname="elem2" type="uint8"/>					
+				</XConversion>			
+			</XField>
+			<XField name="totalElems" byteoffset="17" length="1" type="uint8"/>
+			<XField name="day1" byteoffset="18" length="1" type="uint8"/>
+			<XField name="hour1" byteoffset="19" length="1" type="uint8"/>
+			<XField name="minute1" byteoffset="20" length="1" type="uint8"/>
+			<XField name="action1" byteoffset="21" length="1" type="uint8"/>
+			<XField name="runflag1" byteoffset="22" length="1" type="uint8"/>
+			<XField name="group1" byteoffset="23" length="2" type="uint16"/>
+			<XField name="day2" byteoffset="25" length="1" type="uint8"/>
+			<XField name="hour2" byteoffset="26" length="1" type="uint8"/>
+			<XField name="minute2" byteoffset="27" length="1" type="uint8"/>
+			<XField name="action2" byteoffset="28" length="1" type="uint8"/>
+			<XField name="runflag2" byteoffset="29" length="1" type="uint8"/>
+			<XField name="group2" byteoffset="30" length="2" type="uint16"/>
+		</XFields>
+		<XFilter>
+			<XCondAnd>
+			
+				<!--
+					Check if this is a sensor type packet...AMTYPE_MULTIHOP or AMTYPE_XDEBUG
+					The Byte offsets defined above assume that there is a multihop header
+				-->
+				<XCondOr>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="amtype"/>
+						<XFilterParam name="fieldvalue" value="0x31"/>
+					</XCond>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="amtype"/>
+						<XFilterParam name="fieldvalue" value="0x33"/>
+					</XCond>
+					<XCondAnd>
+						<XCondOr>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="socketid"/>
+								<XFilterParam name="fieldvalue" value="0x31"/>
+							</XCond>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="socketid"/>
+								<XFilterParam name="fieldvalue" value="0x33"/>
+							</XCond>
+						</XCondOr>
+						<XCondOr>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="amtype"/>
+								<XFilterParam name="fieldvalue" value="0x0B"/>
+							</XCond>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="amtype"/>
+								<XFilterParam name="fieldvalue" value="0x0D"/>
+							</XCond>
+						</XCondOr>										
+					</XCondAnd>
+				</XCondOr>
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="board_id"/>
+					<XFilterParam name="fieldvalue" value="0x84"/>
+				</XCond>				
+				<XCondOr>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0xA"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0xB"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0xC"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0xD"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0xE"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0xF"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x10"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x11"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x12"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x13"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x14"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x15"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x16"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x17"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x18"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x19"/>
+					</XCond>				
+				</XCondOr>
+			</XCondAnd>
+		</XFilter>
+		<XDataSinks>
+			<XDataSink name="Generic Print Datasink">
+				<XDSParam name="printstring" value=" \n Schedule Event %s of %s for node %s:\n   day: %s \n   hour: %s \n   minute: %s \n   action: %s \n   group: %s \nSchedule Event %s of %s for node %s:\n   day: %s \n   hour: %s \n   minute: %s \n   action: %s \n   group: %s \n"/>
+				<XDSParam name="printfields" value="elem1,totalElems,firmware_id,day1,hour1,minute1,action1,group1,elem2,totalElems,firmware_id,day2,hour2,minute2,action2,group2"/>
+			</XDataSink>
+			
+			<!--
+				Using elem1 as index = only one DELETE statement.
+				DELETE * where index = elem1. INSERT elem1 as index in both inserts. 	
+			-->
+						
+			<XDataSink name="Open Log Datasink">
+				<XDSParam name="tablename_1" value="fieldstate_schedules"/>
+				<XDSParam name="createsql_1" value="CREATE TABLE fieldstate_schedules ( id SERIAL, firmware_id integer, day_id integer, hour integer, minute integer, action integer, relay_group_id integer, index integer )"/>
+				
+				<XDSParam name="deletesql_1" value="DELETE FROM fieldstate_schedules WHERE firmware_id = %i AND index = %i"/>
+				<XDSParam name="deletefields_1" value="firmware_id,elem1"/>
+				
+				<XDSParam name="insertsql_1" value="INSERT INTO fieldstate_schedules ( firmware_id,day_id,hour,minute,action,relay_group_id,index ) VALUES ( %i, %i, %i, %i, %i, %i, %i )"/>
+				<XDSParam name="insertfields_1" value="firmware_id,day1,hour1,minute1,action1,group1,elem1"/>
+				
+				<XDSParam name="insertsql_2" value="INSERT INTO fieldstate_schedules ( firmware_id,day_id,hour,minute,action,relay_group_id,index ) VALUES ( %i, %i, %i, %i, %i, %i, %i )"/>
+				<XDSParam name="insertfields_2" value="firmware_id,day2,hour2,minute2,action2,group2,elem1"/>
+			</XDataSink>
+			
+		</XDataSinks>
+	</XFieldExtractor>
+	
+</XServeConfig>

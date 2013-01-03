@@ -1,0 +1,2 @@
+*shared*
+set_ser -Wall set_ser.c

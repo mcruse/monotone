@@ -1,0 +1,195 @@
+Maintain list of change at the bottom.
+
+20071017:
+=========
+
+Everything except PYTHON, PYTOHN_VIA_ENV, and a couple of embedded references
+converted.  Full build, no tests yet.
+
+OK, it seems like EVERYTHING should move to using python-mpx and that
+PYTHON/PYTHON_VER/PYTHON_VIA_ENV should GO AWAY or become completely
+derived.  I think going away is good.
+
+Maybe remove python-mpx-version and python-mpx-executable and create a
+pytohn-mpx-info that takes all sorts of arguments (including things
+like --target?)
+
+./CONVERT2.sh:
+
+
+# Mass change to all #!/usr/bin/env python.* python files:
+
+find . -type f \
+    -not -name '*~' -not -name 'CONVERT*.sh' -not -name '*.python25' \
+    -not -name "*.new" \
+    -exec egrep -Hn '^#![ \t]*/usr/bin/env[ \t]+python' "{}" \; | grep ":1:" | cut -f 1 -d : | \
+    sort -u | while read orig
+	      do
+		new_file="${orig}.new"
+		cat "${orig}" | \
+		    sed 's:^#![ \t]*/usr/bin/env[ \t]\+python.*$:#!/usr/bin/env python-mpx:' \
+			>"${new_file}"
+		mv -f "${new_file}" "${orig}"
+	      done
+
+
+20071016:
+=========
+
+./CONVERT1.sh:
+
+# Mass change to all #!/usr/bin/python(|2|2.[0-9]) python files:
+
+find . -type f \
+    -not -name '*~' -not -name 'CONVERT*.sh' -not -name '*.python25' \
+    -not -name "*.new" \
+    -exec grep -Hn /usr/bin/python "{}" \; | grep ":1:" | cut -f 1 -d : | \
+    sort -u | while read orig
+	      do
+		new_file="${orig}.new"
+		cat "${orig}" | \
+		    sed 's:^#!/usr/bin/python.*$:#!/usr/bin/env python-mpx:' \
+			>"${new_file}"
+		mv -f "${new_file}" "${orig}"
+	      done
+
+find . -type f -exec grep -Hn /usr/bin/python2.2 "{}" \; 2>:
+	17 matched, all the important ones appear to be #!/usr/bin/python2.2
+
+find . -type f -exec grep -Hn /usr/bin/python2 "{}" \; | \
+	grep -v /usr/bin/python2.2 2>
+	13 matches
+		#!/usr/bin/python2
+		documentation
+		./opt/mehtatech/app/files/rc.mpx:248:\
+		 bfp.write(':python2.2:M::\x2d\xed\x0d\x0a::/usr/bin/python2:')
+
+find . -type f -exec grep -Hn /usr/bin/python "{}" \; | \
+	grep -v /usr/bin/python2 2>
+	18 matches, only #!/usr/bin/python seem to be important.
+
+find . -type f -exec grep -Hn /usr/bin/env "{}" \; | grep python 2>
+	81 matches, the vast majority #!/usr/bin/env python[2.x]
+	./mpx/install/_lib.py:43:	script_text='%sPYTHON_VIA_ENV=...
+	./tools/dev_stub:104:[ "$PYTHON_VIA_ENV+set" == +set ] && PYTH...
+
+find . -type f -exec grep -Hn "@PYTHON_VIA_ENV@" "{}" \; 2>
+./pextract.in:8:exec @PYTHON_VIA_ENV@ $(proot)/pextract.pyc --root="$(proot)" "$@"
+	./tools/python-mpx.in:7:exec @PYTHON_VIA_ENV@ "$@"
+	./tools/pyc_loader.in:8:exec @PYTHON_VIA_ENV@ $0.pyc $*
+	./tools/penvironment.rc.in:102:export PYTHON_VIA_ENV='@PYTHON_VIA_ENV@'
+	?./configure:5501:s,@PYTHON_VIA_ENV@,$PYTHON_VIA_ENV,;t t
+	./install.in:4:exec @PYTHON_VIA_ENV@ install.pyc "$@"
+
+find . -type f -exec grep -Hn "PYTHON_VIA_ENV" "{}" \; | grep '$' 2>
+	36 matches, many in ./configure and generated files.
+	- Does not HANVE to be cleaned up, but could be for carity.
+	- Creating a reverse compatible dev_stub is the tricky bit, probably
+	  trying python-mpx first is the way to go.
+
+find . -type f -exec grep -Hn "@PYTHON@" "{}" \; 2>
+	12 matches, looks like only ./tools/penvironment.rc[.in] matters.
+	
+find . -type f -exec grep -Hn "PYTHON" "{}" \; | grep '\$' | grep -v '~' | \
+	grep -v "PYTHON[_A-Z]" | grep -v "[_A-Z]PYTHON" 2>
+	36 matches, mostly configure and configure generated files and
+	module Makefiles.
+
+
+20071015:
+=========
+
+Finished scan of /usr/lib/python[2.2].  All comments except
+./moab/broadway.moab.install.py:18.  I need to do all the assorted bin strings.
+
+find	/usr/lib/python2.2
+	/usr/lib/python2	# None unique
+	/usr/lib/python		# /usr/lib/python%d.%d MAY help above cases...
+	# NOTE:  All except ./moab/broadway.moab.install.py:18 may be
+	#        irrelevant!  Yea!
+	/usr/bin/python2.2
+	/usr/bin/python2
+	/usr/bin/python
+	# 20071016: All /usr/bin/python seem to be #!/usr/bin/python*
+	# and ./opt/mehtatech/app/files/rc.mpx:248: and some documentation.
+	# 
+	/usr/bin/env python2.2
+	/usr/bin/env python2
+	/usr/bin/env python
+	# 20071016: All /usr/bin/env python seem to be #!/usr/bin/env python*
+	# except ./mpx/install/_lib.py:43: and ./tools/dev_stub:104:
+	# 
+	@PYTHON_VIA_ENV@
+	@PYTHON@
+
+NOTE patterns, use keyboard macro, sed or ??? to reliably fix...
+
+find . -type f -exec grep -Hn /usr/lib/python2.2 "{}" \; 2>: 9ish matches...
+find . -type f -exec grep -Hn /usr/lib/python2 "{}" \; 2>: None unique.
+find . -type f -exec grep -Hn /usr/lib/python "{}" \; 2>: Added
+	 /usr/lib/python%d.%d which may help with above, or mpx.properties...
+
+20071012:
+=========
+
+Install Python2.5moe2:
+----------------------
+
+[mevans@fearfactory moe25]$ cd /
+
+[mevans@fearfactory /]$ sudo tar xzvpf ~/source/moe25/python25moe2-1.tgz
+
+Confirm that the 
+
+[mevans@fearfactory /]$ cd
+[mevans@fearfactory ~]$ python2.5moe2 -c 'import sys
+> print sys.version'
+2.5.1 (r251:54863, Oct 11 2007, 19:34:18)
+[GCC 2.96 20000731 (Red Hat Linux 7.2 2.96-112.7.2)]
+[mevans@fearfactory ~]$
+
+Building broadway using Python 2.5moe2:
+---------------------------------------
+
+NOTE: Changes to configure.in require (re)running ./setup_configure_script.sh
+      in the source directory!
+
+[mevans@fearfactory broadway]$ ./setup_configure_script.sh
+[mevans@fearfactory broadway]$ cd ..
+[mevans@fearfactory python25_mediator_branch]$
+
+
+[mevans@fearfactory python25_mediator_branch]$ mkdir python25moe2
+[mevans@fearfactory python25_mediator_branch]$ cd python25moe2/
+[mevans@fearfactory python25moe2]$ ../broadway/configure \
+					--with-buildrc=python25moe2
+[mevans@fearfactory python25moe2]$ . tools/penvironment.rc
+[mevans@fearfactory python25moe2]$ make
+
+Issues:
+-------
+
+1. Hard coded /usr/bin/python2 and /usr/bin/env python2
+
+2. PYTHON=python2, and I don't know why!
+
+NOTE:  Fix via mpx-python-runtime (broadway-runtime, mpxpy.sh, bpr, mpr,...)
+
+List of Changes:
+----------------
+
+[mevans@fearfactory broadway]$ cvs update
+
+M Makefile.in
+A NOTES.python25
+A build_helper.py
+R build_helper.py.in
+M configure.in
+A buildsup/pygcc
+R buildsup/pygcc.in
+A buildsup/pygcc_backend.py
+R buildsup/pygcc_backend.py.in
+A buildsup/python25moe2.rc
+M tools/INSTALL_STUBS
+M tools/Makefile.in
+A tools/python-mpx.in

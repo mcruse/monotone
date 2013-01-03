@@ -1,0 +1,9 @@
+*shared*
+LOCALMODLIBS=_lib.a _data.a _bvlc_stub.a
+
+lib -Wall lib.c
+npdu -Wall npdu.c npdu_object.c addr_object.c \
+           eth.c ip.c mstp.c -ldl _lib.a _bvlc_stub.a
+tag -Wall tag.c -ldl _lib.a _data.a
+data -Wall data.c -ldl _lib.a
+_bvlc -Wall _bvlc.c -ldl _lib.a

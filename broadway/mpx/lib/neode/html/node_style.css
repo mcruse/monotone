@@ -1,0 +1,54 @@
+body {
+	font-size: 76%;
+}
+
+h1.title {
+    background: black;
+    color: white;
+    padding: .25em;
+}
+
+div.config_section, div.child_section {
+    padding: .5em;
+}
+
+h2.section {
+    margin-bottom: 2px;
+    margin-top: 3em;
+    
+}
+
+caption {
+    visibility: hidden;
+}
+
+table {
+    font-size: 1em;
+    border-collapse: collapse;
+    background-color: #FFFFD0;
+    width: 75%;
+}
+
+tr.config_header, tr.child_header {
+    background-color: black;
+    color: white;
+}
+
+td {
+    border-style: solid;
+    border-color: black;
+    border-width: thin;
+    border-bottom-width: medium;
+    padding-left: 5px;
+}
+
+tr {
+    text-align: left;
+    font-size: 1.25em;
+}
+
+th {
+    padding-left: 5px;
+    font-size: 1.25em;
+    font-weight: bold; 
+}

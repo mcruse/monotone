@@ -1,0 +1,74 @@
+<!--
+Copyright (C) 2009 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>    
+    <script type="text/javascript">
+    var IFRAMENAME = ""
+    function startIFrame(){
+    //create iframe for editing 
+    var iFrameHolder = document.getElementById("webexpressholder");
+    var childFrame = document.createElement("iframe");
+    IFRAMENAME = "webexpressframe";
+	childFrame.setAttribute("id",IFRAMENAME);
+    childFrame.setAttribute("name",IFRAMENAME);
+    childFrame.src = "/webapi/emptypage.html";
+    childFrame.width = "100%";
+    childFrame.height = "100%";
+    childFrame.marginWidth = "0";
+    childFrame.marginHeight = "0";
+    childFrame.frameBorder = "0";
+    childFrame.scrolling = "auto";
+    iFrameHolder.appendChild(childFrame);
+    window.setTimeout("startIFrameFinish();",0); //fixes IE appendChild() race
+    }
+    function startIFrameFinish() {
+    //load iframe with target file
+    document.getElementById(IFRAMENAME).src = "webexpress.psp";
+    }
+    </script>
+</head>
+<body marginheight="0" marginwidth="0" topmargin="0" leftmargin="0" >
+<div align="center" width="100%" >
+    <div id="shell">
+        <div id="right">
+            <div id="content" align="left">
+		<div id="webexpressholder"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+startIFrame();
+</script>
+</body>
+</html>

@@ -1,0 +1,475 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%"
+	paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10"
+	creationComplete="init()" xmlns:eventmetaeditor="com.cisco.nbm.scheduler.ui.components.eventmetaeditor.*">
+	<mx:Script>
+		<![CDATA[
+			import mx.utils.StringUtil;
+			import mx.events.AdvancedDataGridEventReason;
+			import mx.events.AdvancedDataGridEvent;
+			import com.cisco.nbm.scheduler.ui.ScheduleDocumentEvent;
+			import com.cisco.nbm.scheduler.ScheduleDocument;
+			import mx.events.CloseEvent;
+			import mx.controls.Alert;
+			import mx.validators.ValidationResult;
+			import com.cisco.nbm.scheduler.ui.components.eventmetaeditor.EventMetaValueValidator;
+			import com.cisco.nbm.scheduler.EventMetaData;
+			import mx.events.MetadataEvent;
+			import mx.events.ValidationResultEvent;
+			import com.cisco.nbm.scheduler.HierarchicalSchedule;
+			
+			[Bindable]
+			public var _scheduleDocument:ScheduleDocument;
+			
+			[Bindable]
+			private var _schedule:HierarchicalSchedule;
+			
+			private var _initialized:Boolean = false;
+			
+			[Bindable]
+			private var canMoveUp:Boolean = false;
+			
+			[Bindable]
+			private var canMoveDown:Boolean = false;
+			
+			[Bindable]
+			private var canDelete:Boolean = false;
+			
+			[Bindable]
+			private var canEdit:Boolean = false;
+			
+			private var valueValidator:EventMetaValueValidator;
+			
+			private var valueIsValid:Boolean = false;
+			
+			private var preventUpdate:Boolean = false;
+			
+			public var metaColor:int = 0;
+			
+			private function init():void
+			{
+				// create validator
+				valueValidator = new EventMetaValueValidator();
+				
+				//valueValidator.source = tiValue;
+				valueValidator.property = "text";
+				valueValidator.required = true;
+				valueValidator.trigger = null;
+				//valueValidator.addEventListener(ValidationResultEvent.VALID, handleValueValidation);
+			//	valueValidator.addEventListener(ValidationResultEvent.INVALID, handleValueValidation);
+				
+				_initialized = true;
+				
+				if (_scheduleDocument != null)
+				{
+					setSchedule(_scheduleDocument.schedule);
+				}
+			}
+			
+			public function set scheduleDocument(value:ScheduleDocument):void
+			{
+				if (_scheduleDocument != null)
+				{
+					_scheduleDocument.removeEventListener(
+						ScheduleDocumentEvent.SCHEDULE_CHANGE,
+						handleScheduleDocumentModified);
+				}
+			
+				_scheduleDocument = value;
+			
+				if (_scheduleDocument != null)
+				{
+					_scheduleDocument.addEventListener(
+						ScheduleDocumentEvent.SCHEDULE_CHANGE,
+						handleScheduleDocumentModified);
+						
+					setSchedule(_scheduleDocument.schedule);
+				}	
+			}
+			
+			private function handleScheduleDocumentModified(event:ScheduleDocumentEvent):void
+			{
+				if (!initialized)
+				{
+					return;
+				}
+				
+				if (_scheduleDocument != null)
+				{
+					setSchedule( _scheduleDocument.schedule );
+				}
+				else
+				{
+					setSchedule(null);
+				}
+			}
+			
+			public function setSchedule(value:HierarchicalSchedule):void
+			{
+				_schedule = value;
+				if (!initialized)
+				{
+					return;
+				}
+				
+				preventUpdate = true;
+				updateValues();
+				updateEnablement();
+				preventUpdate = false; // 
+				
+			}			
+			
+			private function handleGridChange():void
+			{
+				updateEnablement();
+				updateEditors();
+			}
+			
+			private function updateEnablement():void
+			{
+				if ( _schedule == null ) {
+					canMoveUp = false;
+					canMoveDown = false;
+					canDelete = false;
+					canEdit = false;
+					return;
+				}
+
+				var selIndex:int = gridEventMeta.selectedIndex;
+				var totalItems:int = _schedule.metaData.length;
+				
+				canMoveUp = selIndex > 0 && selIndex != -1;
+				canMoveDown = selIndex < totalItems - 1 && selIndex != -1;
+				canDelete = selIndex != -1 && totalItems > 1;
+				
+				canEdit = selIndex != -1;
+			}
+			
+			private function updateEditors():void
+			{
+				/*
+				var meta:EventMetaData = _schedule.metaData;
+				tiName.text = meta.name;
+				cpColor.selectedColor = uint(meta.color);
+				tiValue.text = meta.value;
+				*/
+				var meta:EventMetaData = gridEventMeta.selectedItem as EventMetaData;
+				
+				if (meta != null)
+				{
+					metaName = meta.name;
+					metaValue = meta.value;
+					metaColor = meta.color;
+					
+					xtiName.text = meta.name;
+					xtiValue.text = meta.value;
+					cpColor.selectedColor = meta.color;
+				}
+				else
+				{
+					metaName = "";
+					metaValue = "";
+					metaColor = 0;
+					
+					xtiName.text = ""
+					xtiValue.text = ""
+					cpColor.selectedIndex = 0;
+				}
+			}
+			
+			private function updateValues():void
+			{
+				if (_schedule != null) {
+					gridEventMeta.dataProvider = _schedule.metaData;
+				}
+			}
+			
+			
+			
+			private function handleValueValidation(event:ValidationResultEvent):void
+			{
+				if (preventUpdate)
+				{
+					return;
+				}
+				valueIsValid = event.type == ValidationResultEvent.VALID;
+				updateMeta();					
+			}
+			
+			private var metaName:String;
+			
+			private var metaValue:String;
+			
+			public function updateMeta():void
+			{
+				var meta:EventMetaData = gridEventMeta.selectedItem as EventMetaData;
+				
+				if (meta != null)
+				{
+					var newValue:String = meta.value;//"";//tiValue.text;
+					
+					if (metaValue != meta.value)
+					//if (xtiName.text != meta.value)
+					{
+						newValue = metaValue;//tiValue.text;
+						//newValue = xtiValue.text;
+					} 
+					
+					// NEED TO UPDATE
+					_scheduleDocument.updateMetaEntry(meta, 
+						/*xtiName.text,*/ metaName,
+						 /*cpColor.selectedColor,*/
+						 metaColor ,
+						 newValue);
+				}
+				
+				
+			}
+			
+			
+			private function processChange(event:AdvancedDataGridEvent):void {
+				if (event.reason == AdvancedDataGridEventReason.CANCELLED) {
+					return;
+				}
+				
+				event.preventDefault();
+				
+				trace("Change!: " + event);
+				
+				switch (event.dataField) {
+					case "name":
+						var ti:TextInput = gridEventMeta.itemEditorInstance as TextInput;
+						metaName = StringUtil.trim(ti.text);
+						break
+					case "value":
+						var ti:TextInput = gridEventMeta.itemEditorInstance as TextInput;
+						metaValue = ti.text;
+						break;
+				}
+				
+				updateMeta();
+				
+				gridEventMeta.destroyItemEditor();
+				
+				// Notify the list control to update its display.
+				gridEventMeta.dataProvider.itemUpdated(event.itemRenderer.data);
+
+				
+			}
+			
+			
+			private function handleAdd():void
+			{
+				var newMeta:EventMetaData = new EventMetaData();
+				newMeta.name = "Event " + _schedule.metaData.length;
+				newMeta.value = "";
+				newMeta.color = 0xff0000;
+				
+				_scheduleDocument.addMetaDataItem(newMeta);
+				
+				
+				gridEventMeta.validateNow();
+				gridEventMeta.selectedItem = newMeta;
+				
+				updateEditors();
+				updateEnablement();
+			}
+			
+			private function handleDelete():void
+			{
+				var meta:EventMetaData = gridEventMeta.selectedItem as EventMetaData;
+				var selIdx:int = gridEventMeta.selectedIndex;
+				
+				// Prevent delete of all but 1st
+				if (_schedule.metaData.length < 2)
+				{
+					return;
+				}
+				
+				var idx:int = _schedule.metaData.getItemIndex(meta);
+				
+				if (idx != -1)
+				{
+					var dependentEntryCount:int = _schedule.getCountEntriesForEventMeta(meta);
+					
+					if (dependentEntryCount > 0)
+					{
+						displayConfirmDelete( dependentEntryCount, meta );
+						return;
+					}
+					
+					metaDelete = meta;
+					deleteMeta(meta);
+				}
+			}
+			var metaDelete:EventMetaData ;
+			
+			private function displayConfirmDelete(count:int, meta:EventMetaData):void
+			{
+				var pluralized:String = count == 1 ? "entry" : "entries"; 
+			
+				metaDelete = meta;
+				Alert.show("This event entry " + meta.name + " is being used by " +
+					count + " " +  pluralized + ".  Deleting this" + 
+							" event will delete " + (count == 1 ? "that" : "those") + 
+							" " + pluralized + ".  Do you want to proceed?",
+							"Delete event entry",
+							Alert.YES | Alert.NO, null, handleConfirmDeleteClose);
+					 
+			}
+			
+			private function handleConfirmDeleteClose(event:CloseEvent):void
+			{
+				if (event.detail == Alert.YES)
+				{
+					deleteMeta(metaDelete);
+				}	
+				
+				metaDelete = null;
+			}
+			
+			private function deleteMeta(meta:EventMetaData):void
+			{
+				var selIdx:int = gridEventMeta.selectedIndex;
+				
+				
+				_scheduleDocument.deleteEventMetaEntry(meta);
+				
+				
+				gridEventMeta.validateNow();
+				
+				if (selIdx > _schedule.metaData.length)
+				{
+					selIdx = _schedule.metaData.length
+				}
+				
+				gridEventMeta.selectedIndex = selIdx;
+				
+				updateEditors();
+				updateEnablement();
+			}
+			
+			private function handleMoveUp():void
+			{
+				var currentIdx:int = gridEventMeta.selectedIndex;
+				var upIdx:int = currentIdx - 1;
+				
+				if (upIdx >= 0)
+				{
+					
+					_scheduleDocument.moveMetaData(currentIdx, upIdx);
+					
+					gridEventMeta.validateNow();
+					gridEventMeta.selectedIndex = upIdx;
+					updateEditors();
+					updateEnablement();
+				}
+			}
+			
+			private function handleMoveDown():void
+			{
+				var currentIdx:int = gridEventMeta.selectedIndex;
+				var downIdx:int = currentIdx + 1;
+				
+				if (downIdx < _schedule.metaData.length)
+				{
+					
+					//var item:Object = _schedule.metaData.removeItemAt(currentIdx);
+					//_schedule.metaData.addItemAt(item, downIdx);
+					_scheduleDocument.moveMetaData(currentIdx, downIdx);
+					//_schedule.moveMetaData(currentIdx, downIdx);
+					
+					gridEventMeta.validateNow();
+					gridEventMeta.selectedIndex = downIdx;
+					updateEditors();
+					updateEnablement();
+				}
+			}
+			
+		]]>
+	</mx:Script>
+	<!--
+	<eventmetaeditor:EventMetaValueValidator source="{tiValue}"
+		property="text" required="true" />
+		-->
+	<mx:AdvancedDataGrid id="gridEventMeta" width="100%" 
+		rowCount="10" 
+		editable="true"
+		itemEditEnd="processChange(event)"
+		change="handleGridChange()">
+		<mx:columns>
+			<mx:AdvancedDataGridColumn headerText="Name" dataField="name"/>
+			<mx:AdvancedDataGridColumn headerText="Value" dataField="value" />
+			<mx:AdvancedDataGridColumn headerText="Color" dataField="color" rendererIsEditor="true" sortable="false">
+				<mx:itemRenderer>
+					<mx:Component>
+						<mx:HBox horizontalScrollPolicy="off" verticalScrollPolicy="off" horizontalAlign="center">
+							<mx:Script>
+								<![CDATA[
+									import mx.events.MetadataEvent;
+									
+									private var dataChangeFlag:Boolean;
+									
+									public function get value():String {
+										return new String(data.color);
+									}
+									
+									override public function set data(value:Object):void {
+										super.data = value;
+										dataChangeFlag = true;
+										invalidateProperties();
+										
+									}
+									
+									override protected function commitProperties():void {
+										super.commitProperties();
+										
+										if ( dataChangeFlag ) {
+											dataChangeFlag = false;
+											if ( data != null )
+												cpEditor.selectedColor = data.color;
+										}
+									}
+									
+									private function update():void {
+										outerDocument.metaColor = cpEditor.selectedColor; 
+										outerDocument.updateMeta();
+									}
+								]]>
+							</mx:Script>
+							<mx:ColorPicker id="cpEditor" 
+								change="{update()}"/>
+						</mx:HBox>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:AdvancedDataGridColumn>
+		</mx:columns>
+	</mx:AdvancedDataGrid>
+	<mx:HBox width="100%">
+		<mx:Button label="Move Up" enabled="{canMoveUp}" click="handleMoveUp()" />
+		<mx:Button label="Move Down" enabled="{canMoveDown}" click="handleMoveDown()" />
+		<mx:Spacer width="20" />
+		<mx:Button label="Add" enabled="{_schedule != null}" click="handleAdd()" />
+		<mx:Button label="Delete" enabled="{canDelete}" click="handleDelete()" />
+	</mx:HBox>
+	
+	<mx:Form visible="false">
+		<mx:FormItem label="Name:">
+			<mx:TextInput width="200" id="xtiName" 
+				editable="{canEdit}"
+				change="updateMeta()" />
+		</mx:FormItem>
+		<mx:FormItem label="Color:">
+			<mx:ColorPicker id="cpColor"
+				editable="{canEdit}"
+				enabled="{canEdit}" 
+				change="updateMeta()" />
+		</mx:FormItem>
+		<mx:FormItem label="Value:">
+			<mx:TextInput width="200" id="xtiValue"
+				editable="{canEdit}" 
+				change="updateMeta()" />
+		</mx:FormItem>
+		
+	</mx:Form>
+</mx:VBox>

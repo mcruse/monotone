@@ -1,0 +1,217 @@
+<html>
+<head>
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="EXPIRES" content="0" />
+<title>Trends</title>
+<style type="text/css">
+<!--
+body {
+        background-color: #CCCCCC;
+}
+-->
+</style>
+</head>
+
+<%
+from pysnmp.entity.rfc3413.oneliner import cmdgen
+import ConfigParser
+import os
+import sys
+from mpx import properties
+from mpx.lib import msglog
+from mpx.lib.node import as_node
+from opt.rz.omega.lib.energywise.energywise_api import EnergywiseSwitch 
+from opt.rz.omega.lib.energywise.energywise_manager import EnergywiseManager
+#globals
+
+redirect = """
+<html>
+    <head>
+        <META HTTP-EQUIV="Window-target" CONTENT="_top"> 
+        <META http-equiv="Refresh" content="0; Url=/energywise.html" >
+        <title>Energywise</title>
+    </head>
+    <body>
+    </body>
+</html>
+"""
+
+configuration = [] 
+m = request.get_post_data_as_dictionary()
+mkeys = m.keys()
+
+filenameList = []
+
+def get_ew_manager():
+    ew = None
+    for child in as_node('/services').children_nodes():
+        if isinstance(child, EnergywiseManager):
+            ew = child
+            break
+    return ew
+    
+def deleteTrends():
+    EnergywiseManagerNode = get_ew_manager()
+    localList = str(m['postviewtrend'][0])
+    EnergywiseManagerNode.delete_trends(localList)
+
+def doSave():
+#    config = ConfigParser.ConfigParser()
+#    config.read([filename])
+    count = 0
+    localList = str(m['postForm'][0])
+    if localList.endswith(':'):
+        localList = localList[:-1]
+    localList = localList.split(':')
+#   wordList has frequency and domain to be trend followed by trend_name
+    points = [] 
+    try:
+     while localList:
+        freq = localList.pop(0)
+        domain = localList.pop(0)
+        int(freq)
+        points.append({'frequency':freq, 'domain':domain})
+    except Exception:
+            msglog.exception()
+            msglog.log(
+                         "Energywise",msglog.types.ERR,
+                         "Failed to create trend every %r seconds"
+                         %(freq)
+                        ) 
+    #from points under domain find all energywise switches
+    EnergywiseManagerNode = get_ew_manager()
+    EnergywiseManagerNode.save_trends(points)    
+    
+def write_redirect():
+    psp.write(redirect)
+
+def write_content():
+    psp.write(content)
+
+
+if 'postForm' in mkeys and m['postForm'][0]:
+    if get_ew_manager():
+        doSave()
+    write_redirect()
+    return
+elif 'postviewtrend' in mkeys and m['postviewtrend'][0]:
+    if get_ew_manager():
+        deleteTrends()
+    write_redirect()
+    return
+%>
+
+<body>
+<script type="text/javascript">
+function loadtable(){
+var tableRef = window.document.getElementById("trendTable");
+var numRows = tableRef.rows.length;
+var count = 1;
+<%
+EnergywiseManagerNode = get_ew_manager()
+trends_list = []
+if EnergywiseManagerNode:
+    trends_list = EnergywiseManagerNode.get_trends()
+
+row = 1
+if trends_list:
+    for trend_name, trend_period in trends_list:
+        psp.write("var input = window.document.createElement(\"input\");\n")
+        psp.write("var input1 = window.document.createElement(\"input\");\n")
+        psp.write("var input2 = window.document.createElement(\"input\");\n")
+        psp.write("newRow = tableRef.insertRow(" + str(row) + ");\n")
+        rowstr = "viewtrendrow" + str(row)
+        psp.write("newRow.id = \"" + str(rowstr) + "\";\n")
+        psp.write("newcell1 = newRow.insertCell(0);\n")
+        psp.write("newcell2 = newRow.insertCell(1);\n")
+        psp.write("newcell3 = newRow.insertCell(2);\n")
+        psp.write("input.type = \"text\";\n")
+        inputstr = rowstr + "input1"
+        psp.write("input.id = \"" + str(inputstr) + "\";\n") 
+        psp.write("input.value = \"" + str(trend_period) + "\";\n")
+        psp.write("input1.type = \"text\";\n")
+        input1str = rowstr + "input2"
+        psp.write("input1.id = \"" + str(input1str) + "\";\n") 
+        psp.write("input1.value = \"" + str(trend_name) + "\";\n")
+        input2str = rowstr + "input3"
+        psp.write("input2.id = \"" + str(input2str) + "\";\n") 
+        psp.write("input2.type = \"submit\";\n")
+        psp.write("input2.value = \" - \";\n")
+        psp.write("input2.onclick = function() {deleteTrendConfig(\"" + input1str +"\")};\n")
+        
+        psp.write("newcell1.appendChild(input);\n")
+        psp.write("newcell2.appendChild(input1);\n")
+        psp.write("newcell2.appendChild(input2);\n")
+        row +=1
+%>
+}
+
+function saveTrendConfig(tableId) {
+    var tableRef = document.getElementById(tableId);
+    var iRow, iCell;
+    var numRows = tableRef.rows.length;
+    var val;
+    var result = [];
+    var separator = ':';
+    
+    for(iRow=0;iRow<tableRef.rows.length;iRow++) {
+        var oRow = tableRef.rows[iRow]
+        for(iCell=0;iCell<oRow.cells.length;iCell++) {
+            if(oRow.cells[iCell].getElementsByTagName("input").length != 0) {
+                val =  oRow.cells[iCell].getElementsByTagName("input")[0].value;
+                if( val != '...') {
+                    // store it in configuration list and put it back to file.
+                    result += val;
+                    result += separator;
+                }
+            }
+        }
+    }
+    var hiddenfield = document.getElementById("postForm");
+    hiddenfield.value = result;
+    document.getElementById("saveTrend").style.display = "none";
+}
+
+function deleteTrendConfig(domainId)
+{
+    var result = '';
+    var separator = ':';
+    var domain = document.getElementById(domainId);
+    var hiddenfield = document.getElementById("postviewtrend");
+    result = domain.value + ':';
+    hiddenfield.value = result;
+}
+
+
+</script>
+<%
+normal_html = """
+    <form action="/omega/nrgyzMgr/config_trend.psp" method="post" name="trendConfigForm">
+    <table class="configuration-table" id="trendTable" name="trendTable">
+        <tr class="table-header">
+            <th id="Nameheader">Frequency</th>
+                <th id="Actionheader">Energywise Domain</th>
+        </tr>
+    </table>
+    <input type="hidden" name="postForm" id="postForm" value="">
+    <input type="hidden" name="postviewtrend" id="postviewtrend" value="">
+    <input type="button" onclick="addRow('trendTable') " value="+">
+    <input id="saveTrend" type="submit" value="Save" onclick="saveTrendConfig('trendTable')" style="display:none">
+</form>
+<script type="text/javascript">
+    loadtable();
+</script>
+</body>
+</html>
+"""
+no_ew_html = """
+<b>The Energywise service has not been enabled</b>
+</body>
+</html>
+"""
+if EnergywiseManagerNode:
+    psp.write(normal_html)
+else:
+    psp.write(no_ew_html)
+    
+

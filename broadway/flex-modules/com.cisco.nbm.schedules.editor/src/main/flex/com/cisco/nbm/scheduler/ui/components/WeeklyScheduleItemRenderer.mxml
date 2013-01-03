@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:AdvancedDataGridItemRenderer xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Script>
+		<![CDATA[
+			import com.cisco.nbm.scheduler.EventMetaData;
+			import mx.events.PropertyChangeEvent;
+			import com.cisco.nbm.scheduler.DailyEntry;
+			
+			[Bindable]
+			private var _dailyEntry:DailyEntry;
+			
+			public function set dailyEntry(entry:DailyEntry):void
+			{
+				if (entry != _dailyEntry)
+				{
+					var oldValue:DailyEntry = _dailyEntry;
+					
+					if (oldValue != null)
+					{
+						oldValue.removeEventListener(PropertyChangeEvent.PROPERTY_CHANGE, handleDailyEntryChange);
+					}
+					_dailyEntry = entry;
+					
+					if (_dailyEntry != null)
+					{
+						_dailyEntry.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, handleDailyEntryChange);
+					}
+						
+					this.invalidateDisplayList();
+				}
+			}
+			
+			private function handleDailyEntryChange(event:PropertyChangeEvent):void
+			{
+				this.invalidateDisplayList();
+			}
+			
+			override public function validateNow():void
+			{
+				if (_dailyEntry != null)
+				{
+					var eventMeta:EventMetaData = _dailyEntry.eventMeta;
+					
+					if (eventMeta != null)
+					{
+						background = true;
+						backgroundColor = eventMeta.color;
+					}
+					else
+					{
+						background = false;
+					}
+				}
+				else
+				{
+					background = false;
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:AdvancedDataGridItemRenderer>

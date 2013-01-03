@@ -1,0 +1,517 @@
+#!/usr/bin/env python-mpx
+ 
+import os
+import re
+import sys
+import time
+import string
+import exceptions
+import syslog
+
+cur_debug_level = 5
+did_write_pid = 0
+
+# @note: The following functionality (through _get_filename() is ripped off from
+#        moab/linux/lib/process.py.  It is duplicated here to avoid dependencies.
+
+# @note The following try/except block is to support using mpx.properties
+#       when running 'in place', but also to function when copied to for
+#       use by a "stand alone" package (e.g. /usr/sbin/config_service ->
+#       /usr/lib/moab/config_service).
+try:
+  import mpx
+  VAR_RUN_BROADWAY = mpx.properties.get('VAR_RUN_BROADWAY','/var/run/broadway')
+except:
+  VAR_RUN = os.environ.get('BROADWAY_VAR_RUN', '/var/run')
+  VAR_RUN_BROADWAY = os.environ.get('BROADWAY_VAR_RUN_BROADWAY',
+                                    os.path.join(VAR_RUN,'broadway'))
+
+VAR_RUN_BROADWAY = os.path.realpath(VAR_RUN_BROADWAY)
+#
+def _write_pid_file(name):
+    global did_write_pid
+    for c in range(0, 10):
+        try:
+            fname = _get_filename(name)
+            fd = os.open(fname, os.O_EXCL|os.O_CREAT|os.O_RDWR, 0644)
+            os.write(fd, str(os.getpid()))
+            os.close(fd)
+            did_write_pid = 1
+            return
+        except Exception, e:
+            msgstr  = 'Got exception trying to write lockfile (%s): ' % fname
+            msgstr += '%s' % str(e)
+            logMsg(0, msgstr)
+        time.sleep(.25 * c)
+#
+def _remove_pid_file(name):
+    global did_write_pid
+    if not did_write_pid:
+        return
+    fname = _get_filename(name)
+    try:
+        os.remove(fname)
+    except Exception, e:
+        msgstr  = 'Got exception trying to remove lockfile (%s): ' % fname
+        msgstr += '%s' % str(e)
+        logMsg(0, msgstr)
+#
+def _get_filename(name):
+    return os.path.join(VAR_RUN_BROADWAY, name + '.pid')
+#
+def _do_exit(retval):
+    _remove_pid_file('hotplug')
+    sys.exit(retval)
+#
+def logMsg(debug_level, msg):
+    global cur_debug_level
+    if cur_debug_level >= debug_level:
+        try:
+            syslog.syslog(syslog.LOG_INFO, msg)
+        except:
+            print 'Could not log message via syslog: %s.' % msg
+#
+def safe_remove(filename):
+    if not os.path.exists(filename):
+        return
+    logMsg(5, 'Removing file: %s.' % filename)
+    try:
+        os.remove(filename)
+    except:
+        pass
+    return
+
+##
+# test_module
+#
+# Function to test if the specified module is loaded.
+#
+# @param modname The name of the module to look for.
+# @param numtries The number of tries to check if the module
+#                 is present.  Each try takes at least 1/10 second.
+# @default 1
+# @return 1 if the module is loaded, 0 otherwise.
+#
+def test_module( modname, numtries = 1 ):
+    curtry = 0
+    while curtry < numtries:
+        f = open('/proc/modules', 'r')
+        raw = f.read()
+        f.close()
+        ents = raw.split('\n')
+        # Note: items below take the form:
+        #       ['module-name', 'memory-usage', 'number-of-users', ...]
+        # Where ... is a variable number of entries which could be
+        # (unused), (autoclean), a list of users or some combination.
+        for ent in ents:
+            items = ent.split()
+            if items:
+                if items[0] == modname:
+                    # We have a winner
+                    return 1
+        curtry = curtry + 1
+        time.sleep(.1)
+    return 0
+
+def get_env(varname, isfatal=1):
+    envdict = os.environ
+    if envdict.has_key(varname):
+        return envdict[varname]
+    else:
+        if isfatal:
+            raise Exception("Environment variable %s is not set" % varname)
+    return None
+
+# Note: At the moment, the definitive copy of this routine lives in
+#       broadway/moab/linux/lib/usb.py.
+#
+def do_popen(cmd,reportoutput=0,reporterror=1):
+    logMsg(5, 'Running command: %s.' % cmd)
+    i,o,e = os.popen3(cmd)
+    stderr = e.read()
+    stdout = o.read()
+    i.close()
+    o.close()
+    e.close()
+    if reportoutput:
+        logMsg(2, 'Got output of %s from cmd: %s.' % (stdout,
+                                                      cmd))
+    if reporterror:
+        if len(stderr) != 0:
+            logMsg(1, 'Got error of %s from cmd: %s.' % (stderr,
+                                                         cmd))
+    return (stdout, stderr)
+
+# Note: At the moment, the definitive copy of this routine lives in
+#       broadway/moab/linux/lib/usb.py.
+#
+def scanmounts():
+    """creates dictionary from /proc/mounts"""
+    # example: '/dev/sda1 /mnt/sda1 ext3 rw 0 0'
+    #   device, mountpoint, type, options
+    mounts = {}
+    try:
+        for line in open('/proc/mounts'):
+            line = line.strip()
+            if line[0:7] == '/dev/sd':
+                tup = line.split(' ')
+                device = tup[0]
+                mountpoint = tup[1]
+                type = tup[2]
+                options = tup[3:]
+                mounts[device] = (mountpoint, type, options)
+    except:
+        logMsg(1, 'Got error reading/parsing /proc/mounts.')
+    return mounts
+
+# Note: At the moment, the definitive copy of this routine lives in
+#       broadway/moab/linux/lib/usb.py.
+#
+def check_drive(scsi_dev):
+    """Checks to see if the specified SCSI device (sda, sdb, etc.) is
+still actually present by attempting to read a few bytes from it.
+Returns 1 if it does appear to be present, and 0 otherwise.
+"""
+    # Test to see if this drive is actually there.
+    # If it is really there, we should be able to read
+    # a few bytes from it.  If it isn't we should
+    # get an IO Error.
+    devfile = '/dev/%s' % scsi_dev
+    f = open(devfile, 'rb')
+    didread = 0
+    try:
+        y = f.read(100)
+        didread = 1
+    except exceptions.IOError, e:
+        didread = 0
+    y = None
+    f.close()   
+    return didread
+
+# Note: At the moment, the definitive copy of this routine lives in
+#       broadway/moab/linux/lib/usb.py.
+def grabpartitions(dev_list):
+    """Takes a list of devices (e.g. sda, sdb) and 
+    Returns a list of partition dictionaries (or None).
+    """
+    partitions = []
+    
+    for drive in dev_list:
+        fparts = getmap(drive)
+        if fparts:
+            for p in fparts:
+                partitions.append(p)
+    #
+    return partitions
+
+# Note: At the moment, the definitive copy of this routine lives in
+#       broadway/moab/linux/lib/usb.py.
+#
+def scandrives(confirm=1):
+    """Reads /proc/partitions and returns a list of SCSI devices
+i.e. sda, sdb.  None if no matches.
+
+Optional parameter confirm (default is 1): Set to 1 if you
+want scandrives to confirm that the device is really there.
+Set to 0 if you don't want it to confirm that.
+
+Returns a list of drives.
+"""
+    drives = []
+    
+    pat = re.compile('\d+\s+\d+\s+\d+\s+(sd[a-z])\s+')
+    for line in open('/proc/partitions'):
+        line = line.strip()
+        m = re.search(pat, line)
+        if m:
+            scsi_dev = m.group(1)
+            if confirm:
+                didread = check_drive(scsi_dev)
+                if didread:
+                    drives.append(scsi_dev)
+            else:
+                drives.append(scsi_dev)
+    #
+    return drives
+
+## todo:  need to deal with case where patition table is non-existant.
+##
+## todo:  rewrite to use sfdisk
+
+# Note: At the moment, the definitive copy of this routine lives in
+#       broadway/moab/linux/lib/usb.py.
+#
+def getmap(device):
+    """calls fdisk and returns a list of dictionaries containing the
+    partition information.  device can be specified like 'sda' '/dev/sda'
+    """
+    if not device:
+        return None
+
+    pat = re.compile('.*(sd[a-z])')
+    m = re.search(pat, device)
+    if not m:
+        return None
+    dev = m.group(1)
+    i,o,e = os.popen3('/sbin/fdisk -l /dev/%s' % dev)
+    err = e.read().strip()
+    if err:
+        raise Exception(err)
+    out = o.readlines()
+    o.close()
+    e.close()
+
+    parts = []
+    if not out:
+        return None
+
+    # nice hairy regexp to grok this:
+    # Device    Boot    Start       End    Blocks   Id  System
+    # /dev/sda1   *         1       490     62719+  83  Linux
+    # note: boot '*' may not be present, blocks may not have '+' or '-'
+    #       to indicate that rounding has occured
+    pat = re.compile(r'/dev/(sd[a-z]\d+)\s+(\*)?\s+(\d+)\s+(\d+)\s+(\d+)[\+\-]?\s+(\w+)\s+(.+)')
+    for line in out:
+        line = line.strip()
+        m = re.search(pat, line)
+        if m:
+            #debug
+            # print "Found:  %s" % line
+            dict =  { 'filesys' : m.group(1),
+                      'boot'   : m.group(2),
+                      'start'  : int(m.group(3)),
+                      'end'    : int(m.group(4)),
+                      'blocks' : int(m.group(5)),
+                      'id'     : m.group(6),
+                      'system' : m.group(7)
+                      }
+            parts.append(dict)
+        else:
+            #debug
+            #print 'skip line: %s' % line
+            pass
+    return parts
+        
+##
+# -- MAIN --
+#
+#
+# To aid debugging, dump evironment to /tmp
+f = open('/tmp/.hotplug', 'w+') 
+for k in os.environ.keys():
+    f.write('%s: %s\n' % (k, os.environ[k]))
+f.close()
+
+# Open a connection to the system log
+syslog.openlog('hotplug', syslog.LOG_PID | syslog.LOG_CONS)
+
+# For now, only handle usb type events (event type
+# is the first, required parameter).
+if len(sys.argv) < 2:
+    logMsg(0, 'Not called with enough arguments: %s.' % str(sys.argv))
+    _remove_pid_file('hotplug')
+    raise Exception("hotplug must be called with at least one argument")
+
+if sys.argv[1] != 'usb':
+    logMsg(1, 'Not handling non-usb event: %s.' % sys.argv[1])
+    _do_exit(0)
+
+# Kernel USB hotplug params include:
+#
+#       ACTION=%s [add or remove]
+#       PRODUCT=%x/%x/%x
+#       INTERFACE=%d/%d/%d
+#       TYPE=%d/%d/%d
+# And if usbfs (originally called usbdevfs) is configured, also:
+#
+#       DEVFS=/proc/bus/usb
+#       DEVICE=/proc/bus/usb/%03d/%03d
+
+# Generate the filename for a remover script to be used in the event
+# of a remove event (and created on an add event).
+device = get_env('DEVICE', 0)
+interface = get_env('INTERFACE')
+action = get_env('ACTION')
+
+if not device:  
+    product = get_env('PRODUCT')
+    type = get_env('TYPE')
+    #
+    uniqstr = '%s/%s/%s' % (interface, product, type)
+else:
+    uniqstr = device
+
+uniqstr = string.replace(uniqstr, '/', ':')
+
+logMsg(7, 'Got uniqstr of %s.' % uniqstr)
+
+removefilename = '/var/run/usb/%s' % uniqstr
+
+logMsg(6, 'Got removefilename of %s.' % removefilename)
+
+# Ensure that /var/run/usb exists (move to install script soon)
+if not os.path.exists('/var/run/usb'):
+    os.makedirs('/var/run/usb')
+    
+cls, sub, prot = interface.split('/')
+
+if action == 'add':
+    safe_remove(removefilename)
+    #
+    if cls == '8':   
+        # First, write a pid file.
+        _write_pid_file('hotplug')
+        #
+        didmount = 0
+        try:
+            drives = scandrives(confirm=1)
+        except Exception,e:
+            msgstr  = 'Got exception trying to scandrives(): '
+            msgstr += '%s' % str(e)
+            logMsg(0, msgstr)
+            if e.__class__ == IOError:
+                # OK, got an IO Error.
+                if e.errno == 6:
+                    # Got an "No such device or address" error.  This
+                    # could mean that the USB device has stopped
+                    # responding to us, etc.  One possible remedy
+                    # is to reload the usb-storage module, so try
+                    # that here.
+                    msgstr = 'Trying to reload usb-storage module.'
+                    logMsg(0, msgstr)
+                    do_popen('rmmod usb-storage')
+                    do_popen('modprobe usb-storage')
+            drives = []
+        #
+        # If drives is empty, then we might be experiencing the case
+        # where the usb-storage module has not yet been loaded at
+        # the time that this script is running.  To guard against this
+        # we use test_module() to wait a reasonable amount of time
+        # for the usb-storage module to be loaded if it isn't already,
+        # then try the scandrives() again.
+        if len(drives) == 0:
+            msgstr  = 'No SCSI drives found.  Waiting a little '
+            msgstr += 'while in the hopes that usb-storage will '
+            msgstr += 'loaded.'
+            logMsg(1, msgstr)
+            # Note: Wait up to 10 seconds for the usb-storage module
+            #       to appear.
+            if test_module('usb-storage', 100):
+                # Looks like we found the module.  Sleep for a
+                # short time to let it discover any drives out
+                # there, then try again.
+                time.sleep(2)
+                #
+                drives = scandrives(confirm=1)
+                if len(drives) == 0:
+                    msgstr = 'Last ditch effort, reloading usb-storage'
+                    logMsg(1, msgstr)
+                    do_popen('rmmod usb-storage')
+                    do_popen('modprobe usb-storage')
+                    time.sleep(2)
+                    drives = scandrives(confirm=1)
+                    if len(drives) == 0:
+                        msgstr = 'Still no SCSI drives found.  Giving up.'
+                        logMsg(1, msgstr)
+                    else:
+                        msgstr = 'Found a SCSI drive.  Looks like it worked.'
+                        logMsg(1, msgstr)
+                else:
+                    msgstr = 'Found a SCSI drive.  Looks like it worked.'
+                    logMsg(1, msgstr)
+            else:
+                msgstr  = 'Apparently the usb-storage module was never '
+                msgstr += 'loaded.  Giving up.'
+                logMsg(1, msgstr)
+        #
+        partitions = grabpartitions(drives)
+
+        mounts = scanmounts()
+        logMsg(4, 'Got mounts of %s.' % str(mounts))
+
+        f = open(removefilename, 'w')
+        f.write('#!/bin/sh\n')
+        
+        # Loop through any umounted partitions and try to
+        # mount them.
+        for x in partitions:
+            logMsg(4, '%s-%s' % (x['filesys'], str(x)))
+            log_dev = '/dev/%s' % x['filesys']
+            if mounts.has_key(log_dev):
+                logMsg(3, 'Partition already mounted, skipping: %s.' % log_dev)
+            else:
+                mntdir = '/mnt/%s' % x['filesys']
+                if not os.path.exists(mntdir):
+                  do_popen('mkdir -p %s' % mntdir)
+                f.write('umount %s >& /tmp/umount.out\n' % mntdir)
+                # Note: @fixme:  For now, hardcode that the drive will be mounted
+                #       with uid=webdev and gid=webdev.  This is a very short term
+                #       solution and needs to be replaced with something much
+                #       better very soon.
+                do_popen('mount -o uid=webdev,gid=webdev %s %s' % (log_dev, mntdir))
+                didmount = 1
+                if os.path.exists('%s/.autorun' % mntdir):
+                    do_popen('%s/.autorun' % mntdir)
+        f.close()
+        os.chmod(removefilename, 0700)               
+        if didmount:
+            # Put code to 'signal' the framework here.
+            pass
+#
+elif action == 'remove':
+    if cls == 8:
+        # First, write a pid file.
+        _write_pid_file('hotplug')
+    #
+    if os.path.exists(removefilename):
+        do_popen(removefilename)
+        safe_remove(removefilename)
+    else:
+        if cls == 8:
+            logMsg(0, 'Remove File %s not found.' % removefilename)
+    #
+    # If it isn't a storage device then we don't need to do anything
+    if cls != '8':
+        _do_exit(0)
+    #
+    # Remove the lock file before we try anything really time consuming.
+    _remove_pid_file('hotplug')
+    #
+    # Attempt to automatically handle the remove by scanning for
+    # drives which have mounted partitions, but aren't really
+    # present any longer.
+    all_drives = scandrives(confirm=0)
+    good_drives = scandrives(confirm=1)
+    #
+    mounts = scanmounts()
+    logMsg(4, 'Got mounts of %s.' % str(mounts))
+    #
+    for x in all_drives:
+        if x not in good_drives:
+            logMsg(0, 'It looks like the following is a bogus drive: %s.' % x)
+            log_dev = '/dev/%s' % x
+            for y in mounts:
+                z = mounts[y]
+                print y[0:8]
+                if y[0:8] == log_dev:
+                    logMsg(0, 'Attempting to umount apparently bogus mount: %s.' % y)
+                    o,e = do_popen('umount %s' % y)
+                    if len(e) != 0:
+                        did_umount = 0
+                        for i in range(0, 5):
+                            msg  = 'Had trouble un-mounting device (%s).  ' % e
+                            msg += 'Will try again in a 5 seconds.'
+                            logMsg(0, msg)
+                            time.sleep(5)
+                            logMsg(0, 'Trying again to umount apparently bogus mount: %s.' % y)
+                            o,e =do_popen('umount %s' % y)
+                            if len(e) == 0:
+                                logMsg(0, 'umount of %s was finally successful.' % y)
+                                did_umount = 1
+                                break
+                        if not did_umount:
+                            logMsg(0, 'Giving up on umounting %s.' % y)
+else:
+    logMsg(1, 'Unsupported action: %s.' % str(action))
+#
+_do_exit(0)

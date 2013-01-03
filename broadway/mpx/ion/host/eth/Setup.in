@@ -1,0 +1,4 @@
+*shared*
+
+_eth -Wall _eth.c
+

@@ -1,0 +1,247 @@
+/*
+Purpose: Generic Node widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: Checkbox.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+function Checkbox(){
+  this.base = Widget;
+  this.base();
+  this._name = 'Checkbox';
+  this._z_index = '1000';
+  this._node = '';
+  this.node_selector_node = 'true';
+
+  this._checked_value='1';
+  this._checked_value_label='Checkbox true';
+  
+  this._unchecked_value='0';
+  this._unchecked_value_label='Checkbox false';
+  this._tooltip='';
+  
+  this._text_color = 'black';
+  this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+  this._text_font_size = '12px';
+ }
+
+Checkbox.prototype = new Widget;
+
+
+Checkbox.prototype.init = function(element) {
+  this._name = 'Checkbox';
+  this._z_index = element.getAttribute('zindex');
+  var nodedisplaydiv = this.get_element(element,'div','nodedisplay');
+  this._node = nodedisplaydiv.getAttribute('node');
+  if(nodedisplaydiv.currentStyle) {
+    this._text_color = nodedisplaydiv.currentStyle['color'];
+    this._text_font_family = nodedisplaydiv.currentStyle['fontFamily'];
+    this._text_font_size = nodedisplaydiv.currentStyle['fontSize'];
+  }
+  else if(window.getComputedStyle) {
+    var compStyle = window.getComputedStyle(nodedisplaydiv,"");
+    this._text_color = compStyle.getPropertyValue('color');
+    this._text_font_family = compStyle.getPropertyValue('font-family');
+    this._text_font_size = compStyle.getPropertyValue('font-size');
+  }
+  else {
+// this._text_color = 'black';
+// this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+// this._text_font_size = '12px';
+	  this._text_color=nodedisplaydiv.style.color;
+	  this._text_font_family=nodedisplaydiv.style.fontFamily;
+	  this._text_font_size=nodedisplaydiv.style.fontSize;
+  }
+  
+  var infodiv = this.get_element(element,'input','info');
+  this._checked_value=nodedisplaydiv.getAttribute('checked_value');
+  this._checked_value_label=nodedisplaydiv.getAttribute('checked_value_label');
+  this._unchecked_value=nodedisplaydiv.getAttribute('unchecked_value');
+  this._unchecked_value_label=nodedisplaydiv.getAttribute('unchecked_value_label');
+  this._tooltip = nodedisplaydiv.getAttribute('title');
+  var placeHolder = this.get_element(nodedisplaydiv,'div','placeholder');
+  
+  
+}
+
+Checkbox.prototype.init_element = function (){
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version','1_0_dev_2');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  this.element.style.position = 'absolute';
+  this.element.style.zIndex = this._z_index;
+  
+  var placeholderdiv = document.createElement('div');
+  placeholderdiv.setAttribute('element', 'placeholder');
+  placeholderdiv.style.whiteSpace='nowrap';
+
+ 
+  var width=(this._checked_value_label.length>this._unchecked_value_label.length?this._checked_value_label.length:this._unchecked_value_label.length);
+  var str='';
+  for(var i=0;i<width;i++){
+	  str=str+'X';
+  }
+  placeholderdiv.innerHTML=str;
+ 
+  var nodedisplaydiv = document.createElement('div');
+  nodedisplaydiv.setAttribute('element', 'nodedisplay');
+  nodedisplaydiv.setAttribute('node', this._node);
+  nodedisplaydiv.setAttribute('display_function','CheckboxDisplay');
+  nodedisplaydiv.setAttribute('checked_value',this._checked_value);
+  nodedisplaydiv.setAttribute('unchecked_value',this._unchecked_value);
+  nodedisplaydiv.setAttribute('checked_value_label',this._checked_value_label);
+  nodedisplaydiv.setAttribute('unchecked_value_label',this._unchecked_value_label);
+  nodedisplaydiv.setAttribute('title',this._tooltip);
+
+  
+  
+  var tableCheck = document.createElement('table');
+  nodedisplaydiv.appendChild(tableCheck);
+  
+  var tableRow = document.createElement('tr');
+  tableCheck.appendChild(tableRow);
+  
+  var elem = document.createElement('td');
+  tableRow.appendChild(elem);
+  var check = document.createElement('input');
+  check.setAttribute('element','check');
+  check.setAttribute('type','checkbox');
+  check.setAttribute('onclick','CheckboxClicked(event)');
+
+  
+  elem.appendChild(check);
+  elem=document.createElement('td');
+  elem.appendChild(placeholderdiv);
+  tableRow.appendChild(elem);
+  
+
+  if(this._text_color != ''){
+    nodedisplaydiv.style.color = this._text_color;
+    placeholderdiv.style.color=this._text_color;
+  }
+  if(this._text_font_family != ''){
+    nodedisplaydiv.style.fontFamily = this._text_font_family;
+    placeholderdiv.style.fontFamily = this._text_font_family;
+  }  
+  if(this._text_font_size != ''){
+    nodedisplaydiv.style.fontSize = this._text_font_size;
+    placeholderdiv.style.fontSize = this._text_font_size;
+  }  
+  
+  this.element.appendChild(nodedisplaydiv);
+}
+
+
+Checkbox.prototype.create = function (){
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function Checkbox_factory(){
+  return new Checkbox();
+}
+
+function CheckboxDisplay(e,v){
+	// gets the nodedisplay element
+	
+	var check = CheckboxGetElement(e,'input','check');
+	var checked_value=e.getAttribute('checked_value');
+	var unchecked_value=e.getAttribute('unchecked_value');
+	if(typeof v.ErrorCode!='undefined'){
+		label='N/A';
+	}
+	else{
+		var selected = (v==checked_value);
+		check.checked=(selected);
+		var label='';
+		if(selected){
+			label=e.getAttribute('checked_value_label');
+		}else{
+			label=e.getAttribute('unchecked_value_label');
+		}
+	}
+	var placeHolder = CheckboxGetElement(e,'div','placeholder');
+	placeHolder.innerHTML = label;
+	
+}
+
+function CheckboxClicked(event){
+	try{
+	var check=event.target;
+	if(typeof event.target=='undefined'){
+		check=event.srcElement;
+	}
+	var nodeDisplayElement = CheckboxGetParent(check,'div','nodedisplay');
+	var nodePath = nodeDisplayElement.getAttribute('node');
+
+	var n = MEDIATOR.get_node(nodePath);
+	var value;
+	var desc;
+	if(check.checked){
+		value = nodeDisplayElement.getAttribute('checked_value');
+		if(value==''){
+			alert('No checked value set in configuration');
+			check.checked=false;
+			return;
+		}
+		desc=nodeDisplayElement.getAttribute('checked_value_label');
+	}
+	else{
+		value=nodeDisplayElement.getAttribute('unchecked_value');
+		if(value==''){
+			alert('No unchecked value set in configuration');
+			check.checked=true;
+			return;
+		}
+		desc=nodeDisplayElement.getAttribute('unchecked_value_label');
+	}
+	var set = setValue(n,value,desc);
+	
+	if(!set){
+		check.checked=!check.checked;
+	}
+	}catch(Ex){
+		Widget_log('Checkbox.CheckboxClicked Exception occurred'+Ex);
+	}
+
+}
+
+function setValue(node,value,desc){
+	var set = confirm('Are you sure you want to set the value as '+desc +' ('+value+')');
+	if(set){
+		node.set(value);
+	}
+	return set;
+}
+
+function CheckboxGetParent(element,t,element_name){
+	while(element.parentNode!=null){
+		element = element.parentNode;
+		if(element.tagName.toUpperCase()!=t.toUpperCase()){
+			continue;
+		}
+		if (element.getAttribute('element') &&
+				element.getAttribute('element') == element_name){ 
+		     return element;
+		}
+	}
+}
+function CheckboxGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e
+}
+
+var Checkbox_loaded = true;

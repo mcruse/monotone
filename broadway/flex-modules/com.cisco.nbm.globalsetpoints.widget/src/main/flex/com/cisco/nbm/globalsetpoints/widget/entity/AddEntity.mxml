@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resize:ResizablePanel
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="vertical"
+	paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10"
+	minHeight="350"
+	minWidth="450" height="400"
+	title="Add Entity"
+	creationComplete="init()"
+	xmlns:ui="com.cisco.nbm.entities.ui.*"
+	xmlns:resize="flex.utils.ui.resize.*">
+<mx:Script>
+	<![CDATA[
+		import mx.managers.PopUpManager;
+		import mx.core.Application;
+		import mx.collections.ArrayCollection;
+		import com.cisco.nbm.entities.EntityManager;
+		import com.cisco.ui.components.DialogCloseReason;
+		import com.cisco.nbm.entities.Entity;
+		
+		/**
+		 * Set the selected entity so that the viewer jumps to that entity, selects
+		 * it and opens it.  If it is null, then nothing is selected.  This
+		 * property is optional.
+		 */
+		private var _selectedEntityPath:String;
+		
+		private var _reason:String;
+
+		private var _entityManager:EntityManager;		
+		
+		private var _propertyPaths:Array = [];
+		
+		private var _initialSelection:Array;
+		
+		private var _disabled:Array;
+		
+		private var _entityRoot:String;
+		
+		private var desiredHeight:int = 400;
+		
+		public function set selectedEntityPath(value:String):void
+		{
+			_selectedEntityPath = value;
+			
+			updateViews();
+		}
+		
+		private function init():void
+		{
+			// listen for stage resize event
+			stage.addEventListener(Event.RESIZE, handleResizeEvent);
+			updateViews();
+			ensureFit();
+		}
+		
+		private function ensureFit():void
+		{
+			if (stage == null)
+			{
+				return;
+			}
+			var minimumHeight:int = stage.stageHeight;
+			var newHeight:int = height;
+			
+			if (minimumHeight < height)
+			{
+				newHeight = minimumHeight;
+			}
+			
+			newHeight = desiredHeight < minimumHeight ? desiredHeight : minimumHeight;
+			
+			if (newHeight != desiredHeight)
+			{
+				invalidateSize();
+			}
+			
+			
+			height = newHeight;
+			//setActualSize(getExplicitOrMeasuredWidth(), newHeight);
+			entityNavigator.validateNow();
+			PopUpManager.centerPopUp(this);
+		}
+		
+		private function handleResizeEvent(event:Event):void
+		{			
+			ensureFit();
+		}
+		
+		public function set initialSelection(value:Array):void
+		{
+			_initialSelection = value;
+			
+			updateViews();
+		}
+		
+		public function set disabled(value:Array):void
+		{
+			_disabled = value;
+			updateViews();
+		}
+		
+		public function set entityRoot(value:String):void
+		{
+			_entityRoot = value;
+			
+			updateViews();
+		}
+		
+		private function cleanup():void
+		{
+			stage.removeEventListener(Event.RESIZE, handleResizeEvent);
+		}
+		
+		private function handleOK():void
+		{
+			cleanup();
+			_reason = DialogCloseReason.OK;
+			
+			dispatchEvent(new Event(Event.CLOSE));
+		}
+		
+		private function handleCancel():void
+		{
+			cleanup();
+			_reason = DialogCloseReason.CANCEL;
+			dispatchEvent(new Event(Event.CLOSE));
+		}
+		
+		public function set entityManager(value:EntityManager):void
+		{
+			_entityManager = value;
+			
+			updateViews();
+		}
+		
+		public function get propertyPaths():Array
+		{
+			return entityNavigator.selectedItems; //_propertyPaths;
+		}
+		
+		public function get reason():String
+		{
+			return _reason; 
+		}
+		
+		private function updateViews():void
+		{
+			if (!initialized)
+			{
+				return;
+			}
+			
+			if (_entityManager == null)
+			{
+				return;
+			}
+			
+			if (_entityRoot == null)
+			{
+				return;
+			}
+			
+			//gc.source = _entityManager.entities; // TODO Need to wrap
+			//gridEntities.validateNow();
+			entityNavigator.entityManager = _entityManager;
+			entityNavigator.initialSelection = _initialSelection;
+			entityNavigator.disabled = _disabled;
+			entityNavigator.entityRoot = _entityRoot;
+		}
+		
+		public function destroy():void
+		{
+			_entityManager = null;
+			entityNavigator.destroy();
+			_propertyPaths = [];
+			
+		}
+	]]>
+</mx:Script>
+<ui:EntityNavigator width="100%" height="100%" id="entityNavigator" />
+<mx:HBox width="100%" horizontalAlign="right">
+	<mx:Button label="OK" click="handleOK()" />
+	<mx:Button label="Cancel" click="handleCancel()" />
+</mx:HBox>
+</resize:ResizablePanel>

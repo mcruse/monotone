@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ELEMENT data (entry*)>
+<!ATTLIST data
+	info CDATA #IMPLIED
+>
+<!ELEMENT entry (value*)>
+<!ATTLIST entry
+          timestamp CDATA #REQUIRED
+>
+
+<!ELEMENT value (#PCDATA)>
+<!ATTLIST value
+          name CDATA #REQUIRED
+>

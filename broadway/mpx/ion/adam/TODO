@@ -1,0 +1,5 @@
+1.  Develop a generic external interface betweem the modules and the
+    AnalogIn/Out classes.  This should work for all ADAM modules.
+2.  Find out if there is a generic name for ADAM/ICP modules.
+3.  Enhance the autoloader to handle loading the appropriate ADAM module
+    for the ICP model numbers (e.g.  7017 - 4017).

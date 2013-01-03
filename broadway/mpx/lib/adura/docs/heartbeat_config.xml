@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE XServeConfig SYSTEM "./xserve_config.dtd">
+<XServeConfig>
+	<XFieldExtractor name="Heartbeat Config XML" order="1">
+		<XFields>
+			<XField name="amtype" byteoffset="2" length="1" type="uint8"/>
+		</XFields>
+		<XFilter>
+			<XCond name="IsEqual">
+				<XFilterParam name="fieldname" value="amtype"/>
+				<XFilterParam name="fieldvalue" value="253"/>
+			</XCond>
+		</XFilter>
+		<XDataSinks/>
+	</XFieldExtractor>
+</XServeConfig>

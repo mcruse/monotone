@@ -1,0 +1,261 @@
+<!--
+Copyright (C) 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<html>
+<head>
+<title>Debug - WebAPI</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<style type="text/css">
+<!--
+.time_stamp {  font-size: 14px; font-weight: bold; color: #33CC00}
+.info {  color: #0000FF}
+.warning {  color: #FFFF00}
+.error {  color: #FF0000}
+-->
+</style>
+</head>
+<body bgcolor="#FFFFFF" text="#000000" onload="update_window()">
+<table width="100%" border="0">
+  <tr> 
+    <td bgcolor="#003399"><font color="#FFFFFF" size="4"><b><font face="Verdana, Arial, Helvetica, sans-serif">Debugging 
+      Information</font></b></font></td>
+  </tr>
+  <tr>
+    <td> 
+      <table width="100%" border="0">
+       <tr>
+          <td width="9%" align="right">Source</td>
+          <td width="58%" align="left"> 
+            <input value="" type="text" name="textfield" size="50" id="source">&nbsp;
+          </td>
+          <td width="33%">&nbsp;</td>
+        </tr>
+        <tr>
+          <td width="9%" align="right">Command</td>
+          <td width="58%" align="left"> 
+            <input type="text" name="textfield" size="50" id="command">
+          </td>
+          <td width="33%">&nbsp;</td>
+        </tr>
+        <tr>
+          <td width="9%" align="right">History</td>
+          <td width="58%" align="left">
+            <select name="select" id="history" onchange="update_command()">
+            <option value="                   "></option>
+            </select>
+          </td>
+          <td width="33%">&nbsp;</td>
+        </tr>
+        <tr>
+          <td width="9%" align="right">&nbsp;</td>
+          <td width="58%" align="left">
+            <!-- <textarea id="command_area" rows="10" cols="80"></textarea> -->
+          </td>
+          <td width="33%">&nbsp;</td>
+        </tr>
+      </table>
+      &nbsp; <br>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <table width="100%" border="0" id="msg_table">
+        <tr> 
+          <td bgcolor="#FFCC66"> 
+            <table width="100%" border="0" >
+              <tr> 
+                <td width="50%"><font size="3" color="#0066FF">Messages</font></td>
+                <td align="right" width="25%"><span onclick="add_blank_row()">Add a Blank row</span></td>
+                <td align="right" width="25%"><span onclick="clear_table()">clear 
+                  table</span></td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+<script language="javascript">
+
+var RETURN_KEY = 13;
+
+function import_source(e){
+    if (e.which == RETURN_KEY){
+        var s = document.getElementById("source");
+        var script = document.createElement("script");
+        log("loading src from " + s.value );
+        script.src = s.value;
+        document.getElementsByTagName("head")[0].appendChild(script);
+    }
+       
+}
+
+
+document.getElementById("source").onkeypress = import_source;
+document.getElementById("command").focus()
+/*
+function textarea_test(){
+    var ca = document.getElementById("command_area");
+    log(ca.value)
+}
+document.getElementById("command_area").onkeypress = textarea_test;
+*/
+
+
+function update_command(){
+    var c =   document.getElementById("command");
+    var h =   document.getElementById("history");
+    c.value = h.value;
+    c.focus();
+
+}
+
+
+function add_history(c){
+    var h = document.getElementById("history");
+    var index = h.options.length;
+    var opt = document.createElement("option");
+    h.appendChild(opt);
+   
+    h.options[index].value = c;
+    h.options[index].innerHTML = c;
+}
+
+function do_command(e){
+    var command =  document.getElementById('command').value;
+    var key = null;
+    if (document.all){
+       key = event.keyCode;
+    }
+    else{
+        key = e.which;
+    }
+    if (key == RETURN_KEY){
+        add_history(command);
+        if(window.opener == null){
+             try{
+                 log(eval(command));
+             }
+             catch(e){
+                  log(e);
+             }
+         }
+         else{
+             try{
+                 log(window.opener.eval(command));
+             }
+             catch(e){
+                  log(e);
+             }
+         }
+        document.getElementById("command").value = "";     
+    }
+}
+
+document.getElementById("command").onkeypress = do_command;
+
+function clear_table(){
+    var msg_table = document.getElementById('msg_table');
+    var index = msg_table.rows.length;
+	if (index > 1){
+	    for (x = index -1; x != 0 ;x--){
+		    msg_table.deleteRow(x);
+		}
+	}
+}
+
+
+function add_blank_row(){
+    log("");
+
+}
+function log(msg,t){
+   DEFAULT = 'info';
+   var type;
+   if (arguments.length >1){
+       
+       type = arguments[1];
+   }
+   else{
+       type = DEFAULT;
+   }
+   
+    if (typeof(msg )== 'string'){
+        msg = msg.replace(/<\//g,'');
+        msg = msg.replace(/</g,'&lt;');
+        msg = msg.replace(/>/g,'&gt;');
+        msg = msg.replace('/\n/g','<br>');
+        
+	}
+                  
+    var cell_color = '';
+    var last_color = '';
+    var msg_table = document.getElementById('msg_table');
+    var index = msg_table.rows.length;
+    msg_table.insertRow(1);
+    var row = msg_table.rows[1];
+    row.insertCell(0);
+    
+	/* ******************
+    Future enhancments
+    if (index> 1){
+        last_color == msg_table.rows[row-1].cells[0].bgcolor;
+        alert(last_color);
+    }
+    */
+    var now = new Date()
+    var d = now.getHours().toString() + ':' +  now.getMinutes().toString();
+    d += ':' + now.getSeconds()
+    d = '<span class="time_stamp">' + d + '</span>'
+    var cell =  row.cells[0]
+    msg = '<span class="' + type + '">' + msg + '</span>';
+    cell.innerHTML = d + ' ' + msg;
+    cell.setAttribute('bgcolor','#EBEBEB');
+}
+function handle_error(msg,url,linenumber){
+   log('ERROR in Debugg Window:\n' + 
+       'message: ' + msg + '\n' +
+       'Url: ' + url + '\n' +  
+	   'linenumber: ' + linenumber);
+}
+
+window.onerror = handle_error;
+
+
+function update_window(){
+   if (window.opener != null){ 
+        window.opener.DEBUG_LOADED = true;
+   }
+}
+</script>
+</html>

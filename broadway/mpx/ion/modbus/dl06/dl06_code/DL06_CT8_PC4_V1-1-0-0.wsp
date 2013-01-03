@@ -1,0 +1,25 @@
+[VERSION]
+APIVERSION=(400)
+VERSION=(4,0,0,16)
+[FRAME]
+PLACEMENT=(44,2,3,-1,-1,-1,-1,68,-1,989,751)
+FRAME DATA=(1,1,0,0)
+[FRAME DATA]
+1=(44,0,1,-1,-1,-4,-4,-34,-2,663,788)
+2=(44,0,1,-1,-1,-4,-4,661,8,2069,894)
+3=(44,0,1,-1,-1,-4,-4,990,-5,2398,881)
+[Ladder Views]
+F1V1=(95,1,0,8,17,2,1,2,5,0,0)
+[Ladder Frame 1]
+Ladder View 1z=(0,0,665,753)
+[FRAME TYPES]
+1=3
+2=6
+3=6
+[Watch Views]
+F2V1=(1239809,1,1,0,0,0,0,85,2,1,0,1240262,209,61,0,0,61,0,0,0)
+F3V1=(1239809,1,1,0,0,0,0,19,3,1,0,1240262,209,61,54,1,61,0,0,0)
+[Watch View 2]
+Filename=C:\DirectSOFT4\Projects\Read DL06_CT8_PC4 data.dta
+[Watch View 3]
+Filename=C:\DirectSOFT4\Projects\Write DL06_CT8_PC4 config.dta

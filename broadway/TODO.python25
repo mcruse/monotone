@@ -1,0 +1,34 @@
+TODO:
+=====
+
+12. Do we need sqlite3 binaries?
+
+11. Upgrade to a more recent libsqlite3?
+
+10. Extend Exception class cleanly?  See mpx/lib/exceptions/__init__.py:86
+
+9. ./mpx/install/_lib.py:43:	script_text='%sPYTHON_VIA_ENV=...
+
+8. ./tools/dev_stub:104:[ "$PYTHON_VIA_ENV+set" == +set ] && PYTH...
+
+7. ./doc/Build-HOWTO.rst:38:               /usr/bin/python2.2
+
+6. ./opt/mehtatech/app/files/rc.mpx:248:    bfp.write(':python2.2:M::\x2d\xed\x0d\x0a::/usr/bin/python2:')
+
+5. ./moab/linux/bin/WATCHDOG.txt:103:  $ /usr/bin/watchdog /usr/bin/python2 /etc/rc.mfw.pyc
+
+4. ./moab/linux/bin/WATCHDOG.txt:114:  $ /usr/bin/watchdog /usr/bin/python2 -i /etc/rc.mfw.pyc -i
+
+1. There should probably be a MOAB /usr/bin/pytohn-mpx as well as the
+   broadway/tools version.  It could even try to detect byte-code blues and try
+   other versions...
+
+2. Combine python-mpx and pytohn-mpx.in?  Add comment that two will be needed
+   iff we can't use the same python binary on development systems and
+   Mediators.
+
+3. Remove or derive PYTHON/PYTHON_VIA_ENV/PYTHON_VER?  dev_stub needs to
+   "fallback" to PYTHON_VIA_ENV.
+
+
+DONE:

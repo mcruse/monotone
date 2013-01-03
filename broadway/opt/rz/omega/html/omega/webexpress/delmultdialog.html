@@ -1,0 +1,86 @@
+<!--
+Copyright (C) 2008 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<!-- 
+Purpose: modal dialog window for delete multiple button
+$Name: mediator_3_1_2_branch $
+$Id: delmultdialog.html 20101 2011-03-06 16:02:15Z bhagn $ -->
+<title>Confirm Delete</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="../includes/css/global.css">
+</head>
+<body>
+<table border="0" cellpadding="0" cellspacing="0" width="250px">
+<tr height="50px">
+<script type="text/javascript">
+document.write('Do you really want to delete ' + window.dialogArguments + '?');
+</script>
+<br><br>
+</tr>
+<tr>
+<td align="center">
+<input type="button" value="Yes" onclick="sendyes()" />
+</td>
+<td align="center">
+<input type="button" value="No" onclick="sendno()" />
+</td>
+<td align="center">
+<input type="button" value="Abort" onclick="sendabort()" />
+</td>
+<td align="center">
+<input type="button" value="Yes to All" onclick="sendyestoall()" />
+</td>
+</tr>
+</table>
+</body>
+<script type="text/javascript">
+function sendyes() {
+window.returnValue = "yes";
+window.close();
+}
+function sendno() {
+window.returnValue = "no";
+window.close();
+}
+function sendabort() {
+window.returnValue = "abort";
+window.close();
+}
+function sendyestoall() {
+window.returnValue = "yestoall";
+window.close();
+}
+</script>
+</body>
+</html>

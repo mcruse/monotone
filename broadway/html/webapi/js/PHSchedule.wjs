@@ -1,0 +1,325 @@
+/*
+Purpose: PHSchedule widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: PHSchedule.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+function PHSchedule(){
+  this.base = Widget;
+  this.base();
+  this._name = 'PHSchedule';
+  this._z_index = '1000';
+  this._node = '';
+  this.node_selector_node = 'true';
+  this._schedule_prefix = 'RZSched_';
+  this._text_color = 'black';
+  this.color_selector_text_color = 'true';
+  this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+  this._text_font_size = '12px';
+  this._text_font_style = 'normal';
+  this._text_font_weight = 'normal';
+  this._widget_background_color = 'lightgrey'; //not inherited
+  this.color_selector_widget_background_color = 'true'; //not inherited
+  this._widget_padding_bottom = '5px'; //not inherited
+  this._widget_padding_left = '5px'; //not inherited
+  this._widget_padding_right = '5px'; //not inherited
+  this._widget_padding_top = '5px'; //not inherited
+  this._schedule_button_scale = '100';
+  this._schedule_button_source = '/webapi/images/schedulebtnsm.gif';
+  this._schedule_button_width = '70px';
+  this._schedule_button_height = '20px';
+ }
+
+PHSchedule.prototype = new Widget;
+
+PHSchedule.prototype.after_config_table = function() {
+  Widget_log('PHSchedule.after_config_table(), at top');
+}
+
+PHSchedule.prototype.init = function(element) {
+  Widget_log('PHSchedule.init(), at top');
+  this._name = 'PHSchedule';
+  this._z_index = element.getAttribute('zindex');
+  var outercontainer = this.get_element(element,'div','outercontainer');
+  if(outercontainer.currentStyle) {
+    this._text_color = outercontainer.currentStyle['color'];
+    this._text_font_family = outercontainer.currentStyle['fontFamily'];
+    this._text_font_size = outercontainer.currentStyle['fontSize'];
+    this._text_font_style = outercontainer.currentStyle['fontStyle'];
+    //this._text_font_weight = outercontainer.currentStyle['fontWeight'];
+    this._text_font_weight = outercontainer.style.fontWeight; // bug in IE?
+    this._widget_background_color = outercontainer.currentStyle['backgroundColor'];
+    this._widget_padding_bottom = outercontainer.currentStyle['paddingBottom'];
+    this._widget_padding_left = outercontainer.currentStyle['paddingLeft'];
+    this._widget_padding_right = outercontainer.currentStyle['paddingRight'];
+    this._widget_padding_top = outercontainer.currentStyle['paddingTop'];
+  }
+  else if(window.getComputedStyle) {
+    var compStyle = window.getComputedStyle(outercontainer,"");
+    this._text_color = compStyle.getPropertyValue('color');
+    this._text_font_family = compStyle.getPropertyValue('font-family');
+    this._text_font_size = compStyle.getPropertyValue('font-size');
+    this._text_font_style = compStyle.getPropertyValue('font-style');
+    this._text_font_weight = compStyle.getPropertyValue('font-weight');
+    this._widget_background_color = compStyle.getPropertyValue('background-color');
+    this._widget_padding_bottom = compStyle.getPropertyValue('padding-bottom');
+    this._widget_padding_left = compStyle.getPropertyValue('padding-left');
+    this._widget_padding_right = compStyle.getPropertyValue('padding-right');
+    this._widget_padding_top = compStyle.getPropertyValue('padding-top');
+  }
+  else {
+    this._text_color = 'black';
+    this._widget_background_color = 'lightgrey';
+    this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+    this._text_font_size = '12px';
+    this._text_font_style = 'normal';
+    this._text_font_weight = 'normal';
+    this._widget_padding_bottom = '5px';
+    this._widget_padding_left = '5px';
+    this._widget_padding_right = '5px';
+    this._widget_padding_top = '5px';
+  }
+  var infospan = this.get_element(element,'div','info');
+  this._schedule_button_scale = this.get_span_attr(infospan, 'schedule_button_scale');
+  this._schedule_button_source = this.get_span_attr(infospan, 'schedule_button_source');
+  this._schedule_button_width = this.get_span_attr(infospan, 'schedule_button_width');
+  this._schedule_button_height = this.get_span_attr(infospan, 'schedule_button_height');
+  this._node = this.get_span_attr(infospan, 'schedule_path');
+  this._schedule_prefix = this.get_span_attr(infospan, 'schedule_prefix');
+ }
+
+PHSchedule.prototype.init_element = function (){
+  Widget_log('PHSchedule.init_element(), at top');
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version','1_0_dev_2');
+  //this.element.setAttribute('auto_resize','false');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  //this.element.style.width = '100px';
+  this.element.style.position = 'absolute';
+  this.element.style.zIndex = this._z_index;
+
+  var outercontainer = document.createElement('div');
+  outercontainer.setAttribute('element','outercontainer');
+  outercontainer.style.position = 'relative';
+  outercontainer.style.verticalAlign = 'middle';
+  outercontainer.style.height = 'auto';
+  outercontainer.style.width = 'auto';
+  if(this._text_color != ''){
+    outercontainer.style.color = this._text_color;
+  }
+  if(this._text_font_family != ''){
+    outercontainer.style.fontFamily = this._text_font_family;
+  }  
+  if(this._text_font_size != ''){
+    outercontainer.style.fontSize = this._text_font_size;
+  }  
+  if(this._text_font_style != ''){
+    outercontainer.style.fontStyle = this._text_font_style; //inherited by children
+  }
+  if(this._text_font_weight != ''){
+    outercontainer.style.fontWeight = this._text_font_weight; //inherited by children
+  }
+  if(this._widget_background_color != ''){
+    outercontainer.style.backgroundColor = this._widget_background_color;
+  }
+  if(this._widget_padding_bottom != ''){
+    outercontainer.style.paddingBottom = this._widget_padding_bottom;
+  }  
+  if(this._widget_padding_left != ''){
+    outercontainer.style.paddingLeft = this._widget_padding_left;
+  }  
+  if(this._widget_padding_right != ''){
+    outercontainer.style.paddingRight = this._widget_padding_right;
+  }  
+  if(this._widget_padding_top != ''){
+    outercontainer.style.paddingTop = this._widget_padding_top;
+  }  
+
+  var widgettable = document.createElement('table');
+  widgettable.setAttribute('element','widgettable');
+  widgettable.setAttribute('cols', '1');
+  widgettable.setAttribute('align','center');
+  widgettable.setAttribute('cellpadding','0');
+  widgettable.setAttribute('cellspacing','8');
+  widgettable.setAttribute('width','100px');
+  widgettable.insertRow(0);
+  widgettable.insertRow(1);
+
+  //rows[0].cells[0] contains textdisplay
+  widgettable.rows[0].insertCell(0);
+  widgettable.rows[0].cells[0].align = 'center';
+  widgettable.rows[0].cells[0].setAttribute('valign','top');
+  //widgettable.rows[0].cells[0].setAttribute('height',myClrBtnHeight);
+  //widgettable.rows[0].cells[0].setAttribute('width','1px');
+
+  /*var innercontainer = document.createElement('div');
+  innercontainer.setAttribute('element','innercontainer');
+  innercontainer.style.position = 'relative';
+  innercontainer.style.verticalAlign = 'middle';
+  innercontainer.style.height = 'auto';
+  innercontainer.style.width = 'auto';
+  if(this._widget_background_color != ''){
+    innercontainer.style.backgroundColor = this._widget_background_color;
+  }
+  innercontainer.style.top = '0';
+  innercontainer.style.left = '0';
+  innercontainer.style.zIndex = '0';*/
+
+  var textdisplay = document.createElement('div');
+  textdisplay.setAttribute('element', 'textdisplay');
+  //textdisplay.style.position = 'absolute';
+  if(this._text_color != ''){
+    textdisplay.style.color = this._text_color;
+  }
+  if(this._text_font_family != ''){
+    textdisplay.style.fontFamily = this._text_font_family;
+  }  
+  if(this._text_font_size != ''){
+    textdisplay.style.fontSize = this._text_font_size;
+  }  
+  if(this._text_font_style != ''){
+    textdisplay.style.fontStyle = this._text_font_style; //inherited by children
+  }
+  if(this._text_font_weight != ''){
+    textdisplay.style.fontWeight = this._text_font_weight; //inherited by children
+  }
+  if(this._widget_background_color != ''){
+    textdisplay.style.backgroundColor = this._widget_background_color;
+  }
+  if(this._node != '') {
+    if(this._schedule_prefix != '') {
+      var myPrefixIndex = this._node.lastIndexOf(this._schedule_prefix);
+      if(myPrefixIndex != -1) {
+        textdisplay.innerHTML = this._node.substring(myPrefixIndex + this._schedule_prefix.length);
+      }
+      else {
+        textdisplay.innerHTML = 'Prefix not found!';
+      }
+    }
+    else {
+      textdisplay.innerHTML = 'Prefix not configured!';
+    }
+  }
+  else {
+    textdisplay.innerHTML = 'Schedule Editor';
+  }
+  //FIXTHIS: NN doesn't require offset to style.top
+  textdisplay.style.top = '0'; // offset for placeholder border
+  textdisplay.style.left = '0';
+  textdisplay.style.zIndex = '1';
+
+  widgettable.rows[0].cells[0].appendChild(textdisplay);
+
+  var infospan = document.createElement('div');
+  infospan.setAttribute('element','info');
+  infospan.setAttribute('type','hidden');  
+  infospan.setAttribute('schedule_button_scale', this._schedule_button_scale);
+  infospan.setAttribute('schedule_button_source', this._schedule_button_source);
+  infospan.setAttribute('schedule_button_width', this._schedule_button_width);
+  infospan.setAttribute('schedule_button_height', this._schedule_button_height);
+  infospan.setAttribute('schedule_path', this._node);
+  infospan.setAttribute('schedule_prefix', this._schedule_prefix);
+  //infospan.style.position = 'relative';
+  infospan.style.backgroundColor = 'transparent';
+  infospan.style.top = '0';
+  infospan.style.left = '0';
+  infospan.style.height = '1';
+  infospan.style.width = '1';
+  infospan.style.zIndex = '0';
+  infospan.style.visibility = 'hidden';
+  infospan.style.display = 'none';
+   
+  //rows[1].cell[0] contains schedule button
+  widgettable.rows[1].insertCell(0);
+  widgettable.rows[1].cells[0].align = 'center';
+  widgettable.rows[1].cells[0].setAttribute('valign','middle');
+
+  var schedulebtnimg = document.createElement('img');
+  schedulebtnimg.setAttribute('element','schedulebtn');
+  schedulebtnimg.setAttribute('src',this._schedule_button_source);
+  schedulebtnimg.setAttribute('alt','');
+  var myScheduleBtnWidth = Math.round(parseInt(this._schedule_button_width) * (this._schedule_button_scale / 100.0));
+  schedulebtnimg.setAttribute('width',myScheduleBtnWidth);
+  var myScheduleBtnHeight = Math.round(parseInt(this._schedule_button_height) * (this._schedule_button_scale / 100.0));
+  schedulebtnimg.setAttribute('height',myScheduleBtnHeight);
+  schedulebtnimg.setAttribute('onclick','PHScheduleBtnHandler(event)');
+
+  //widgettable.rows[1].cells[0].setAttribute('height',myScheduleBtnHeight);
+  widgettable.rows[1].cells[0].setAttribute('width',myScheduleBtnWidth);
+  widgettable.rows[1].cells[0].appendChild(schedulebtnimg);
+
+  outercontainer.appendChild(widgettable);
+  outercontainer.appendChild(infospan);
+  this.element.appendChild(outercontainer);
+}
+
+
+PHSchedule.prototype.create = function (){
+  Widget_log('PHSchedule.create(), at top');
+  //_msglog('PHSchedule.create(), arguments.length=' + arguments.length);
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function PHSchedule_factory(){
+  return new PHSchedule();
+}
+
+function PHScheduleGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e
+}
+
+function PHScheduleBtnHandler(evt) {
+  Widget_log("PHScheduleBtnHandler() entered");
+  evt = (evt) ? evt : ((event) ? event : null);
+  if(evt.detail) {
+    Widget_log("PHScheduleBtnHandler(), evt.detail=" + evt.detail);
+  }
+  var elem = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null);
+  var myWidget = elem.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode; //topmost div of PHSchedule widget
+  //alert("PHScheduleBtnHandler(), elem.parentNode.parentNode.parentNode.parentNode.parentNode,element=" + elem.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('element'));
+  Widget_log("PHScheduleBtnHandler(), myWidget id = " + myWidget.getAttribute('id'));
+  Widget_log("PHScheduleBtnHandler(), window.location.hostname = " + window.location.hostname);
+  var ielement = PHScheduleGetElement(myWidget,'div','info');
+  var mySchedulePath = ielement.getAttribute('schedule_path');
+  if(mySchedulePath == '') { //if no path specified, open full schedule editor
+    var ustring = "/webapi/psp/scheduler.psp?editmode=FULL";
+  }
+  else { //open restricted schedule editor on indicated schedule
+    var ustring = "/webapi/scheduler.htm?editmode=SAVEONLY";
+    var mySchedulePrefix = ielement.getAttribute('schedule_prefix');
+    var myLastSlash = mySchedulePath.lastIndexOf('/')
+    //ustring += "&scheduleholder=" + mySchedulePath.substring(0,myLastSlash);
+    ustring += "&scheduleholder=" + encodeURIComponent(mySchedulePath.substring(0,myLastSlash));
+    //ustring += "&scheduleprefix=" + mySchedulePrefix;
+    ustring += "&scheduleprefix=" + encodeURIComponent(mySchedulePrefix);
+    var myScheduleName = mySchedulePath.substring(myLastSlash + 1 + mySchedulePrefix.length);
+    //ustring += "&schedulename=" + myScheduleName;
+    ustring += "&schedulename=" + encodeURIComponent(myScheduleName);
+  }
+  Widget_log("PHScheduleBtnHandler(), ustring = " + ustring);
+  //alert("PHScheduleBtnHandler(), ustring = " + ustring);
+
+  var features = "resizable,scrollbars,width=880,height=700";
+
+  var objWin = window.open(ustring, "scheduler" + myWidget.getAttribute('id'), features);
+
+  objWin.focus();
+}
+
+var PHSchedule_loaded = true;

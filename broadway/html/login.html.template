@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- envenergy_file_info/property: 'upgradeable' = 'yes' -->
+<!-- envenergy_file_info/property: 'user_modifiable' = 'yes' -->
+<HTML>
+<TITLE>Mediator - Login</TITLE>
+<link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+<style type="text/css">
+<!--
+.login_button {font-size:20px;}
+.login_label{font-size:18px;font-weight:bold;}
+.highlight_label{font-size:18px;font-weight:bold;color:#ff0000}
+.msg{color:009900; }
+.error{color:ff0000; }
+-->
+</style>
+<BODY>
+<table width="800">
+  <tr>
+    <td align="center"> 
+       <img border=0 src="images/logo.png" width="292" height="237">
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <div class="env_header">
+        <BR>Mediator Operating Environment %s
+        <BR>Mediator Framework (tm) %s
+        <BR>Copyright (c) 2005 Encorp, Inc.
+        <BR>Serial number %s
+        %s
+      </div>
+      <BR><HR>
+      <form name="login_frm" action="login" method="post">
+      <table width="800" border="0" cellspacing="0" cellpadding="0">
+      <tr>
+        <td align="center" valign="top"> 
+          <table width="400" border="0" cellspacing="0" cellpadding="5">
+            <tr align="left"> 
+              <td valign="middle" colspan="3" >$$MSG$$</td>
+            </tr>
+            <tr> 
+              <td align="right" valign="middle" width="100" class="$$LOGIN_LABEL_CLS$$" >Username: </td>
+              <td align="left" valign="middle" width="150"> 
+                <input type="text" name="uname"  value="$$USERNAME$$">
+              </td>
+              <td class="login_box">&nbsp;</td>
+            </tr>
+            <tr> 
+              <td align="right" valign="middle" width="100" class="$$LOGIN_LABEL_CLS$$" >Password: </td>
+              <td align="left" valign="middle" width="150"> 
+                <input type="password" name="pword"   value="$$PASSWORD$$">
+              </td>
+              <td> 
+                <input type="submit" class="login_button" value="Login" name="submit">
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+    </form>
+    <p></P>
+  </td>
+</tr>
+</table> 
+</BODY>
+</HTML>

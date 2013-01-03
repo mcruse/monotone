@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!ELEMENT mpxconfig (node)>
+<!ATTLIST mpxconfig
+	node_version CDATA #IMPLIED
+>
+
+<!ELEMENT node (config?, node*)>
+<!ATTLIST node
+	name CDATA #REQUIRED
+	node_id CDATA #REQUIRED
+	module CDATA #IMPLIED
+	config_builder CDATA #IMPLIED
+	inherant (true | false) "false"
+	description CDATA #IMPLIED
+>
+	
+<!ELEMENT config (property*)>
+
+<!ELEMENT property (list?)>
+<!ATTLIST property
+	name CDATA #REQUIRED
+	value CDATA #IMPLIED
+>
+
+<!ELEMENT list (dictionary?)>
+
+<!ELEMENT dictionary (property*)>
+

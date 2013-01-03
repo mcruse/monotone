@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+#-*-Shell-Script-*- Hint to [X]Emacs on colorization, etc...
+#
+# Link any *.pyc file to this file and the link is referencable as a command
+# line program.
+#
+
+exec python-mpx $0.pyc $*

@@ -1,0 +1,51 @@
+#!/bin/bash
+#
+# Convert MIB text into PySNMP-compilant MIB/managed objects module.
+# See http://pysnmp.sf.net for more information.
+#
+
+
+libsmi2pysnmp=$(dirname $0)/libsmi2pysnmp  # part of pysnmp distro
+SMIDUMP="SMIPATH=/opt/riptide/devtools/libsmi-0.4.8/share/mibs/ietf:$(dirname $0)/ \
+	 LD_LIBRARY_PATH=/opt/riptide/devtools/libsmi-0.4.8/lib \
+	 /opt/riptide/devtools/libsmi-0.4.8/bin/smidump"
+
+while getopts o: o
+  do case "$o" in
+  o) exec 5>"$OPTARG" 1>&5 || { echo >&2 "Redirection failed"; exit 1; } ;;
+  [?]) echo >&2 "\
+Convert MIB text file into PySNMP-compliant module, see http://pysnmp.sf.net.
+Usage: $0 [-o pysnmp-mib-file ] [ mib-text-file ]\
+"
+  exit 1;;
+  esac
+done
+
+mibPyFile=$2;
+shift $((OPTIND-1))
+
+[ $# -gt 1 ] && { echo >&2 "Extra arguments given"; exit 1; }
+
+[ -z $1 ] && { mibFile="-"; } || { 
+    mibFile=$1;
+}        
+
+#the following lines are used to find out if the mib is old or new, a useful query may be required in the future.
+egrep -q 'FROM *RFC' $mibFile 2> /dev/null && ! egrep -q 'FROM *SNMPv2-' $mibFile 2> /dev/null && { oldMib='yes'; } || {
+    [ $? -eq 1 ] && { oldMib='no'; } || {
+        echo >&2 "cant open $mibFile";
+        exit 1;
+    }
+}
+tmpFile1=/tmp/buildmibs1.$$
+tmpFile2=/tmp/buildmibs2.$$
+echo >&2 "the MIB file name in text format is:"
+echo >&2 $mibFile
+echo >&2 "the name of compiled MIB file in python is:"
+echo >&2 $mibPyFile
+eval $SMIDUMP -k -f smiv2 $mibFile > $tmpFile1;
+eval $SMIDUMP -f python -k $tmpFile1 > $tmpFile2;
+cat $tmpFile2 | $libsmi2pysnmp >$mibPyFile; #} || {
+rm -f $tmpFile1
+rm -f $tmpFile2
+exit

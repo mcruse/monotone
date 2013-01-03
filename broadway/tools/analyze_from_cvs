@@ -1,0 +1,22 @@
+#!/bin/bash
+set -xv # Debug (Enabled for cron jobs!)
+# @fixme Set properties file?
+# @fixme Make into a much more useful command.
+# @fixme Support command line options. (--help, --properties=, --mail-results=,
+#                                       --debug, --verbosity=, etc...)
+export # Debug (Enabled for cron jobs!)
+TMPDIR=/tmp/$$
+mkdir ${TMPDIR} || exit 1
+BAILSCRIPT="(cd /tmp ; rm -rf ${TMPDIR} ; exit 1) || exit 1"
+cd ${TMPDIR} || eval ${BAILSCRIPT}
+export # Debug (Enabled for cron jobs!)
+cvs co mediator || eval ${BAILSCRIPT}
+cd mediator/configtool/build || eval ${BAILSCRIPT}
+./build || eval ${BAILSCRIPT}
+cd ../../broadway || eval ${BAILSCRIPT}
+source tools/penvironment.rc  || eval ${BAILSCRIPT}
+./compileall || eval ${BAILSCRIPT}
+./tools/pychecker_lint . # @fixme Update wrappers are created...
+cd /tmp
+rm -rf ${TMPDIR}
+exit 0

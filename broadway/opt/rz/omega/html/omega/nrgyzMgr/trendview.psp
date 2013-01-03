@@ -1,0 +1,130 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<meta http-equiv="CACHE-CONTROL" content="no-cache" />
+<meta http-equiv="EXPIRES" content="0" />
+<head>
+<!-- Copyright (c) 2005 Richards-Zeta -->
+<!-- $Name: mediator_3_1_2_branch $ -->
+<!-- $Id: trendview.psp 20101 2011-03-06 16:02:15Z bhagn $ -->
+<style type="text/css">
+<!--
+body {
+        background-color: #CCCCCC;
+}
+-->
+</style>
+</head>
+<script type="text/javascript">
+<%
+import os
+from mpx.lib.node import as_node
+from mpx.lib.http import MultipartCollector
+
+m = MultipartCollector(request)
+mkeys = m.keys()
+
+def get_ew_manager():
+    ew = None
+    for child in as_node('/services').children_nodes():
+        if isinstance(child, EnergywiseManager):
+            ew = child
+            break
+    return ew
+%>
+
+function getEnergywiseTrendFromMediator()
+{
+var tableRef = window.document.getElementById("viewtableid");
+var numRows = tableRef.rows.length;
+var count = 1;
+while(count < numRows)
+{
+  tableRef.deleteRow(count);
+  count += 1;
+}
+<%
+EnergywiseManagerNode = get_ew_manager()
+trends_list = []
+if EnergywiseManagerNode:
+    trends_list = EnergywiseManagerNode.get_trends()
+row = 1
+if trends_list:
+    for trend_name, trend_period in trends_list:
+        psp.write("var input = window.document.createElement(\"input\");\n")
+        psp.write("var input1 = window.document.createElement(\"input\");\n")
+        psp.write("newRow = tableRef.insertRow(" + str(row) + ");\n")
+        rowstr = "viewtrendrow" + str(row)
+        psp.write("newRow.id = \"" + str(rowstr) + "\";\n")
+        psp.write("newcell1 = newRow.insertCell(0);\n")
+        psp.write("newcell2 = newRow.insertCell(1);\n")
+        psp.write("input.type = \"text\";\n")
+        inputstr = rowstr + "input1"
+        psp.write("input.id = \"" + str(inputstr) + "\";\n") 
+        psp.write("input.value = \"" + str(trend_period) + "\";\n")
+        psp.write("input1.type = \"text\";\n")
+        input1str = rowstr + "input2"
+        psp.write("input1.id = \"" + str(input1str) + "\";\n") 
+        psp.write("input1.value = \"" + str(trend_name) + "\";\n")
+        psp.write("newcell1.appendChild(input);\n")
+        psp.write("newcell2.appendChild(input1);\n")
+        psp.write("newRow.onclick = function() { this.style.background = \" yellow \"; } ; \n")
+        psp.write("newRow.ondblclick = function() { this.style.background = \" white \"; } ; \n")
+        row +=1
+%>
+}
+<%
+def deleteTrends():
+    EnergywiseManagerNode = get_ew_manager()
+    localList = str(m['postviewtrend'].value)
+    size = 0
+    size = localList.count(':')
+    if size > 0:
+        EnergywiseManagerNode.delete_trends(localList)
+    psp.write("window.close();\n")
+
+if 'postviewtrend' in mkeys and get_ew_manager():
+    deleteTrends()
+
+%>
+function deleteTrendConfig()
+{
+   var tableref = document.getElementById("viewtableid");
+   var numRows = tableref.rows.length; 
+   var count = 1;
+   var result = '';
+   var separator = ':';
+   while (count < numRows)
+   {
+       var rowId = "viewtrendrow" + count.toString();
+       var currRow = document.getElementById(rowId);
+       if (currRow.style.background == "yellow")
+       {
+           var freqId = "viewtrendrow" + count.toString() + "input1";
+           var freq = document.getElementById(freqId);
+           var domainId = "viewtrendrow" + count.toString() + "input2";
+           var domain = document.getElementById(domainId);
+           result += domain.value;
+           result += separator;
+       }
+       count += 1;
+   }
+var hiddenfield = document.getElementById("postviewtrend");
+hiddenfield.value = result;
+
+}
+</script>
+<body onload = "getEnergywiseTrendFromMediator()"  >
+<form action="trendview.psp" method="post" enctype="multipart/form-data" name="trendConfigForm">
+<table id="viewtableid" name="viewtableid" border="1" cellpadding=2>
+<tr>
+<th align="center" style="width:7.6em">
+Frequency </th>
+<th align="center" style="width:10em">
+Energywise Domain </th>
+</tr>
+</table>
+<input type="submit"  value="Delete" onclick="deleteTrendConfig()" >
+<input type="hidden" name="postviewtrend" id = "postviewtrend" value = "">
+</form>
+</body>
+</html>

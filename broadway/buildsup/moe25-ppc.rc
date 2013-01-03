@@ -1,0 +1,71 @@
+#
+# Resource file for specifying tools for a MOE2-type build (use devtools 2.0).
+#
+# Remarks:
+#   ac_XXX variables are intended as an intermediate resource for configure.
+#   This is because autoconf is pretty particular about how it looks for non-
+#   traditional programs (as opposed to the standard 'CC' and 'CXX').  In
+#   order to detect and use the correct programs that support the toolchain
+#   we want we have to do a little black magic in the configure script.  Sorry
+#   about the extra warts.
+#
+#   ENVENERGY_DT_HOME, JAVA_HOME, and ANT_HOME are Envenergy-required
+#   environment variables.
+#
+#   CC is the de-facto way to call out an alternate C compiler.
+#
+
+echo "
+  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+  Error: moe25-ppc is intened for cross-compiling and is not yet implemented
+
+  Please use moe25-megatron and build on Megatron hardware.
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+"
+exit 1
+
+PYTHON_VER="2.5"
+PYTHON_PREFIX="/opt/moe25/usr"
+PYTHON_EXEC_PREFIX="${PYTHON_PREFIX}"
+PYTHON_LIB="${PYTHON_EXEC_PREFIX}/lib/python${PYTHON_VER}"
+PYTHON_INC="${PYTHON_EXEC_PREFIX}/include/python${PYTHON_VER}"
+PYTHON="${PYTHON_EXEC_PREFIX}/bin/python${PYTHON_VER}"
+PYTHONHOME="${PYTHON_PREFIX}:${PYTHON_EXEC_PREFIX}"
+PYTHONPATH="@BUILD_DIR@"
+
+ENVENERGY_DT_HOME="/usr"
+
+INCLUDES="-I/usr/include"
+INCLUDES="-I/opt/moe25/usr/include"
+INCLUDES="$INCLUDES -I${PYTHON_INC}"
+#INCLUDES="$INCLUDES -I/opt/riptide/devtools/libsmi-0.4.8/include"
+#INCLUDES="$INCLUDES -I/opt/envenergy/devtools/2.0/x86/linux-2.4.21/include"
+#INCLUDES="$INCLUDES -I/opt/envenergy/devtools/2.0/x86/include"
+PROCESSOR_FAMILY="ppc"
+
+CC="gcc"
+CXX="g++"
+
+LDFLAGS="-L/opt/moe25/usr/lib"
+
+ac_toolchain_dir="/usr/bin"
+ac_AR="ar"
+ac_LD="ld"
+ac_NM="nm"
+ac_M4="m4"
+ac_RANLIB="ranlib"
+ac_STRIP="strip"
+
+AUTOMAKE="automake-1.7"
+AUTOCONF="autoconf"
+AUTOHEADER="autoheader"
+ACLOCAL="aclocal-1.7"
+
+#JAVA_HOME="/opt/envenergy/devtools/3.0/java/j2sdk1.4.1_02"
+JAVA_HOME="/usr/lib/jvm/java-1.6.0"
+JAVACMD="${JAVA_HOME}/bin/java"
+ANT_HOME="/opt/envenergy/devtools/3.0/ant"
+
+# Local Variables:
+# mode:shell-script
+# End:

@@ -1,0 +1,171 @@
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+         width="100%" horizontalGap="-2"
+         horizontalAlign="left" verticalAlign="middle"
+         horizontalScrollPolicy="off"
+         verticalScrollPolicy="off" doubleClick="showEditor()" keyDown="onKeyDown(event)"
+         backgroundColor="{ invalid ? 0xF35000:0xFFFF99}" backgroundAlpha="{currentvalue != ovalue ? 1:0}">
+    
+    <mx:Script>
+        <![CDATA[
+        
+            import mx.controls.listClasses.ListData;
+            import mx.controls.dataGridClasses.DataGridListData;
+            import mx.controls.listClasses.BaseListData;
+            import mx.controls.DataGrid;
+            import mx.events.FlexEvent;
+            import mx.collections.ArrayCollection;
+            import com.cisco.nbm.globalsetpoints.SetpointDatatype;
+            import mx.controls.Alert
+			
+            [Bindable]
+            private var comboData:ArrayCollection = new ArrayCollection();
+            //private var comboData:Object = new Object();
+			
+			[Bindable]
+            private var max:Number;
+            
+            [Bindable]
+            private var min:Number;
+            
+            [Bindable]
+            private var numericValue:Number;
+            
+            [Bindable]
+            private var comboSelectedindex:Number = 0;
+            
+            [Bindable]
+            public var currentvalue:String;
+            
+            public var alertMessage:String;
+            
+            [Bindable]
+            private var ovalue:String; // Original value
+            
+            [Bindable]
+            public var invalid:Boolean;
+            
+			override public function set data(value:Object):void
+			{
+				if(value != null)
+				{
+					if(value.ovalue == undefined) value.ovalue = value.value;
+					super.data = value;
+					currentvalue = value.value;
+					ovalue = value.ovalue;
+					
+					if(value.data_type[SetpointDatatype.ENUMERATED]!= null ){
+						comboData = new ArrayCollection();
+						for(var i in value.data_type[SetpointDatatype.ENUMERATED]){
+							comboData.addItem({'label':i, 'data':value.data_type[SetpointDatatype.ENUMERATED][i]});
+						}
+						inputswitcher.selectedIndex = 2;
+					} else if(value.data_type[SetpointDatatype.NUMERIC]!= null){
+						inputswitcher.selectedIndex = 1;
+						max = undefined;
+						min = undefined;
+						if(!isNaN(Number(value.data_type[SetpointDatatype.NUMERIC]['max']))){
+							max = Number(value.data_type[SetpointDatatype.NUMERIC]['max']);
+						}
+						if(!isNaN(Number(value.data_type[SetpointDatatype.NUMERIC]['min']))){
+							min = Number(value.data_type[SetpointDatatype.NUMERIC]['min']);
+						}
+					} else {
+						inputswitcher.selectedIndex = 0;
+					}
+				}
+				validateValue();
+			}
+            
+            override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void
+			{
+				super.updateDisplayList(unscaledWidth, unscaledHeight);
+				//if(!this.hitTestObject(editSwitcher)) hideEditor();
+		        if(comboBox)
+		        {
+		        	for(var i:int=0; i<comboData.length; i++){
+						if(currentvalue == comboData[i].data){
+							comboSelectedindex = i;
+							break;
+						}
+					}
+		        	comboBox.selectedIndex = comboSelectedindex;
+				}
+			}
+			
+			// Validation
+			private function validateValue():void{
+				if(inputTextField.text == "" || inputTextField.text == null || inputTextField.text == undefined){
+					alertMessage = "Value cannot be empty.\n";
+					invalid = true;
+					alertIcon.toolTip = alertMessage;
+				} else {
+					invalid = false;
+				}
+			}
+			
+			// Show Editor
+			private function showEditor():void{
+				editSwitcher.selectedIndex = 1;
+				if(inputswitcher.selectedIndex == 2){
+					comboBox.setFocus();
+				} else if(inputswitcher.selectedIndex == 1){
+					numericStepper.setFocus();
+				} else {
+					inputTextField.setFocus();
+				}
+			}
+			
+			// hide Editor
+			private function hideEditor():void{
+				editSwitcher.selectedIndex = 0;
+			}
+			
+			private function onKeyDown(evt:KeyboardEvent):void {
+                if (evt.charCode == Keyboard.ESCAPE) {
+                	currentvalue = ovalue;
+                    hideEditor();
+                }
+            }
+        ]]>
+    </mx:Script>
+    
+    <!-- Alert icon -->
+    <mx:HBox id="alertIcon" horizontalAlign="center" verticalAlign="middle" horizontalGap="0" width="{invalid ? 30 : 0}" visible="{invalid}" showEffect="Fade" hideEffect="Fade" resizeEffect="Resize">
+	        <mx:Spacer/>
+	        <mx:Image  source="@Embed('/assets/icons/alert_major_2001_16.png')" horizontalAlign="center" verticalAlign="middle"/>
+	    </mx:HBox>
+    <mx:ViewStack id="editSwitcher" selectedIndex="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" width="100%" height="100%" creationPolicy="all">
+    
+    <!-- DISPLAY -->
+    <mx:HBox paddingLeft="10"  showEffect="Fade">
+    	<mx:Label text="{inputswitcher.selectedIndex == 2 ? comboBox.selectedItem.label:currentvalue}" width="100%" fontWeight="bold" fontSize="11"/>
+	</mx:HBox>
+    
+    <!-- EDITOR -->
+    <mx:HBox horizontalGap="-2" showEffect="Fade" hideEffect="Fade">
+    <mx:ViewStack id="inputswitcher" selectedIndex="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" paddingLeft="10" width="100%" height="100%" click="showEditor();">
+    	<!-- Simple Text -->
+    	<mx:Canvas id="textInput">
+    		<mx:TextInput id="inputTextField" text="{currentvalue}" change="currentvalue = inputTextField.text;"
+    			focusOut="validateValue(); hideEditor();"/>
+	    </mx:Canvas>
+	    
+	    <!-- Numeric Stepper -->
+    	<mx:Canvas id="Numeric" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+    		<mx:HBox verticalAlign="middle">
+		        <mx:NumericStepper id="numericStepper" value="{Number(currentvalue)}" maximum="{max}" minimum="{min}"
+		        	 change="currentvalue = numericStepper.value.toString();" keyUp="currentvalue = numericStepper.value.toString();" stepSize=".1" focusOut=" currentvalue= numericStepper.value.toString(); hideEditor();"/>
+		        <mx:HSlider id="hSlider" value="{Number(currentvalue)}" visible="{!isNaN(max+min)}" maximum="{numericStepper.maximum}" minimum="{numericStepper.minimum}"
+		        	change="currentvalue = hSlider.value.toString()" snapInterval=".1" focusOut="hideEditor();" focusIn="showEditor();"/>
+		    </mx:HBox>
+	    </mx:Canvas>
+	    
+	    <!-- Drop Down -->
+    	<mx:Canvas id="DropDown">
+    		<mx:ComboBox id="comboBox" dataProvider="{comboData}" change="currentvalue = comboBox.selectedItem.data" focusOut="validateValue(); hideEditor();" />
+	    </mx:Canvas>
+	</mx:ViewStack>
+	</mx:HBox>
+	
+	</mx:ViewStack>
+</mx:HBox>

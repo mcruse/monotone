@@ -1,0 +1,127 @@
+--
+-- **********************************************************************
+-- *        Panduit Corp. Structure of Management Information      	*
+-- *                                                               	*
+-- *        December 2004, Robert Wilcox				*
+-- *                                                               	*
+-- *        Copyright (c) 2004, Panduit Corp.                      	*
+-- *        All Rights Reserved.                                   	*
+-- *        Panduit Corp., Tinley Park, IL 60477-3091              	*
+-- **********************************************************************
+--
+
+PANDUIT-REG DEFINITIONS ::= BEGIN
+
+IMPORTS
+	MODULE-IDENTITY,
+	OBJECT-IDENTITY,
+	enterprises
+			FROM SNMPv2-SMI;
+
+panduit MODULE-IDENTITY
+        LAST-UPDATED    "200504270000Z"        
+        ORGANIZATION    "Panduit Corp."
+        CONTACT-INFO
+                "       Panduit Corp.
+                        Network Connectivity Group
+
+                Postal: Panduit Corp.
+                        17301 Ridgeland Avenue
+                        Tinley Park, IL 60477-3091
+                        USA
+
+                   Tel: +1 708 532-1800/888-506-5400
+
+                E-mail: info@panduit.com"
+
+        DESCRIPTION
+                        "The structure of Management information for the Panduit Enterprise."
+
+        REVISION        "200501030000Z"         
+        DESCRIPTION
+                        "Initial version of this MIB module."
+
+        REVISION        "200504270000Z"         
+        DESCRIPTION
+                        "Added panduitApps and panduitProdOutlet"
+         ::= { enterprises 19536 }
+
+--
+--
+--                      Registrations
+--
+panduitRegistration OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Subtrees for Panduit product registrations."
+        ::= { panduit 1 }
+
+--
+--                      Products
+--
+panduitProducts OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Subtrees for all Panduit products."
+        ::= { panduit 3 }
+
+panduitProdPanel OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Subtrees for Panel products."
+        ::= { panduitProducts 1 }
+
+panduitProdOutlet OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Subtrees for Outlet products."
+        ::= { panduitProducts 2 }
+
+--
+--                      Capabilities
+--
+panduitCapabilities OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Subtrees for Panduit agent profiles."
+        ::= { panduit 4 }
+
+--
+--                      Requirements
+--
+panduitRequirements OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Subtrees for Panduit application
+                 specific requirements."
+        ::= { panduit 5 }
+
+--
+--                      Experimental
+--
+panduitExperimental OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "panduitExperimental provides a root object identifier 
+		from which experimental MIBs may be temporarily based.
+		MIBs placed here are Panduit work-in-process MIBs which
+		have not been assigned a permanent object identifier.
+
+		NOTE WELL: There is no support for MIBs in the panduitExperimental 
+		subtree.  MIBs may be assigned permanent object identifiers
+		and deleted from the panduitExperimental subtree or simply
+		deleted."
+
+        ::= { panduit 6 }
+
+panduitApps OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "panduitApps provides a root object identifier 
+		from which all application-based MIBs may be placed.
+		This allows these MIBs to be re-used across products and 
+		product lines." 
+
+        ::= { panduit 7 }
+
+END	--PANDUIT-SMI

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cisco:EntityViewerWidgetApp
+	xmlns:cisco="com.cisco.nbm.entityviewer.*"
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="vertical"
+	horizontalAlign="left"
+	paddingBottom="3" paddingLeft="3" paddingRight="3" paddingTop="3" 
+	>
+	<mx:Style source="kubrick.css" />
+	<mx:Style>
+		.entityNameStyle
+		{
+			font-weight: bold;
+			font-size: 16;
+		}
+		
+		.sectionLabel
+		{
+			font-weight: bold;
+			font-size: 20;
+		} 
+	</mx:Style>
+	<mx:Script>
+		<![CDATA[
+			import mx.utils.StringUtil;
+			import com.cisco.nbm.entities.EntityProperty;
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]
+			private var alarms:ArrayCollection = new ArrayCollection();
+			
+			override protected function init():void
+			{
+				alarms.filterFunction = filterAlarms;
+				alarms.refresh();
+			}
+			
+			private function filterAlarms(item:EntityProperty):Boolean
+			{
+				return item.type.toLowerCase() == "alarm";
+			}
+			
+			private function handleAlarmDoubleClicked():void
+			{
+				var item:EntityProperty = gridAlarms.selectedItem as EntityProperty;
+				
+				logger.debug("selected alarm: " + item);
+				ExternalInterface.call("launchAlarmViewer", item.name);
+			}
+			
+			
+			override protected function customizeBrowserBridge():void
+			{
+				if (initialSelectedEntity != null && initialSelectedEntity.length != 0)
+				{
+					//logger.debug("Showing entity: " + initialSelectedEntity);
+					tiEntityPath.text = initialSelectedEntity;
+				}
+			}
+			
+			override protected function enableDebug():void
+			{
+				super.enableDebug();
+				debugBox.visible = true;
+				debugBox.height = debugBox.measuredHeight;
+			}
+			
+			override protected function getLoggerName():String
+			{
+				return "cisco.nbm.widgets.entityAlarmViewer";
+			}
+			
+			override protected function entityPropertiesLoaded():void
+			{
+				super.entityPropertiesLoaded();
+				updateControls();
+			}
+			
+			override protected function entitySelected():void
+			{
+				super.entitySelected();
+				
+				tiEntityPath.text = entity.path;//entityId;
+				
+				updateControls();
+			}
+			
+			private function updateControls():void
+			{
+				labelEntityName.text = entity.label;
+				
+				if (entity.propertiesLoaded)
+				{
+					alarms.list = entity.properties;
+					alarms.refresh();					
+				}
+			}
+		]]>
+	</mx:Script>
+	<mx:Label styleName="entityNameStyle" id="labelEntityName" />
+	<mx:HBox id="debugBox" width="100%" 
+		height="0"
+		verticalAlign="middle" visible="false"
+		styleName="debugBox"
+		>
+		<mx:Label text="Entity Path" />
+		<mx:TextInput width="200" id="tiEntityPath" text="{Globals.INITIAL_ENTITY_PATH}"  />
+		<mx:Button label="Load" click="debugLoadEntity(tiEntityPath.text)" 
+			enabled="{StringUtil.trim(tiEntityPath.text).length != 0 &amp;&amp; ready}" 
+			/>
+	</mx:HBox>
+	<mx:AdvancedDataGrid id="gridAlarms" width="100%" dataProvider="{alarms}"
+		doubleClick="handleAlarmDoubleClicked()">
+		<mx:columns>
+			<mx:AdvancedDataGridColumn headerText="Name" dataField="name" width="100" />
+			<mx:AdvancedDataGridColumn headerText="Label" dataField="label" width="150" />
+			<mx:AdvancedDataGridColumn headerText="Description" dataField="description" />
+		</mx:columns>
+	</mx:AdvancedDataGrid>
+	<mx:HBox width="100%">
+		<mx:Button label="View" enabled="{gridAlarms.selectedItem != null}" click="handleAlarmDoubleClicked()" />
+	</mx:HBox>
+	
+</cisco:EntityViewerWidgetApp>

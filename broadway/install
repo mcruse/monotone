@@ -1,0 +1,25 @@
+#!/bin/bash
+#-*-Shell-Script-*- Hint to [X]Emacs on colorization, etc...
+
+#install must only be run from runlevel 2. 
+level=`runlevel |awk '{print $2}' 2>&1`
+if [ $level -ne 2 ]
+	then echo "Not in runlevel 2. Run "init 2" before install"
+else
+	# Update tools/python-mpx to set up PYTHONPATH for the installed directory.
+	set -e
+	_proot=$(cd $(dirname $0) && pwd)
+	cd ${_proot}
+	[ -e tools/python-mpx ]
+	_tmp=tools/python-mpx.$$
+	grep -v MARKER tools/python-mpx >${_tmp}
+	echo "export PYTHONPATH='${_proot}' # PYTHONPATH-MARKER" >>${_tmp}
+	grep PYTHONEXEC-MARKER tools/python-mpx >>${_tmp}
+	chmod a+x ${_tmp}
+	rm -rf tools/python-mpx.bak
+	mv tools/python-mpx tools/python-mpx.bak
+	mv ${_tmp} tools/python-mpx
+	set +e
+	
+	exec tools/python-mpx install.pyc "$@"
+fi

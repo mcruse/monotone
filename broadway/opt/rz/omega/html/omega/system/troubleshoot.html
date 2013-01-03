@@ -1,0 +1,144 @@
+<!--
+Copyright (C) 2009 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Cache-Control" content="no-store">
+<meta http-equiv="Pragma" content="no-cache">
+<link rel="stylesheet" href="/public/styles/page.css" type="text/css">
+<link rel="stylesheet" href="/public/styles/tabs1.css" type="text/css">
+<link rel="stylesheet" href="/public/styles/tabs2.css" type="text/css">
+<link rel="stylesheet" href="/public/styles/navtabs.css" type="text/css">
+<link rel="stylesheet" href="/public/styles/navigation.css" type="text/css">
+
+
+
+<link rel="stylesheet" type="text/css" href="includes/msglog.css">
+<script src="includes/msglog.js">
+<script language="javascript" src="includes/functions.js"></script>
+<SCRIPT 
+src="../includes/js/global.js" 
+type=text/javascript></SCRIPT>
+<title>Cisco Network Building Mediator</title>
+</head>
+    <body class="kubrick tundra">
+        <div id="background">
+            <img src="/public/images/pageBackground.jpg" />
+        </div>
+        <div id="header">
+            <h1 class="title">Network Building Mediator</h1>
+            <ul class="actions">
+                <li><a href="">About</a></li>
+                <li>
+                    <a id="logout" href="/logout">
+                        Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="primary-tabs">
+            <img class="left-side" src="/public/images/primary_tabs_left.png" />        
+            <ul class="tabs">
+                <li class="tab-button">
+                    <a href="/index.html">
+                        <img class="prefix" src="/public/images/transparent.png" />
+                        Home
+                        <img class="suffix" src="/public/images/transparent.png" />
+                    </a>
+                </li>
+                <li class="tab-button">
+                    <a href="/events.html">
+                        <img class="prefix" src="/public/images/transparent.png" />
+                        Events
+                        <img class="suffix" src="/public/images/transparent.png" />
+                    </a>
+                </li>
+                <li class="tab-button">
+                    <a href="/trends.html">
+                        <img class="prefix" src="/public/images/transparent.png" />
+                        Trends
+                        <img class="suffix" src="/public/images/transparent.png" />
+                    </a>
+                </li>
+                <li class="tab-button">
+                    <a href="/schedules.html">
+                        <img class="prefix" src="/public/images/transparent.png" />
+                        Schedules
+                        <img class="suffix" src="/public/images/transparent.png" />
+                    </a>
+                </li>
+                <li class="tab-button">
+                    <a href="/security.html">
+                        <img class="prefix" src="/public/images/transparent.png" />
+                        Security
+                        <img class="suffix" src="/public/images/transparent.png" />
+                    </a>
+                </li>
+                <li class="tab-button">
+                    <a href="/nodes.html">
+                        <img class="prefix" src="/public/images/transparent.png" />
+                        Nodes
+                        <img class="suffix" src="/public/images/transparent.png" />
+                    </a>
+                </li>
+                <li class="tab-button">
+                    <a href="/system.html">
+                        <img class="prefix" src="/public/images/transparent.png" />
+                        System
+                        <img class="suffix" src="/public/images/transparent.png" />
+                    </a>
+                </li>
+           <li class="tab-button">
+                    <a href="/omega/webexpress/">
+                        <img class="prefix" src="/public/images/transparent.png" />
+                        WebExpress
+                        <img class="suffix" src="/public/images/transparent.png" />
+                    </a>
+                </li>
+            </ul>
+            <img class="right-side" src="/public/images/primary_tabs_right.png" />
+        </div>
+        <div id="stage">
+            <div class="pane" id="navigation" align="center"  >
+                <iframe src="/webapi/psp/mediatorname.psp" name="nameframe" marginwidth="0" marginheight="0" scrolling="no" frameborder="0" width=100% height=55 vspace=8>
+                 </iframe>
+				  
+            </div>        
+            <div id="contentarea" class="pane"  >            
+				<IFRAME id=msglogframe name=msglogframe marginWidth=0 marginHeight=0 src="/omega/system/msglog.html" frameBorder=0 width=99% height=715 >
+                </IFRAME>
+            </div>
+        </div>
+        <div id="footer">Cisco Network Building Mediator &copy; 2005-2011</div>
+    </body>
+</html>

@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:components="com.cisco.ui.components.*"
+	creationComplete="init()" 
+	width="100%" height="100%" 
+	xmlns:entities="com.cisco.nbm.entities.*">
+	<mx:Script>
+		<![CDATA[
+			import mx.events.PropertyChangeEvent;
+			import mx.controls.CheckBox;
+			import mx.utils.StringUtil;
+			import mx.events.CollectionEventKind;
+			import mx.events.CollectionEvent;
+			import com.cisco.nbm.entities.Entity;
+			import com.cisco.nbm.entities.EntityProperty;
+			import mx.collections.ArrayCollection;
+			import com.cisco.nbm.entities.EntityManager;
+			
+			private var _entityManager:EntityManager;
+			
+			//private var _properties:ArrayCollection /* of EntityProperty */;
+			private var _propertyWrapper:PropertyCollectionWrapper = new PropertyCollectionWrapper();
+			
+			private var selectedEntity:Entity;
+			
+			//public var selectedItems:ArrayCollection = new ArrayCollection();
+			
+			private var _initialSelection:ArrayCollection = new ArrayCollection();
+			
+			private var _disabled:ArrayCollection = new ArrayCollection();
+			
+			public var hideNullCannonicalPaths:Boolean;
+			
+			private var _entityRoot:String;
+			
+			private function init():void
+			{
+				updateEditors();
+				_propertyWrapper.addEventListener(CollectionEvent.COLLECTION_CHANGE, handleWrapperChange);
+			}
+			
+			public function get selectedItems():Array
+			{
+				return _initialSelection.source;
+			}
+			
+			public function destroy():void
+			{
+				_propertyWrapper.destroy();
+			}
+			
+			public function set entityRoot(value:String):void
+			{
+				_entityRoot = value;
+				
+				updateEditors();
+			}
+			
+			public function set initialSelection(value:Array):void
+			{
+				if (_initialSelection.source != value)
+				{
+					
+					_initialSelection.source = value;
+					_initialSelection.refresh();
+					
+					updateSelected();
+				}
+			}
+			
+			// Set disabled entity list
+			public function set disabled(value:Array):void
+			{
+				if (_disabled.source != value)
+				{
+					_disabled.source = value;
+					_disabled.refresh();
+					//updateSelected();
+				}
+			}
+			
+			public function set entityManager(value:EntityManager):void
+			{
+				if (value != _entityManager)
+				{
+					//_propertyWrapper.properties = //selectedEntity.properties;
+					if (_entityManager != null)
+					{
+						//_entityManager.entities.removeEventListener(CollectionEvent.COLLECTION_CHANGE, handleCollectionChange);
+					}
+					_entityManager = value;
+					
+					
+					if (_entityManager != null)
+					{
+						//_entityManager.entities.addEventListener(CollectionEvent.COLLECTION_CHANGE, handleCollectionChange);
+					}
+					
+					updateProperties();
+					updateEditors();
+					updateSelected();
+				}
+			}
+			
+			private var loadedEntities:Boolean = false;
+			
+			private function filterOutputs(item:EntityProperty):Boolean
+			{
+				if (item.type.toLowerCase().indexOf("output") != -1)
+				{
+					return true;
+				}
+				return false;
+			}
+			
+			public function updateEditors():void
+			{
+				if (!loadedEntities && _entityManager != null && _entityRoot != null)
+				{
+					loadedEntities = true;
+					//debugGrid.dataProvider = _entityManager.getEntitiesAt(_entityRoot);
+					//hdSource.source = _entityManager.entities;//getEntitiesAt(_entityRoot);
+					hdSource.source = _entityManager.getEntity( _entityRoot );
+					//col.filterFunction = filterOutputs;
+					//col.refresh();
+					
+				//	gridProperties.dataProvider = _propertyWrapper;
+					gridProperties.dataProvider = _propertyWrapper;
+					
+					if(hideNullCannonicalPaths){
+						_propertyWrapper.filterFunction = propertyFilterFunction;
+					}
+					
+					//gridEntities.dataProvider = _entityManager.entities;
+					//_propertyWrapper.update(_entityManager.entities);
+			//		gc.source = _propertyWrapper;
+			//		gc.refresh(true);
+					//gridEntities.validateNow();
+					//gridEntities.expandAll();
+					
+					//debugGrid.dataProvider = _propertyWrapper;
+				}
+				else
+				{
+			//		gridEntities.dataProvider = null;
+				}
+			}
+
+			
+			/**
+			 * Removes properties that are read-only or output only
+			 */
+			private function updateProperties():void
+			{
+				if (selectedEntity != null)
+				{
+					
+				//	gridProperties.dataProvider = _propertyWrapper;
+				}
+			}
+
+			private function handleChange():void
+			{
+			//	selectedEntity = gridEntities.selectedItem as Entity;
+				
+				updateProperties();
+			}
+			
+			private function handleWrapperChange(event:CollectionEvent):void
+			{
+				//arr.push( { 'entityName' : prop.entity, 'propertyName' : prop.property } );
+				if (event.kind == CollectionEventKind.UPDATE)
+				{
+					for each (var eventItem:PropertyChangeEvent in event.items)
+					{
+						var item:PropertyWrapper = eventItem.source as PropertyWrapper;
+						
+						//var idx:int = selectedItems.getItemIndex(item);
+						var idx:int = -1;
+						
+						var i:int = 0;
+						
+						
+						for each (var selItem:EntityPropertySelectionEntry in _initialSelection/*selectedItems*/)
+						{
+							if (selItem.wrapperEquals(item))
+							/*
+							if (selItem.entityCanonicalPath == item.entity.canonicalPath &&//item.entityName && 
+								selItem['propertyName'] == item.propertyName &&
+								selItem['type'] == item.type)
+								*/
+								{
+									idx = i;
+									break;
+								} 
+						}
+						 
+						if (item.selected && idx == -1)
+						{
+							/*selectedItems*/
+							var newItem:EntityPropertySelectionEntry = 
+								new EntityPropertySelectionEntry(
+									item.entity.canonicalPath,
+									item.propertyName,
+									item.type);
+							_initialSelection.addItem(newItem);
+							/*
+							_initialSelection.addItem( 
+								{ 'entityName' : item.entity.canonicalPath,
+								'canonicalPath' : item.entity.canonicalPath,
+								'path' : item.path,
+								'propertyName' : item.propertyName,
+								'type' : item.property.type }  );
+							*/	
+						}
+						else if (!item.selected && idx != -1)
+						{
+							/*selectedItems*/_initialSelection.removeItemAt(idx);
+						}
+					}
+					
+				}
+				else if (event.kind == CollectionEventKind.ADD )
+				{
+					//updateSelected();
+					if (_initialSelection != null && _initialSelection.length > 0)
+					{
+						// TODO Move to property wrapper 
+						for each (var wrapper:PropertyWrapper in event.items)
+						{
+							for each (var prop:EntityPropertySelectionEntry in _initialSelection)
+							{
+								//if (wrapper.entityName == prop.entityName &&
+								//	wrapper.propertyName == prop.propertyName)
+								//if (wrapper.path == prop.path)
+								if (wrapper.entity.canonicalPath == prop.entityCanonicalPath &&
+									wrapper.propertyName == prop.propertyName &&
+									wrapper.type == prop.type)
+								{
+										wrapper.selected = true;
+										break;
+								}
+							}
+						}
+					}
+					
+					// Disable if there are any entries on disabled list
+					if (_disabled != null && _disabled.length > 0)
+					{
+						// TODO Move to property wrapper 
+						for each (var wrapper:PropertyWrapper in event.items)
+						{
+							for each (var prop:EntityPropertySelectionEntry in _disabled)
+							{
+								if (wrapper.entity.canonicalPath == prop.entityCanonicalPath &&
+									wrapper.propertyName == prop.propertyName &&
+									wrapper.type == prop.type)
+								{
+										wrapper.enabled = false;
+										break;
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			private function updateSelected():void
+			{
+				_propertyWrapper.updateSelection(_initialSelection.source);
+				
+			}
+			
+			private function handleCollectionChange(event:CollectionEvent):void
+			{
+				//_propertyWrapper.update(_entityManager.entities);
+			}
+			
+			private function handleFilterChange():void
+			{
+				/*
+				var filterDeviceName:String = StringUtil.trim(tiFilterDeviceName.text);
+				var filterPropertyName:String = StringUtil.trim(tiFilterPropertyName.text);
+				k.setFilter(filterDeviceName, filterPropertyName);
+				*/
+			}
+			
+			private function handleItemSelectedChanged(event:Event):void
+			{
+				var cb:CheckBox = event.target as CheckBox;
+				
+				cb.data.selected = cb.selected;
+			}
+			
+			private function handleNavChange():void
+			{
+				var selectedEntity:Entity = gridNavigation.selectedItem as Entity;
+				
+				if (selectedEntity != null)
+				{
+					_propertyWrapper.update(selectedEntity);
+				}
+				else
+				{
+					_propertyWrapper.update(null);
+				}
+				
+				updateSelected();
+			}
+			
+			
+			
+			private function handleSelectionChanged():void
+			{
+				//trace("handle selection changed");
+				
+				/// THe selection happens when the checkbox is checked, then we add or remove the wrapper
+				/// from the selection list based on the selected state of the box. 
+				/// TODO This doesn't work
+				var item:PropertyWrapper = gridProperties.selectedItem as PropertyWrapper;
+				
+				//trace("selected? " + item.selected);
+			}
+			
+			private function propertyFilterFunction(item:PropertyWrapper):Boolean
+			{
+				if(item.entity.canonicalPath == null){
+					return false;
+				}
+				
+				return true;
+			}
+		]]>
+	</mx:Script>
+		<mx:HDividedBox width="100%" height="100%">
+		<!--
+			<mx:HBox width="100%">
+				<mx:Label text="Device Name" />
+				<mx:TextInput width="100" id="tiFilterDeviceName" change="handleFilterChange()"/>
+				<mx:Label text="Property Name" />
+				<mx:TextInput width="100" id="tiFilterPropertyName" change="handleFilterChange()" />
+			</mx:HBox>
+			-->
+			<mx:AdvancedDataGrid width="100" height="100%" id="gridNavigation"
+				showHeaders="false"
+				change="handleNavChange()">
+				<mx:dataProvider>
+					<entities:EntityHierarchicalData id="hdSource" />
+				</mx:dataProvider>
+				<mx:columns>
+					<mx:AdvancedDataGridColumn dataField="label" />
+				</mx:columns>
+				
+			</mx:AdvancedDataGrid>
+			
+			<mx:AdvancedDataGrid width="100%" height="100%" id="gridProperties"
+				change="handleSelectionChanged()">
+				<mx:columns>
+					<mx:AdvancedDataGridColumn width="20" dataField="selected"
+											   headerRenderer="com.cisco.nbm.entities.renderer.CheckBoxHeaderRenderer">
+						<mx:itemRenderer>
+							<mx:Component>
+								<mx:HBox horizontalAlign="center">
+									<mx:CheckBox id="cb" selected="{data.selected}" enabled="{data.enabled}" change="{data.selected = cb.selected}" />
+								</mx:HBox>
+							</mx:Component>
+						</mx:itemRenderer>
+					</mx:AdvancedDataGridColumn>
+					<mx:AdvancedDataGridColumn headerText="Entity Name" dataField="label" />
+					<mx:AdvancedDataGridColumn headerText="Property Name" dataField="propertyName" /> 
+				</mx:columns>
+			</mx:AdvancedDataGrid>
+			
+		
+		</mx:HDividedBox>
+</mx:VBox>

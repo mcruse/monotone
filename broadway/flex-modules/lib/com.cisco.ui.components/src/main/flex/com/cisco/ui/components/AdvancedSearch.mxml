@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%">
+
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ICollectionView;
+			import com.cisco.ui.components.util.Util;
+			import com.cisco.ui.components.view.renderer.CheckBoxImageItemRenderer;
+			import mx.collections.ArrayCollection;
+			import com.cisco.ui.components.view.FilterTextInput;
+			import com.cisco.ui.components.vo.IAdvancedSearchTarget;
+			import com.cisco.ui.components.view.renderer.FilterTextRenderer;
+			import com.cisco.ui.components.vo.AdvancedSearchItem;
+		
+			[Bindable]
+			public var selectedCriteria:ICollectionView;
+			
+			public var targetComponent:IAdvancedSearchTarget;
+			
+			public function set target(value:IAdvancedSearchTarget):void {
+				targetComponent = value;
+				selectedCriteria = targetComponent.searchfields;
+				if ( grid != null ) {
+					grid.invalidateProperties();
+					grid.invalidateDisplayList();
+				}
+				
+				invalidateSize();
+			}
+			
+
+			
+			private function get checkBoxRenderer():IFactory {
+				var factory:ClassFactory = new ClassFactory(CheckBoxImageItemRenderer);
+				factory.properties = { changeHandler:itemEnableHandler,selectedFunction:selectedCriteriaHandler};
+				return factory;
+			}
+			
+			private function get filterTextRenderer():IFactory {
+				var factory:ClassFactory = new ClassFactory(FilterTextRenderer);
+				factory.properties = { changeHandler:searchChangeHandler,enableFunction:selectedCriteriaHandler};
+				return factory;
+			}
+			
+			private function itemEnableHandler(item:AdvancedSearchItem,selected:Boolean):void {
+				item.enabled = selected;
+				grid.invalidateProperties();
+				if ( targetComponent.searchFunction != null) {
+					targetComponent.searchFunction();
+				}
+			}
+			
+			private function selectedCriteriaHandler(item:Object):Boolean {
+				return (item as AdvancedSearchItem).enabled;
+			}
+			
+			private function searchChangeHandler(item:AdvancedSearchItem,searchString:String):void {
+				item.searchString = searchString;
+				if ( targetComponent.searchFunction != null && item.enabled ) {
+					targetComponent.searchFunction();
+				}
+			}
+			
+			public function search(item:Object):Boolean {
+				var flag:Boolean = true;
+				var label:String;
+				for each ( var criteria:AdvancedSearchItem in selectedCriteria ) {
+					if ( !criteria.enabled )	continue;
+					label = labelFunction(item,criteria.label);
+					flag = Util.search(label, criteria.searchString) != -1;
+					if ( !flag )
+						break;
+				}
+				return flag;
+			}
+			
+			private function labelFunction(item:Object,dataField:String):String {
+				var labelValue:* = targetComponent.searchLabel(item,dataField);
+				try {
+					labelValue = String(labelValue).toString();
+				} catch(ex:Error) {
+					
+				}
+				return labelValue as String;
+			}
+			
+			override protected function measure():void {
+				super.measure();
+				if ( selectedCriteria != null && includeInLayout ) {
+					maxHeight = selectedCriteria.length * 28;
+					measuredHeight = maxHeight;
+				} else {
+					maxHeight = 0;
+				}
+			}
+			
+			
+		]]>
+	</mx:Script>
+
+	<mx:DataGrid  id="grid" dataProvider="{selectedCriteria}" showHeaders="false" 
+		useRollOver="false" horizontalGridLines="false" verticalGridLines="false" alternatingItemColors="{[0xffffff]}"
+		borderStyle="none" rowHeight="28" left="5" top="0" right="0" bottom="0" selectionColor="0xffffff">
+		<mx:columns>
+			<mx:DataGridColumn itemRenderer="{checkBoxRenderer}" dataField="displayName"/>
+			<mx:DataGridColumn itemRenderer="{filterTextRenderer}"/>
+		</mx:columns>
+	</mx:DataGrid>
+</mx:Canvas>

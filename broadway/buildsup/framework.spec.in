@@ -1,0 +1,224 @@
+# vim: ts=8 noexpandtab syntax=spec
+#
+# $Revision: 20101 $
+#=---------------------------------------------------------------------------=#
+# This file generated from:
+#   @SOURCE@
+# Any changes made here will probably be lost.
+#=---------------------------------------------------------------------------=#
+
+%{expand:%(cat ./buildsup/framework_rpmspec_inc)}  # <-- DO NOT DELETE!
+
+Name: framework
+Version: %{_fw_version}
+Release: %{_fw_rpm_release}
+Summary: The Mediator Framework
+URL: http://www.encorp.com/
+Vendor: Encorp, Inc.
+Group: System/Applications
+Source0: %{name}-%{version}.tar.bz2
+License: Encorp Proprietary
+BuildRoot: /tmp/%{name}-root
+
+Provides: %{name} = %{version}
+
+Requires: python >= 2.4
+Requires: python < 2.5
+
+%define debug_package %{nil}
+
+%description
+This is the core software that all Encorp framework products require.
+
+%build
+####
+# We're not going to use RPM's BUILD stuff, because we're already working
+# in a directory outside the source tree.
+cd %{_fw_build}
+
+# So we don't reconfigure every frikkin' time we build...
+[ -f .subdirs ] || {
+	%{_fw_source}/configure --with-buildrc=@BUILD_RC@
+}
+
+. %{_penvironment_rc}
+make -s all tarball
+
+%install
+rm -rf $RPM_BUILD_ROOT
+
+# Enter and (re)establish the build environment.
+cd %{_fw_build}
+. %{_penvironment_rc}
+
+####
+# Create bogus /proc entries so the install scripts think they are running
+# on 2500 hardware.
+mkdir -p %{_penvironment_d}/proc/mediator
+touch %{_penvironment_d}/proc/mediator/pattern
+echo "2500" > %{_penvironment_d}/proc/mediator/model
+
+# Extract just the files required by the app into penvironment.d/usr/lib.
+cd %{_penvironment_d}/usr/lib
+%{_fw_build}/pextract -b . %{_release_tarball} broadway
+
+####
+# Run the old-style Broadway install, updating penvironment.d/(var|etc|usr),
+# but assumes that /usr/lib/broadway is already in place.
+cd %{_penvironment_d}/usr/lib/broadway
+./install -d
+
+# Clean-up penvironment.d to be more standard.
+cd %{_penvironment_d}
+
+for bin in bin/*; do
+    test -f ${bin} && cp -fLp ${bin} usr/bin/ && rm -f ${bin}
+done
+
+for sbin in sbin/*; do
+    test -f ${sbin} && cp -fLp ${sbin} usr/sbin/ && rm -f ${sbin}
+done
+
+####
+# Now, create a list file that will be used to subtract the core files from
+# the stuff we install to create a project-specific RPM (MPX, TSWS, &c).  The
+# idea is that a project-specific RPM should only contain the stuff it needs,
+# and not a full copy of the framework.
+cd %{_penvironment_d}
+find . -type f -o -type l | sed -e 's#\.\/##g' > %{_fw_core_listfile}
+
+# Remove root files we don't want to distribute with the RPM.
+rm -rf README bin home proc sbin tmp
+
+# Clean-up and repackage penvironment.d/usr/lib/broadway
+cd %{_penvironment_d}/usr/lib/broadway
+
+# Delete install scripts, they are not needed for moe3.
+find . -name "*.install.*" -exec rm \{\} \;
+rm -f install install.pyc
+
+# Delete the unused web-server components.
+rm -rf html mpx/service/network/http mpx/service/network/https
+rm -rf %{_penvironment_d}/var/mpx/www
+
+####
+# Delete the unused standard configuration and application buildset
+# and the dsa key.  The framework is moving away from managing these
+# things.
+rm -rf cfg buildset.xml mediator.id_dsa
+
+# Delete files no longer managed by the framework's packaging system.
+cd %{_penvironment_d}
+rm -rf etc/dhcpc
+rm -f etc/group
+rm -f etc/inittab
+rm -f etc/inittab.bak
+rm -f etc/motd
+rm -f etc/passwd
+rm -rf etc/ppp
+rm -rf etc/profile.d
+rm -f usr/bin/mpxconfig
+rm -f usr/sbin/hotplug
+rm -f usr/sbin/config_service
+
+# Not needed for moe3.
+rm -rf opt
+
+# These are just frikkin useless.
+rm -rf var/lock
+rm -rf var/proftpd
+rm -f var/mpx/config/private.key
+rm -f var/mpx/config/persistent/*
+rm -f var/mpx/log/msglog.log.1
+
+# The only thing in this directory is pieces of the old MPXCONFIG program.
+rm -rf usr/lib/mpx
+
+# This is now distributed with moe3.  (Why is it in three places in the f/w?)
+rm -rf usr/lib/moab usr/lib/broadway/moab/config_service
+
+# Empty directory, toss it.
+rm -rf usr/sbin
+
+# Hack to "relocate" the assorted configuration files.
+cd %{_penvironment_d}
+_CANDIDATES=$(find . -type f -exec file \{\} \; |
+	grep "ASCII\|script" |
+	grep -v ".pyc:" |
+	grep -v ".log.1:" |
+	grep -v ".dat.1" |
+	cut -f 1 -d :)
+
+for ofile in $_CANDIDATES
+do
+	if grep -q %{_penvironment_d} ${ofile}; then
+		ifile=${ofile}.in
+		cp -p ${ofile} ${ifile} # save permissions...
+		sed "s:%{_penvironment_d}::g
+		     s:%{%proot}:/usr/lib/broadway:g" ${ifile} >${ofile}
+		rm ${ifile}
+	fi
+done
+
+# Modify /etc/rc.mfw to NOT set the PYTHONPATH.  I THINK THIS IS BROKEN.
+sed	-e "s#export PYTHONPATH='/usr/lib/broadway'#unset PYTHONPATH#g" \
+	-e 's/watchdog ${PYTHON}/watchdog --respawn ${PYTHON}/g' \
+	%{_penvironment_d}/etc/rc.mfw >%{_penvironment_d}/etc/rc.mfw.new
+mv -f %{_penvironment_d}/etc/rc.mfw.new %{_penvironment_d}/etc/rc.mfw
+chmod a+x %{_penvironment_d}/etc/rc.mfw
+
+# Remove the broadway.xml file, this is managed by the MPX RPM.
+rm %{_penvironment_d}/var/mpx/config/broadway.xml
+
+# SysV startup stuff...
+mkdir -m 0755 -p %{_penvironment_d}/etc/rc.d/init.d
+cp %{_fw_source}/tools/broadway.in %{_penvironment_d}/etc/rc.d/init.d/broadway
+chmod 0755 %{_penvironment_d}/etc/rc.d/init.d/broadway
+
+for dir in 0 1 2 3 4 5 6; do
+	mkdir -m 0755 -p %{_penvironment_d}/etc/rc.d/rc${dir}.d
+done
+for dir in 3 4 5; do
+	ln -sf ../init.d/broadway %{_penvironment_d}/etc/rc.d/rc${dir}.d/S99broadway
+done
+for dir in 0 1 2 6; do
+	ln -sf ../init.d/broadway %{_penvironment_d}/etc/rc.d/rc${dir}.d/K11broadway
+done
+
+# Create the symlinks that access the framework control and messages utilities.
+mkdir -m 0755 -p %{_penvironment_d}/usr/bin
+cp %{_fw_source}/tools/framework_ctl.sh %{_penvironment_d}/usr/bin/.
+chmod 0755 %{_penvironment_d}/usr/bin/framework_ctl.sh
+for link in startframe stopframe restartframe; do
+    ln -s framework_ctl.sh %{_penvironment_d}/usr/bin/${link}
+done
+
+chmod 0755 %{_penvironment_d}/usr/lib/broadway/tools/messages.pyc
+ln -sf /usr/lib/broadway/tools/messages.pyc %{_penvironment_d}/usr/bin/messages
+
+####
+# Create a core framework distribution, packages that depend on the core
+# framework will use this tarball.  That way, we don't have to keep
+# building the framework over and over and over and over ...
+tar zcf %{_fw_core_distfile} .
+
+# Copy the stuff to RPM_BUILD_ROOT.
+cd %{_penvironment_d}
+mkdir $RPM_BUILD_ROOT
+mkdir -m 0755 -p $RPM_BUILD_ROOT/var/mpx/db
+cp -pr * $RPM_BUILD_ROOT
+
+%files
+%defattr(-, root, root, -)
+/etc
+%config /etc/rc.d/rc?.d/[SK]??broadway
+/usr
+%attr(4755,root,root) /usr/bin/superexec
+/var
+%attr(0755,apache,apache) /var/mpx/db
+
+%changelog
+* Thu Sep 22 2005 Scott T. Mansfield <scott.mansfield@encorp.com>
+- Initial revision.
+
+#=- EOF ---------------------------------------------------------------------=#

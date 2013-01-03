@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	implements="mx.controls.listClasses.IDropInListItemRenderer"
+	 toolTip="{tooltipText}" verticalAlign="middle" paddingLeft="2" horizontalGap="4">
+ 
+	<mx:Script>
+		import mx.controls.listClasses.BaseListData;
+		import mx.controls.advancedDataGridClasses.AdvancedDataGridListData;
+		
+		private var _listData:BaseListData;
+		
+		[Bindable]
+		private var tooltipText:String;
+		
+		// Icons
+		[Embed(source="/assets/icons/state_green_16.png")]
+		private var iconGreen:Class;
+
+		[Embed(source="/assets/icons/state_red_16.png")]
+		private var iconRed:Class;
+		
+		public function get listData():BaseListData
+		{
+			return _listData;
+		}
+	
+		public function set listData(value:BaseListData):void
+		{
+			// Clear previous values(as the item renderes are reused)
+			labelWidget.text = '';
+			tooltipText = '';
+			iconImage.source = null;
+			// End of clear values
+			_listData = value;
+			if(listData == null) return;
+			var datafield:String = AdvancedDataGridListData(listData).dataField;
+			if(AdvancedDataGridListData(listData).item.hasOwnProperty(datafield)){
+				var entityobj:Object = AdvancedDataGridListData(listData).item[datafield];
+				if(entityobj != null){
+					labelWidget.text = entityobj.property + "("+ entityobj.value + ")";
+					tooltipText =     "Property:" + entityobj.property + "\n"
+									+ "Type:" + entityobj.type + "\n"
+									+ "Value:" + entityobj.value ;
+					updateValueState(entityobj.value, entityobj.setpoint_value);
+				}
+			}
+			
+		}   
+		
+		private function updateValueState(_currentvalue:String, _setpointvalue:String):void{
+			if(_currentvalue == _setpointvalue){
+				// Show green
+				iconImage.source = iconGreen;
+			} else {
+				// Show red
+				iconImage.source = iconRed;
+			}
+		}
+		
+	</mx:Script>
+	
+	<mx:Image id="iconImage" width="10" height="10"/>
+	<mx:Label id="labelWidget"/>
+ 
+</mx:HBox>

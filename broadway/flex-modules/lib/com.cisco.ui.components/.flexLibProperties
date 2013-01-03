@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flexLibProperties version="1">
+<includeClasses>
+<classEntry path="com.cisco.collections.HierarchicalCollectionView"/>
+<classEntry path="com.cisco.collections.HierarchicalCollectionViewCursor"/>
+<classEntry path="com.cisco.ui.CiscoNumberFormatter"/>
+<classEntry path="com.cisco.ui.components.AdvancedSearch"/>
+<classEntry path="com.cisco.ui.components.CiscoAdvancedDataGrid"/>
+<classEntry path="com.cisco.ui.components.CiscoPanel"/>
+<classEntry path="com.cisco.ui.components.CiscoProgressBar"/>
+<classEntry path="com.cisco.ui.components.CiscoTree"/>
+<classEntry path="com.cisco.ui.components.CiscoTreeEvent"/>
+<classEntry path="com.cisco.ui.components.CiscoUITree"/>
+<classEntry path="com.cisco.ui.components.DelayedTimer"/>
+<classEntry path="com.cisco.ui.components.DialogCloseReason"/>
+<classEntry path="com.cisco.ui.components.DialogPanel"/>
+<classEntry path="com.cisco.ui.components.ErrorPanel"/>
+<classEntry path="com.cisco.ui.components.FontFamilyComboBoxRenderer"/>
+<classEntry path="com.cisco.ui.components.FontFamilyDropDown"/>
+<classEntry path="com.cisco.ui.components.PageErrorContainer"/>
+<classEntry path="com.cisco.ui.components.TreeDataDescriptor"/>
+<classEntry path="com.cisco.ui.components.event.DictionaryEvent"/>
+<classEntry path="com.cisco.ui.components.event.UIDataEvent"/>
+<classEntry path="com.cisco.ui.components.skins.TreeDropIndicator"/>
+<classEntry path="com.cisco.ui.components.util.Util"/>
+<classEntry path="com.cisco.ui.components.view.ComboBox"/>
+<classEntry path="com.cisco.ui.components.view.DateTimeChooser"/>
+<classEntry path="com.cisco.ui.components.view.DateTimeField"/>
+<classEntry path="com.cisco.ui.components.view.ExportDataGrid"/>
+<classEntry path="com.cisco.ui.components.view.FilterTextInput"/>
+<classEntry path="com.cisco.ui.components.view.Header"/>
+<classEntry path="com.cisco.ui.components.view.NBMNumericTextInput"/>
+<classEntry path="com.cisco.ui.components.view.NBMTitleWindow"/>
+<classEntry path="com.cisco.ui.components.view.NbmAlert"/>
+<classEntry path="com.cisco.ui.components.view.ResizeHandler"/>
+<classEntry path="com.cisco.ui.components.view.SplitBox"/>
+<classEntry path="com.cisco.ui.components.view.SplitDivider"/>
+<classEntry path="com.cisco.ui.components.view.WeekChooser"/>
+<classEntry path="com.cisco.ui.components.view.Wizard"/>
+<classEntry path="com.cisco.ui.components.view.filterDataGrid.FilterDataGrid"/>
+<classEntry path="com.cisco.ui.components.view.filterDataGrid.FilterDataGridColumn"/>
+<classEntry path="com.cisco.ui.components.view.filterDataGrid.renderer.FilterHeaderRenderer"/>
+<classEntry path="com.cisco.ui.components.view.filterDataGrid.vo.FilterDataGridListData"/>
+<classEntry path="com.cisco.ui.components.view.filterDataGrid.vo.FilterItemVO"/>
+<classEntry path="com.cisco.ui.components.view.filterDataGrid.vo.FilterVO"/>
+<classEntry path="com.cisco.ui.components.view.renderer.CheckBoxImageItemRenderer"/>
+<classEntry path="com.cisco.ui.components.view.renderer.FilterTextRenderer"/>
+<classEntry path="com.cisco.ui.components.view.renderer.GenericRenderer"/>
+<classEntry path="com.cisco.ui.components.vo.AdvancedDictionary"/>
+<classEntry path="com.cisco.ui.components.vo.AdvancedSearchItem"/>
+<classEntry path="com.cisco.ui.components.vo.Dictionary"/>
+<classEntry path="com.cisco.ui.components.vo.DynamicObject"/>
+<classEntry path="com.cisco.ui.components.vo.IAdvancedSearchTarget"/>
+<classEntry path="com.cisco.ui.components.vo.IComparator"/>
+<classEntry path="com.cisco.ui.components.vo.IDraggable"/>
+<classEntry path="com.cisco.ui.components.vo.IPersistableObject"/>
+<classEntry path="com.cisco.ui.components.vo.IValueObject"/>
+<classEntry path="com.cisco.ui.components.vo.IXMLObject"/>
+</includeClasses>
+<includeResources>
+<resourceEntry destPath="assets/icons/alert_critical_2000_48.png" sourcePath="assets/icons/alert_critical_2000_48.png"/>
+<resourceEntry destPath="assets/icons/alert_critical_2000_32.png" sourcePath="assets/icons/alert_critical_2000_32.png"/>
+</includeResources>
+<namespaceManifests/>
+</flexLibProperties>

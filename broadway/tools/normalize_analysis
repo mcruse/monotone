@@ -1,0 +1,158 @@
+#/usr/bin/env python2.2
+
+from string import strip
+import os
+
+from xml.sax import saxutils
+from xml.sax import make_parser
+from xml.sax.handler import feature_namespaces
+
+from xmllib import XMLParser
+
+class _PylintElement:
+    def __init__(self):
+        self.name = ''
+        self.parent = None
+        self.attributes = {}
+        self.depth = 0
+        self.content = ''
+        self._elements = []
+        return
+    def __str__(self):
+        result = "%s%s:" % (self.depth*" ", self.name)
+        for key in self.attributes.keys():
+            result = "%s %s=%r" % (result, key, self.attributes[key])
+        return result
+    def addElement(self,element):
+        self._elements.append(element)
+        return
+    def startElement(self, parent, name, attributes):
+        self.name = name
+        self.parent = parent
+        self.attributes = {}
+        self.depth = 0
+        self.content = ''
+        self._elements = []
+        for key in attributes.keys():
+            self.attributes[key] = attributes[key]
+        if parent is not None:
+            parent.addElement(self)
+            self.depth = parent.depth + 1
+        return
+    def endElement(self):
+        return
+    def characters(self, content):
+        self.content = ("%s%s" % (self.content, content))
+    def strip_content(self):
+        self.content = self.content.strip()
+        return
+    def combine_children(self):
+        return 0
+    def full_path(self):
+        return self.parent.full_path()
+
+class UnknownElement(_PylintElement):
+    pass
+
+class NCDATA(_PylintElement):
+    pass
+
+class PYCHECKED_DIR(_PylintElement):
+    def full_path(self):
+        return os.path.realpath(
+            os.path.join(self.parent.full_path(), self.attributes['path'])
+            )
+
+class PYCHECKED_FILE(PYCHECKED_DIR):
+    pass
+
+class PYCHECKER_LINT(_PylintElement):
+    def full_path(self):
+        return os.path.realpath(self.attributes['initial_directory'])
+
+_FACTORY_LOOKUP = {
+    'NCDATA':NCDATA,
+    'PYCHECKED_DIR':PYCHECKED_DIR,
+    'PYCHECKED_FILE':PYCHECKED_FILE,
+    'PYCHECKER_LINT':PYCHECKER_LINT,
+    '*':UnknownElement,
+    }
+
+##
+# PylintElement factory.
+def PylintElement(name):
+    if _FACTORY_LOOKUP.has_key(name):
+        factory = _FACTORY_LOOKUP[name]
+    else:
+        factory = _FACTORY_LOOKUP['*']
+    return factory()    
+
+class PylintHandler(saxutils.DefaultHandler):
+    def __init__(self):
+        saxutils.DefaultHandler.__init__(self)
+        self.root = None
+        self.current_element = None
+        return
+    def startDocument(self, *args):
+        self.startElement = self._rootElement
+        return
+    def endDocument(self, *args):
+        return
+    def _rootElement(self, name, attrs):
+        new_element = PylintElement(name)
+        new_element.startElement(self.current_element, name, attrs)
+        self.root = new_element
+        self.current_element = new_element
+        self.startElement = self._startElement
+        return
+    def _startElement(self, name, attrs):
+        new_element = PylintElement(name)
+        new_element.startElement(self.current_element, name, attrs)
+        self.current_element = new_element
+        return
+    def endElement(self, name):
+        self.current_element.endElement()
+        self.current_element = self.current_element.parent
+        return
+    def characters(self, content):
+        self.current_element.characters(content)
+        return
+    def strip_content(self, element=None):
+        if element is None:
+            element = self.root
+        element.strip_content()
+        for child in element._elements:
+            self.strip_content(child)
+    def combine_children(self, element=None):
+        if element is None:
+            element = self.root
+        element.combine_children()
+        for child in element._elements:
+            self.combine_children(child)
+
+def dump_from_root(root):
+    print root
+    for element in root._elements:
+        dump_from_root(element)
+
+if __name__ == '__main__':
+    input = open("/home/mevans/Documents/run_analysis.xml")
+    parser = make_parser()
+    handler = PylintHandler()
+    parser.setContentHandler(handler)    #setContentHandler
+    #setDTDHandler
+    #setEntityResolver
+    #setErrorHandler
+    #setFeature
+    #setLocale
+    #setProperty
+    parser.parse(input)
+    input.close()
+    # First level noise filter.
+    handler.strip_content()
+
+# *** Keep at end of file. ***
+# Local Variables:
+# mode:python
+# mode:font-lock
+# End:

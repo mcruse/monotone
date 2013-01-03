@@ -1,0 +1,182 @@
+<!--
+Copyright (C) 2009 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dojo/resources/dojo.css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dijit/themes/dijit.css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dijit/themes/tundra/tundra.css" />
+        <link rel="stylesheet" type="text/css" href="/cues/themes/kubrick/layout.css" />
+        <link rel="stylesheet" type="text/css" href="/cues/themes/kubrick/tabs.css" />
+        <link rel="stylesheet" href="/public/styles/page.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/login.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/messageBox.css" type="text/css">
+
+        <script type="text/javascript">
+            djConfig = {
+                isDebug: false,
+                debugAtAllCosts: false,
+                parseOnLoad: true,
+                baseUrl: "/dojoroot/dojo/",
+                modulePaths: {
+                    mpx: '/mpx',
+                    cues: '/cues',
+                    utils: '/public/utils',
+                    nbmweb: '/public/nbmweb'
+                }
+            };
+        </script>
+        <script type="text/javascript" src="/dojoroot/dojo/dojo.js"></script>
+		<!--
+        <script type="text/javascript" src="/public/utils/debug.js"></script>
+        <script type="text/javascript" src="/public/utils/style.js"></script>
+        <script type="text/javascript" src="/public/utils/display.js"></script>-->
+		<script type="text/javascript" src="/dojoroot/dojoconfig/mediator_layer.js"></script>
+        <script type="text/javascript">
+            dojo.addOnLoad(function() {
+                var type = "%(status-type)s";
+                var message = "%(status-message)s";
+                var detail = "%(status-detail)s";
+                if (type && message) {
+                    if(type == 'update_password') {
+                        dojo.byId("login").action="/update_password";
+                        dojo.byId("update_form_place_holder").innerHTML = update_form;
+                        dojo.byId("loginSubmit").value = "Change Password";
+                        type="warning";
+                    }
+                    var notify = dojo.getObject(type, false, utils.display);
+                    notify(message, detail);
+                }
+
+                //add Event Listeners for Login form
+                if(dojo.isIE) {
+                	dojo.byId("username_ip").attachEvent('onblur', validateUsername);
+                	dojo.byId("username_ip").attachEvent('onchange', validateUsername);
+                	dojo.byId("password_ip").attachEvent('onblur', validatePassword);
+                	dojo.byId("password_ip").attachEvent('onchange', validatePassword);
+                }else {
+                    dojo.byId("username_ip").addEventListener('blur', validateUsername, false);
+                    dojo.byId("username_ip").addEventListener('change', validateUsername, false);
+                    dojo.byId("password_ip").addEventListener('blur', validatePassword, false);
+                    dojo.byId("password_ip").addEventListener('change', validatePassword, false);
+                }
+                dojo.byId("username_ip").focus();
+            });
+            
+            dojo.require("utils.style");
+            dojo.require("dijit.form.Form");
+            dojo.require("dijit.form.TextBox");
+            dojo.require("dijit.form.Button");
+            dojo.require("dijit.form.ValidationTextBox");
+
+            function validateUsername() {
+                var isValid = false;
+            	var username_ip = dojo.trim(dojo.byId("username_ip").value); 
+                if(username_ip == '' || username_ip.length == 0) {
+                    dojo.byId("username_ip").setAttribute("class", "dijitTextBox dijitError");
+                    isValid = false;
+                } else {
+                    dojo.byId("username_ip").setAttribute("class", "dijitTextBox");
+                    isValid = true;
+                }
+                return isValid;
+            }
+
+            function validatePassword() {
+                var isValid = false;
+                var password_ip = dojo.trim(dojo.byId("password_ip").value); 
+                if(password_ip == '' || password_ip.length == 0) {
+                    dojo.byId("password_ip").setAttribute("class", "dijitTextBox dijitError");
+                    isValid = false;
+                } else {
+                    dojo.byId("password_ip").setAttribute("class", "dijitTextBox");
+                    isValid = true;
+                }
+                return isValid;
+            }
+
+            function validateLoginForm() {
+                var validUsername = validateUsername();
+                var validPassword = validatePassword();
+                console.log(validUsername && validPassword);
+                return (validUsername && validPassword);
+            }
+
+            var update_form = '<div class="input" id="newpwd">' +
+		            '<span class="label">New Password</span>' +
+		            '<input  type="password" name="newpwd"' +
+		            '    class="dijitTextBox"/>' + 
+		        '</div>' +
+		        '<div class="input" id="confirm_newpwd">' +
+		            '<span class="label">Confirm Password</span>' +
+		            '<input  type="password" name="confirm_newpwd"' +
+		            '    class="dijitTextBox"/>' +
+		        '</div>';
+            	
+        </script>
+        <title>Cisco Network Building Mediator</title>
+    </head>
+    <body class="kubrick tundra" id="challenge">
+        <div id="background">
+            <img src="/public/images/pageBackground.jpg" />
+        </div>
+        <div id="header">
+            <h1 class="title">Cisco Network Building Mediator</h1>
+        </div>
+        <div id="stage">
+        <div class="loginform">
+            <form name="login" id="login" method="POST" 
+                action="/login" onsubmit="return validateLoginForm();">
+                
+                <div class="input" id="username">
+                	<span class="label">Username</span>
+                	<input 	type="text" name="username" autocomplete="on"
+                	    class="dijitTextBox" id="username_ip"/>
+                </div>
+                <div class="input" id="password">
+                	<span class="label">Password</span>
+                	<input 	type="password" name="password" autocomplete="on"
+                	    class="dijitTextBox" id="password_ip"/>
+                </div>
+                <div id="update_form_place_holder"></div>
+                <div class="loginButton">
+                    <input type="submit" value="Login" id="loginSubmit"
+                        style="width:75px;height:25px"/>
+                </div>
+                <input type="hidden" name="destination" value="%(request-destination)s" />
+            </form>
+        </div>
+        </div>
+        <div id="footer">Cisco Network Building Mediator &copy; 2005-2011</div>
+    </body>
+</html>

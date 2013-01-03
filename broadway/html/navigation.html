@@ -1,0 +1,227 @@
+<!--
+Copyright (C) 2009 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" type="text/css" href="/public/styles/page.css" />
+        <link rel="stylesheet" type="text/css" href="/public/styles/tabs.css" />
+        <link rel="stylesheet" type="text/css"
+            href="/public/styles/messageBox.css" />
+        <link rel="stylesheet" type="text/css"
+            href="/public/nbmweb/content/themes/FramedPage.css" />
+        <link rel="stylesheet" type="text/css"
+            href="/dojoroot/dojo/resources/dojo.css" />
+        <link rel="stylesheet" type="text/css"
+            href="/dojoroot/dijit/themes/dijit.css" />
+        <link rel="stylesheet" type="text/css"
+            href="/dojoroot/dijit/themes/tundra/tundra.css" />
+        <link rel="stylesheet" type="text/css"
+            href="/cues/themes/kubrick/layout.css" />
+        <link rel="stylesheet" type="text/css"
+            href="/cues/themes/kubrick/tabs.css" />
+        <script type="text/javascript">
+            djConfig = {
+                isDebug: false,
+                debugAtAllCosts: false,
+                parseOnLoad: true,
+                baseUrl: "/dojoroot/dojo/",
+                modulePaths: {
+                    mpx: '/mpx',
+                    cues: '/cues',
+                    utils: '/public/utils',
+                    nbmweb: '/public/nbmweb'
+                }
+            };
+        </script>
+        <script type="text/javascript" src="/dojoroot/dojo/dojo.js"></script>
+<!--        <script type="text/javascript" src="/public/utils/debug.js"></script>-->
+<!--        <script type="text/javascript" src="/public/utils/style.js"></script>-->
+		<script type="text/javascript" src="/dojoroot/dojoconfig/mediator_layer.js"></script>
+        <script type="text/javascript" src="/public/utils/flash/AC_OETags.js"></script>
+        <script type="text/javascript" src="/public/utils/flash/js/nbm_as.js"></script>
+        <script type="text/javascript" src="/public/utils/flash/js/swfobject.js"></script>
+        <script type="text/javascript">
+				dojo.require("utils.style");
+<!--            dojo.require("dojox.dtl._HtmlTemplated");-->
+<!--            dojo.require("dojo.parser");-->
+<!--            dojo.require("dijit.form.Button");-->
+<!--            dojo.require("dijit.layout.ContentPane");-->
+<!--            dojo.require("dijit.layout.TabContainer");-->
+<!--            dojo.require("dijit.layout.BorderContainer");-->
+<!--            dojo.require("nbmweb.content.FramedPage");-->
+            dojo.declare("NBMTabWidget", null, {
+                widget: null,
+                entity: null,
+                started: false,
+                constructor: function(url, replacementElemId, nameId) {
+                    this.widget = cisco.NBMBridge.createWidget(
+                        url, replacementElemId, nameId, "100%", "100%", {
+                            embedded: "1",
+                            topic : "topic",
+                            entity: ""
+                        }, {}, {}
+                    );
+                    this.widget.addLoadedListener(this, this._onWidgetLoad);
+                },
+                setEntity: function(entityUrl) {
+                    if (this.widget.isReady())
+                        this.widget.setEntity(entityUrl);
+                    this.entity = entityUrl;
+                },
+                start: function() {
+                    if (this.widget.isReady())
+                        this.widget.start();
+                    this.started = true;
+                },
+                _onWidgetLoad: function() {
+                    if (this.entity != null)
+                        this.setEntity(this.entity);
+                    if (this.started)
+                        this.start();
+                }
+            });
+        </script>
+        <title>Cisco Network Building Mediator</title>
+    </head>
+    <body class="kubrick tundra">
+        <div id="background">
+            <img src="/public/images/pageBackground.jpg" />
+        </div>
+        <div id="header">
+            <h1 class="title">Network Building Mediator</h1>
+            <ul class="actions">
+                <li><a href="">About</a></li>
+                <li>
+                    <a id="logout" href="/logout">
+                        Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div id="primary-tabs"
+            title=""
+            class="primary-tabs"
+            href="/public/templates/primary.html"
+            extractContent="false"
+            preventCache="false"
+            dojoType="dijit.layout.ContentPane"
+            onDownloadEnd="dojo.addClass('navigation-tab-button', 'selected');">
+        </div>
+        <div id="stage">
+            <div id="contentarea" class="pane">
+                <div id="mainTabContainer"
+                     design="sidebar"
+                     gutters="false"
+                     liveSplitters="true"
+                     style="width: 100%; height: 100%;"
+                     dojoType="dijit.layout.BorderContainer">
+                    <script type="dojo/method">
+                        dojo.addOnLoad(dojo.hitch(this, "resize"));
+                    </script>
+                    <div id="navigationPane"
+                         region="left"
+                         splitter="true"
+                         style="width: 380px; height: 100%;"
+                         dojoType="dijit.layout.ContentPane">
+                        <script type="dojo/method">
+                            console.log("Setting up entity navigator.");
+                            dojo.mixin(this, {
+                                navigator: cisco.NBMBridge.createWidget(
+                                    "/omega/entityViewer/entityNavigator.swf",
+                                    "entityNavigatorWidget",
+                                    "entityNavigator", "100%", "100%", {
+                                        embedded: "1",
+                                        topic : "topic"
+                                    }, {}, {})
+                            });
+                        </script>
+                        <div id="entityNavigatorWidget"></div>
+                    </div>
+                    <div id="contentTabs"
+                         region="center"
+                         dojoType="dijit.layout.TabContainer">
+                        <div id="displayTab"
+                             title="Display"
+                             dojoType="dijit.layout.ContentPane">
+                            <div id="entityDisplayFrame"
+                                 name="entityDisplayPage"
+                                 style="width: 100%; height: 100%;"
+                                 dojoType="nbmweb.content.FramedPage">
+                                <script type="dojo/method">
+	                                console.log("Setting up display frame.");
+	                                dojo.mixin(this, {
+	                                    handleEvent: function(event) {
+	                                        var source = event.display || "";
+	                                        console.log("Displaying:",
+	                                                    event, source);
+	                                        //this.attr("src", source);
+						var final_source = source + "?entity=" + event.entity;
+						console.log("source: '" + final_source + "'");
+						this.attr("src", final_source);
+	                                    }
+	                                });
+	                                dojo.subscribe("topic", this, "handleEvent");
+                                </script>
+                            </div>
+                        </div>
+                        <div id="propertiesTab"
+                             title="Properties"
+                             dojoType="dijit.layout.ContentPane">
+                            <script type="dojo/method">
+                                console.log("Setting up entity viewer.");
+                                dojo.mixin(this, {
+									viewer : new NBMTabWidget(
+                                        "/omega/entityViewer/NBMPropertyViewerWidget.swf",
+										"entityViewerWidget", "entityViewer"),
+                                    handleEvent: function(event) {
+                                        console.log("Event: ", this, event);
+                                        this.viewer.setEntity(event.entity);
+                                        this.viewer.start();
+									},
+									removedChild : function(event) {
+										alert("prop tabs removed child: " + event);
+									}
+                                });
+                				dojo.subscribe("propertiesTab-removeChild",
+                				               this, "removedChild");
+                                dojo.subscribe("topic", this, "handleEvent");
+                            </script>
+                            <div id="entityViewerWidget"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="footer">Cisco Network Building Mediator &copy; 2005-2011</div>
+    </body>
+</html>

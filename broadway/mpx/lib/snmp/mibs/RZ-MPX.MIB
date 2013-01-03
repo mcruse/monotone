@@ -1,0 +1,240 @@
+-- -*- mode: snmpv2; fill-column: 75; -*-
+--
+--  Copyright(C) 2008 Richards-Zeta, Inc.
+--
+
+    RZ-MPX-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+	NOTIFICATION-TYPE, OBJECT-TYPE, MODULE-IDENTITY,
+	Integer32, enterprises
+	    FROM SNMPv2-SMI
+	NOTIFICATION-GROUP, OBJECT-GROUP
+	    FROM SNMPv2-CONF
+        DateAndTime, DisplayString
+	    FROM SNMPv2-TC;
+
+    -- RZ-MPX-MIB::rzMpx
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX
+    -- 1.3.6.1.4.1.32189.1
+    rzMPX MODULE-IDENTITY
+        LAST-UPDATED "200812092300Z"
+        ORGANIZATION "Richards-Zeta, Inc."
+        CONTACT-INFO
+            "Richards-Zeta, Inc.
+             75 Castilian Dr suite 100
+	     Goleta, CA 9311
+             Tel: +1 (805) 685-1600
+             Fax: +1 (805) 685-1662
+             Email: support@richards-zeta.com"
+        DESCRIPTION
+            "This is the MIB module for the asdfadsf..."
+        REVISION "200812092300Z"
+        DESCRIPTION
+            "Created."
+        ::= { richardsZeta 1 }
+
+    -- RZ-MPX-MIB::richardsZeta
+    -- iso.org.dod.internet.private.enterprises.richardsZeta
+    -- 1.3.6.1.4.1.32189
+    richardsZeta OBJECT IDENTIFIER ::= { enterprises 32189 }
+
+    -- RZ-MPX-MIB::rzMpxNotificataions
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxNotificataions
+    -- 1.3.6.1.4.1.32189.1.0
+    --
+    -- Using '0' in the penultimate sub-identifier allows sending SNMPv1
+    -- compatible traps.
+    rzMpxNotificataions OBJECT IDENTIFIER ::= { rzMPX 0 }
+
+    -- RZ-MPX-MIB::rzMpxGenericAlarm
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxNotificataions.rzMpxGenericAlarm
+    -- 1.3.6.1.4.1.32189.1.0.1
+    rzMpxGenericAlarm NOTIFICATION-TYPE
+        OBJECTS {
+	    rzAlarmName,
+	    rzAlarmGUID,
+	    rzAlarmOrigin,
+	    rzAlarmStateGUID,
+	    rzAlarmActionGUID,
+	    rzLogDateAndTime,
+	    rzAlarmState,
+	    rzAlarmDescription
+	--  rzAlarmContext, --  -- string or dict?
+	--  rzLogSeq,       --  -- probably useless.
+        }
+        STATUS      current
+	DESCRIPTION
+	    "blah, blah, blah"
+	::= { rzMpxNotificataions 1 }
+
+
+    -- RZ-MPX-MIB::rzMpxTypes
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxTypes
+    -- 1.3.6.1.4.1.32189.1.1
+    rzTypes OBJECT IDENTIFIER ::= { rzMPX 1 }
+
+    -- RZ-MPX-MIB::rzAlarmGUID
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxTypes.rzAlarmGUID
+    -- 1.3.6.1.4.1.32189.1.1.1
+    rzAlarmGUID OBJECT-TYPE
+	SYNTAX      DisplayString(SIZE(36))
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+	    "A GUID that uniquely identifies a Mediator alarm."
+	::= { rzTypes 1 }
+
+    -- RZ-MPX-MIB::rzAlarmStateGUID
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxTypes.rzAlarmStateGUID
+    -- 1.3.6.1.4.1.32189.1.1.2
+    rzAlarmStateGUID OBJECT-TYPE
+	SYNTAX      DisplayString(SIZE(36))
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+	    "A GUID that uniquely identifies a Mediator alarm state transition."
+	::= { rzTypes 2 }
+
+    -- RZ-MPX-MIB::rzAlarmActionGUID
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxTypes.rzAlarmActionGUID
+    -- 1.3.6.1.4.1.32189.1.1.3
+    rzAlarmActionGUID OBJECT-TYPE
+	SYNTAX      DisplayString(SIZE(36))
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+	    "A GUID that uniquely identifies a Mediator alarm action."
+	::= { rzTypes 3 }
+
+    -- RZ-MPX-MIB::rzAlarmOrigin
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxTypes.rzAlarmOrigin
+    -- 1.3.6.1.4.1.32189.1.1.4
+    rzAlarmOrigin OBJECT-TYPE
+	SYNTAX      DisplayString(SIZE(36))
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+	    ""
+	::= { rzTypes 4 }
+
+    -- RZ-MPX-MIB::rzAlarmName
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxTypes.rzAlarmName
+    -- 1.3.6.1.4.1.32189.1.1.5
+    rzAlarmName OBJECT-TYPE
+	SYNTAX      DisplayString
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+	    ""
+	::= { rzTypes 5 }
+
+    -- RZ-MPX-MIB::rzAlarmState
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxTypes.rzAlarmState
+    -- 1.3.6.1.4.1.32189.1.1.6
+    rzAlarmState OBJECT-TYPE
+	SYNTAX      DisplayString
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+	    ""
+	::= { rzTypes 6 }
+
+    -- RZ-MPX-MIB::rzAlarmPriority
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxTypes.rzAlarmPriority
+    -- 1.3.6.1.4.1.32189.1.1.7
+    rzAlarmPriority OBJECT-TYPE
+	SYNTAX      DisplayString
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+	    ""
+	::= { rzTypes 7 }
+
+    -- RZ-MPX-MIB::rzAlarmActuator
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxTypes.rzAlarmActuator
+    -- 1.3.6.1.4.1.32189.1.1.8
+    rzAlarmActuator OBJECT-TYPE
+	SYNTAX      DisplayString
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+	    ""
+	::= { rzTypes 8 }
+
+    -- RZ-MPX-MIB::rzAlarmDescription
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxTypes.rzAlarmDescription
+    -- 1.3.6.1.4.1.32189.1.1.9
+    rzAlarmDescription OBJECT-TYPE
+	SYNTAX      DisplayString
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+	    ""
+	::= { rzTypes 9 }
+
+    -- RZ-MPX-MIB::rzLogSeq
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxTypes.rzLogSeq
+    -- 1.3.6.1.4.1.32189.1.1.10
+    rzLogSeq OBJECT-TYPE
+	SYNTAX	    Integer32
+	MAX-ACCESS  read-only
+	STATUS	    current
+	DESCRIPTION
+	    ""
+	::= { rzTypes 10 }
+
+    -- RZ-MPX-MIB::rzLogDateAndTime
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxTypes.rzLogDateAndTime
+    -- 1.3.6.1.4.1.32189.1.1.11
+    rzLogDateAndTime OBJECT-TYPE
+	SYNTAX	    DateAndTime
+	MAX-ACCESS  read-only
+	STATUS	    current
+	DESCRIPTION
+	    ""
+	::= { rzTypes 11 }
+
+    -- RZ-MPX-MIB::rzMpxObjects
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxObjects
+    -- 1.3.6.1.4.1.32189.1.2
+    rzObjects OBJECT IDENTIFIER ::= { rzMPX 2 }
+
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxConformance
+    -- 1.3.6.1.4.1.32189.1.3
+    rzConformance OBJECT IDENTIFIER ::= { rzMPX 3 }
+
+    -- RZ-MPX-MIB::rzMpxGroups
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxGroups
+    -- 1.3.6.1.4.1.32189.1.1000
+    rzMpxGroups OBJECT IDENTIFIER ::= { rzMPX 1000 }
+
+    -- RZ-MPX-MIB::rzMpxNotificationGroup
+    -- iso.org.dod.internet.private.enterprises.richardsZeta.rzMPX.\
+    --     rzMpxNotificationGroup
+    -- 1.3.6.1.4.1.32189.1.1000.1
+    rzMpxNotificationGroup NOTIFICATION-GROUP
+        NOTIFICATIONS { rzMpxGenericAlarm }
+	STATUS current
+	DESCRIPTION
+	    "blah blah blah"
+	::= { rzMpxGroups 1 }
+
+END

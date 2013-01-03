@@ -1,0 +1,8 @@
+./fsg-patch-1.manifest
+./mpx/service/data/fsg/__init__.pyc
+./mpx/service/data/fsg/fsg_nodes.pyc
+./mpx/service/data/fsg/xml_formatter.pyc
+./mpx/service/data/ftp_transporter.pyc
+./mpx/service/data/periodic_exporter.pyc
+./nodedef/nodedefs.md5
+./nodedef/nodedefs.zip

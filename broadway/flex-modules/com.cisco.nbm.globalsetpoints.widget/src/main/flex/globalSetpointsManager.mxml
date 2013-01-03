@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="vertical"
+	xmlns:components="com.cisco.nbm.globalsetpoints.widget.components.*"
+	xmlns:uicomponents="com.cisco.ui.components.*" 
+	creationComplete="handleCreationComplete()"
+	paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"	 
+	>
+	<mx:Style source="kubrick.css"/>
+	<mx:Style>
+		.debugBox
+		{
+			padding-bottom: 5;
+			padding-left: 5;
+			padding-right: 5;
+			padding-top: 5;
+			background-color: #ffcccc;
+			vertical-align: middle;
+		}
+	</mx:Style>
+	<mx:Script>
+		<![CDATA[
+			import com.cisco.nbm.browserbridge.BrowserBridge;
+			import com.cisco.nbm.browserbridge.BrowserBridgeEvent;
+			import com.cisco.nbm.browserbridge.ui.connection.AuthenticationDialog;
+			import com.cisco.nbm.entities.Entity;
+			import com.cisco.nbm.entities.EntityManager;
+			import com.cisco.nbm.globalsetpoints.Configuration;
+			import com.cisco.nbm.globalsetpoints.widget.BuildNumber;
+			import com.cisco.nbm.xmlrpc.v2.MediatorNode;
+			import com.cisco.nbm.xmlrpc.v2.MediatorNodeCall;
+			import com.cisco.nbm.xmlrpc.v2.XMLRPCService;
+			import com.cisco.nbm.xmlrpc.v2.XMLRPCServiceEvent;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.logging.ILogger;
+			import mx.logging.Log;
+			import mx.logging.targets.TraceTarget;
+			import mx.utils.StringUtil;
+
+			public static const FV_TOPIC:String = "topic";
+			
+			public static const DEFAULT_TOPIC:String = "/topic";
+			
+			public static const FV_ENTITY:String = "entity"; 
+			
+			private static const DEFAULT_ENTITY_MANAGER_URI:String = "/services/Entity Manager";
+			private static const DEFAULT_GSP_MANAGER_URI:String = "/services/Global Setpoint Manager";
+			private static const DEFAULT_SUBSCRIPTION_MANAGER_URI:String = "/services/Subscription Manager";
+			
+			private var logger:ILogger = Log.getLogger("cisco.globalsetpoints.widget");
+		
+			private var browserBridge:BrowserBridge;
+			
+			/**
+			 * Flag indicating if the widget is embedded
+			 * 
+			 */
+			[Bindable]
+			private var embedded:Boolean = false;
+			
+			/*
+			 * Is the browser bridge ready
+			 */
+			private var ready:Boolean = false;
+			
+			protected var entityManagerURI:String = DEFAULT_ENTITY_MANAGER_URI;
+			protected var gsgManagerURI:String = DEFAULT_GSP_MANAGER_URI;
+			protected var subscriptionManagerURI:String = DEFAULT_SUBSCRIPTION_MANAGER_URI;
+			
+			/**
+			 * Flag indicating if debug is enabled.
+			 */
+			[Bindable]
+			public var debug:Boolean = true;
+			
+			private var initialSelectedEntity:String;
+			
+			[Bindable]
+			protected var entity:Entity;
+			
+			protected var entityManager:EntityManager;
+			
+			protected var service:XMLRPCService;
+			
+			protected var topic:String = DEFAULT_TOPIC; 
+		
+			[Bindable]
+			public var connected:Boolean = false;
+
+			private var config:Configuration = Configuration.getInstance();
+			
+			
+			[Bindable]
+			private var serviceAvailable:Boolean = false;
+
+			private function handleCreationComplete():void
+			{
+				// Configuration singleton creation
+				
+				initContextMenu();
+				initLogging();
+
+				browserBridge = new BrowserBridge();
+				browserBridge.addEventListener(BrowserBridgeEvent.PRE_INIT, handleBrowserBridgePreInit);
+				browserBridge.addEventListener(BrowserBridgeEvent.READY, handleBrowserBridgeReady);
+				browserBridge.addEventListener(BrowserBridgeEvent.ERROR, handleBrowserBridgeError);
+								
+				browserBridge.init(); // TODO:Uncomment when tsting online
+				
+				init();
+			}
+			
+			private function initContextMenu():void
+			{
+				var versionContextItem:ContextMenuItem = new ContextMenuItem("Version Information");
+				
+				versionContextItem.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, 
+					handleVersionContextMenuSelected);
+				
+				var contextMenu:ContextMenu = new ContextMenu();
+				contextMenu.customItems.push(versionContextItem);
+				Application.application.contextMenu = contextMenu;
+			}
+			
+			private function initLogging():void
+			{
+			}
+	
+			private function init():void
+			{
+				var traceTarget:TraceTarget = new TraceTarget();
+				traceTarget.includeCategory = true;
+				traceTarget.includeLevel = true;
+				Log.addTarget(traceTarget);
+			}
+   			
+			private function handleBrowserBridgeError(event:BrowserBridgeEvent):void
+			{
+				logger.error("Error loading browser bridge: " +event.message);
+				
+				Alert.show("JavaScript bridge is not available, widget will be unable to load entities",	 
+					"Error" );
+				 
+				initializeBrowserDepedencies();
+			}
+			
+			private function handleBrowserBridgePreInit(event:BrowserBridgeEvent):void
+			{
+				initializeBrowserDepedencies();
+			}
+			
+			private function handleBrowserBridgeReady(event:BrowserBridgeEvent):void
+			{
+				browserBridge.executeCall("initialize");
+				
+			}
+			
+			private function initializeBrowserDepedencies():void
+			{
+				embedded = browserBridge.args['embedded'] == "1";
+				ready = true;
+				
+				if (browserBridge.args['topic'] != null)
+				{
+					topic = browserBridge.args['topic'];
+				}
+				
+				if (browserBridge.args['entity'] != null)
+				{
+					initialSelectedEntity = StringUtil.trim(browserBridge.args['entity']);
+					
+					if (initialSelectedEntity.length != 0)
+					{
+						logger.debug("Showing entity: " + initialSelectedEntity);
+						//tiEntityPath.text = initialSelectedEntity;
+					}
+				}
+				
+				
+				// poll frequency
+				if (browserBridge.args['poll_frequency'] != null) {
+					config.pollFrequency = new Number(StringUtil.trim(browserBridge.args['poll_frequency']));
+					 
+				}
+				
+				if (browserBridge.args['entity_manager_uri'] != null)
+				{
+					entityManagerURI = StringUtil.trim(browserBridge.args['entity_manager_uri']);
+					
+					if (entityManagerURI.length == 0)
+					{
+						var message:String = "Empty Entity Manager variable specified";
+						
+						Alert.show(message, "Critical Error!");
+						
+						return; 
+					}
+				}
+				else
+				{
+					entityManagerURI = DEFAULT_ENTITY_MANAGER_URI;
+				}
+				
+				var debugParam:String = StringUtil.trim(browserBridge.args["debug"]).toLowerCase(); 
+				if (Boolean(debugParam) && debugParam != "false")
+				{
+					enableDebug();
+				} 
+				
+				logger.debug("Using entity manager URI: '{0}'", entityManagerURI);
+				if (browserBridge.isReady)
+				{
+					// Do not subcribe to topic at the moment.
+					//browserBridge.subscribe(topic, handleTopicReceived);
+					browserBridge.addCallback("setEntity", handleSetEntity);
+					browserBridge.addCallback("getEntity", handleGetEntity);				
+					
+				}
+				
+				if (!embedded)
+				{
+					var authPanel:AuthenticationDialog = AuthenticationDialog.show(this,
+						Globals.DEBUG_SERVER_USERNAME, 
+						Globals.DEBUG_SERVER_PASSWORD, 
+						Globals.DEBUG_SERVER_ADDRESS, handleAuthDialogClose);
+				}
+				else
+				{
+					createService(null, null, null);
+				}
+			}
+			
+			protected function enableDebug():void
+			{
+				debug = true;
+				debugBox.visible = true;
+				debugBox.height = debugBox.measuredHeight;
+			}
+			
+			private function handleVersionContextMenuSelected(event:ContextMenuEvent):void
+			{
+				displayVersionsDialog();
+			}
+			
+			private function displayVersionsDialog():void
+			{
+				Alert.show("Build Number: " + BuildNumber.BUILD_NUMBER, 
+					"Build Number",
+					Alert.OK);
+			}
+			
+			
+			private function handleEntitySelected(entityId:String):void
+			{
+				logger.debug("handleEntitySelected({0})", entityId);
+				
+				cleanCurrentEntity();
+	
+				entity = entityManager.getEntity(entityId);
+				entitySelected();
+			}
+			
+			protected function entitySelected():void
+			{
+				globalSetpointList.resetView();
+				globalSetpointList.getGroups(entity.path);
+			}
+			
+			protected function cleanCurrentEntity():void
+			{
+				if (entity != null)
+				{
+					// Remove any entity selected
+				}
+			}
+			
+			private function handleAuthDialogClose(event:CloseEvent):void
+			{
+				if (event.detail == Alert.OK)
+				{
+					var panel:AuthenticationDialog = event.target as AuthenticationDialog;
+					var username:String = panel.username;
+					var password:String = panel.password;
+					var serverAddress:String = panel.serverAddress;
+					
+					createService(username, password, serverAddress, "http://");
+				}
+			}
+			
+			private function createService(username:String, password:String, serverAddress:String, protocol:String = null):void
+			{
+				var rootURI:String = "/XMLRPCv2/RNA";
+				
+				service = new XMLRPCService(serverAddress, rootURI, username, password, protocol);
+				service.addEventListener(ErrorEvent.ERROR, handleServiceErrorEvent);
+				service.addEventListener(XMLRPCServiceEvent.CALL_COMPLETE, handleCallComplete);
+				entityManager = new EntityManager(service.getNode(entityManagerURI) as MediatorNode);
+				
+				// Create Node
+				globalSetpointList.node = service.getNode(gsgManagerURI) as MediatorNode;
+				globalSetpointList.subscriptionNode = service.getNode(subscriptionManagerURI) as MediatorNode;
+				globalSetpointList._entityManager = entityManager;
+				
+				globalSetpointList.node.execute("is_running", null)
+					.addCallback(handleGSGRunningResult, handleGSGRunningError);
+				
+				// *****************Debug only****************************
+				if (!embedded) globalSetpointList.getGroups(Globals.INITIAL_ENTITY_PATH);
+			}
+		
+			private function handleGSGRunningResult(method:MediatorNodeCall, result:Object):void {
+				serviceAvailable = true;
+				
+				if (initialSelectedEntity != null && initialSelectedEntity.length != 0)
+				{
+					handleEntitySelected(initialSelectedEntity);
+				}
+			}
+			
+			private function handleGSGRunningError(method:MediatorNodeCall, error:Object):void {
+				trace("Not running, error:" + error);
+				
+				serviceAvailable = false;
+				
+				// Display error 
+				pageErrorContainer.message = "The Global Setpoint Manager is not available on this system.";
+			} 
+		
+			private function handleCallComplete(event:XMLRPCServiceEvent):void
+			{
+				connected = true;
+			}
+			
+			private function handleServiceErrorEvent(event:ErrorEvent):void
+			{
+				connected = false;
+				event.preventDefault();
+				
+				throw new Error("XMLRPC Error Prevented Throw: " + event.text);
+			}
+			
+			/// JAVASCRIPT BRIDGE FUNCTIONS
+			public function handleGetEntity(empty:Object=null):String
+			{
+				if (entity != null)
+				{
+					return entity.path;
+				}
+				
+				return null;
+			}
+			
+			public function handleSetEntity(entity:String):void
+			{
+				handleEntitySelected(entity);
+			}
+			
+			// DEBUG FUNCTIONS
+			private function debugSetEntity():void
+			{
+				handleEntitySelected(debugEntityPath.text);
+			}
+		]]>
+	</mx:Script>
+<mx:VBox width="100%" height="100%" 
+	paddingBottom="5" paddingLeft="5" paddingRight="5" paddingTop="5"
+	backgroundColor="#e2ebf0" verticalGap="0">
+	<mx:HBox width="100%" id="debugBox" styleName="debugBox" 
+		verticalAlign="middle" visible="false" height="0" >
+		<mx:TextInput id="debugEntityPath" width="300" />
+		<mx:Button label="Set Entity" click="debugSetEntity()" />
+	</mx:HBox>
+	<uicomponents:PageErrorContainer width="100%" id="pageErrorContainer" />
+	<mx:ViewStack id="MainViewStack" selectedIndex="0" width="100%" height="100%">
+		<components:GlobalSetpointList  id="globalSetpointList" 
+			serviceAvailable="{serviceAvailable}" /> 
+	</mx:ViewStack>	
+</mx:VBox>
+</mx:Application>

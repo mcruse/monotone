@@ -1,0 +1,67 @@
+class real_time_value_req {
+      uint8 wake_up1 = 0xFE;
+      uint8 wake_up2 = 0xFE;
+      uint8 stx1 = 0x68;
+      width=6 fbuffer addr;
+      uint8 stx2 = 0x68;
+      uint8 control = 0x01;
+      uint8 len = 0x02;
+      uint8 di_b1 = 0xF0;
+      uint8 di_b2 = 0x00;
+      uint8 bcc;
+      uint8 etx = 0x16;
+}
+
+class real_time_value_res {
+      width=6 fbuffer addr;
+      uint8 stx2 = 0x68;
+      uint8 control = 0x81;
+      uint8 len = 0x98;
+      uint8 di_b1 = 0xF0;
+      uint8 di_b2 = 0x00;
+      width=150 fbuffer data;
+      uint8 bcc;
+      uint8 etx = 0x16;
+}
+
+
+class control_relay_req {
+      uint8 wake_up1 = 0xFE;
+      uint8 wake_up2 = 0xFE;
+      uint8 stx1 = 0x68;
+      width=6 fbuffer addr;
+      uint8 stx2 = 0x68;
+      uint8 control = 0x04;
+      uint8 len = 0x07;
+      uint8 di_b1 = 0x55;
+      uint8 di_b2 = 0x28;
+      width=4 fbuffer pwd;
+      uint8 data;
+      uint8 bcc;
+      uint8 etx = 0x16;
+}
+
+class control_relay_res {
+      width=6 fbuffer addr;
+      uint8 stx2 = 0x68;
+      uint8 control = 0x84;
+      uint8 len = 0x02;
+      uint8 di_b1 = 0x55;
+      uint8 di_b2 = 0x28;
+      uint8 bcc;
+      uint8 etx = 0x16;
+}
+
+class readmeterres {
+
+    width=6 fbuffer addr;
+    uint8 stx2 = 0x68;
+    uint8 opcode = 0x81;
+    uint8 len = 0x1C;
+    uint8 di_b1 = 0x52;
+    uint8 di_b2 = 0x14;
+    width=25 fbuffer data;
+    uint8 relay;
+    uint8 cs;
+    uint8 etx = 0x16;
+}

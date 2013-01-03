@@ -1,0 +1,14 @@
+@CHARSET "UTF-8";
+
+@import url("primary_tabs.css");
+
+div#primary-tabs1 {
+    position: absolute;
+    top: 51px;
+}
+
+div#stage {
+	top: 97px;
+	margin-top: 4px;
+}
+

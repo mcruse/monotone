@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical"
+	creationComplete="init()"
+	>
+<mx:Script>
+	<![CDATA[
+		import com.cisco.util.UniqueNameFinder;
+		
+		
+		private function init():void
+		{
+			var names:Array = [ "New Folder", "New Folder 0", "New 0 Folder", "New Folder2", "New Folder 10"];
+			var finder:UniqueNameFinder = new UniqueNameFinder();
+			
+			var newName:String = finder.find("New Folder", names);
+			trace("new name: " + newName);
+			
+			newName = finder.find("New {}Folder\\()^$&.*?-/+|[]\\" , names);
+		}
+	]]>
+</mx:Script>
+</mx:Application>

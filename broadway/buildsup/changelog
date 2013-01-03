@@ -1,0 +1,159 @@
+#!/usr/bin/env python
+#-*-Python-*-
+
+import getopt
+from string import split, join
+import os
+import sys
+import string
+from glob import glob
+import re
+import popen2
+
+bugs = {}
+revision = None
+startTag = None
+endTag = None
+debug = 0
+verbosity = 0
+
+# $Id: changelog,v 1.8 2009/11/26 04:50:43 markeva Exp $
+
+def display_help():
+    print 'Usage: changelog [options] [project]'
+    print 'Options:'
+    print '  -h or --help                 displays this help message'
+    print '  -s or --startTag  tag        starting tag name'
+    print '  -e or --endTag    tag        ending tag name'
+    print '  -v or --verbosity level      By default, level=1.'
+    print '  -D or --debug                Guess...'
+    print 'The project name, if not specified, is derived from the'
+    print 'current working directory.\n'
+
+def _writelineto(file, fmt, args):
+    count = 0
+    if args:
+        line = fmt % args
+        count += len(line)
+        file.write(line)
+    else:
+        file.write(fmt)
+        count += len(fmt)
+    #file.write("\n")
+    file.flush()
+    return (count + 1)
+
+def OUTPUT(fmt, *args):
+    return _writelineto(sys.stdout, fmt, args)
+
+def PROGRESS(fmt, *args, **kw):
+    if kw.has_key('level'):
+        level=kw['level']
+    else:
+        level=1
+    if verbosity >= level:
+        return _writelineto(sys.stderr, fmt, args)
+
+def ERROR(fmt, *args):
+    return _writelineto(sys.stderr, fmt, args)
+
+def DEBUG(msg, *args, **kw):
+    if kw.has_key('level'):
+        level=kw['level']
+    else:
+        level=1
+    if debug >= level:
+        OUTPUT(msg)
+
+
+########################### M A I N ###########################
+
+try:
+    optlist, args = getopt.getopt( sys.argv[1:], 'hs:e:Dv:',
+                                   ['help', 'startTag=', 'endTag=', 'debug', 'verbosity='] )
+    for o,a in optlist:
+        if  o in ('-h', '--help'):
+            display_help()
+            sys.exit()
+        if o in ('-s', '--startTag'):
+            startTag = a
+	if o in ('-e', '--endTag'):
+	    endTag = a
+        if o in ('-D', '--debug'):
+            debug = 1
+        if o in ('-v', '--verbosity'):
+            verbosity = a
+            
+except getopt.GetoptError,data:
+    print 'ERROR: There was an error getting the options'
+    print data
+    print '\n'
+    display_help()
+    sys.exit( 1 )
+
+if not startTag:
+    print "Missing --startTag (or -s) parameter"
+    sys.exit( 1 )
+
+if not endTag:
+     print "Missing --endTag (or -e) parameter"
+     sys.exit( 1 )
+
+# The current working directory is assumed to contain the project for which the changelog
+# is being generated.  By default, the directory name and project name are assumed to be the same.
+if len( args ) > 0:
+    project = args[0]
+else:
+    project = os.path.split( os.getcwd() )[-1]
+    
+OUTPUT( '<html>\n' )
+OUTPUT( "<head>\n<title>Changelog for %s from revision %s</title>" % (project, startTag) )
+OUTPUT( "<script type='text/javascript' src='generateChangeLog.js'></script></head>" )
+OUTPUT( '<body onload="init();">\n' )
+OUTPUT( "<b>Changelog for %s from revision %s</b>" % (project, startTag) )
+OUTPUT( "<pre style='display:none'>")
+start_rev = ''
+end_rev = ''
+cmd = 'svn log -v --stop-on-copy https://wwwin-svn-sjc.cisco.com/cbsbu/broadway/tags/%s 2> /dev/null' % startTag
+child = popen2.Popen3( cmd, 0 ) # Ignore stderr.
+stdout = child.fromchild
+line = stdout.readline()
+while line:
+    exp = re.match( '^r[\d]+', line )
+    if exp:
+        start_rev = exp.group(0)
+	break
+    line = stdout.readline()
+    
+# Drain stdout (to avoid a hang).
+while line:
+    line = stdout.readline()
+
+cmd = 'svn log -v --stop-on-copy https://wwwin-svn-sjc.cisco.com/cbsbu/broadway/tags/%s 2> /dev/null' % endTag
+child = popen2.Popen3( cmd, 0 ) # Ignore stderr.
+stdout = child.fromchild
+line = stdout.readline()
+while line:
+    exp = re.match( '^r[\d]+', line )
+    if exp:
+        end_rev = exp.group(0)
+	break
+    line = stdout.readline()
+
+while line:
+    line = stdout.readline()
+
+cmd = 'svn log -v -r%s:%s 2> /dev/null'%(start_rev[1:], end_rev[1:])
+child = popen2.Popen3( cmd, 0 ) # Ignore stderr.
+stdout = child.fromchild
+line = stdout.readline()
+while line:
+    OUTPUT(line)
+    line = stdout.readline()
+
+OUTPUT( "</pre>" )
+OUTPUT( "<div id='progress' style='background:black;'>.</div>")
+OUTPUT( "<div><div id='content' style='float:left;width:83%;'></div>")
+OUTPUT( "<div id='misc' style='float:right;width:15%;'><div id='cdets'></div><div id='changes'></div><div id='users'></div></div><div>")
+OUTPUT( '</body>\n' )
+OUTPUT( '</html>\n' )

@@ -1,0 +1,145 @@
+@CHARSET "UTF-8";
+
+/****************************
+    Style tab-bar.
+    
+    Note that a lot of this code redundant to similar styling defined 
+    by the buttons style sheet.  This has been left as it on purpose; 
+    chances are that we will want to differentiate side-bar navigation 
+    from primary-tab navigation morely clearly in the future.
+****************************/
+div.primary-tabs {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    bottom: auto;
+    left: 0;
+    width: auto;
+    height: 31px;
+    margin: 15px;
+    overflow: hidden;
+    border-style: none;
+}
+
+div.primary-tabs img.left-side {
+    position: absolute;
+    top: 0;
+    right: auto;
+    bottom: 0;
+    left: 0;
+    width: 10px;
+    margin: 0;
+    padding: 0;
+}
+
+div.primary-tabs img.right-side {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: 10px;
+    margin: 0;
+    padding: 0;
+}
+
+/****************************
+    Style tab-buttons
+****************************/
+div.primary-tabs ul.tabs {
+    height: 23px;
+    padding: 4px 0;
+    margin: 0 10px;
+    font-size: 11px;
+    font-style: inherit;
+    list-style: none;
+    list-style-type: none;
+    background: url(/public/images/primary_tabs.png);
+}
+
+div.primary-tabs li.tab-button {
+    position: relative;
+    float: left;
+    height: 23px;
+    color: #FFFFFF;
+    /* Doubled 4px margins makeup 8px gap */
+    margin: 0 4px;
+    font-weight: normal;
+    line-height: normal;
+    background-color: transparent;
+}
+
+div.primary-tabs li#home-tab-button {
+    /* 
+        End caps displayed by 10px padding in UL, 
+        move 2px left to compensate, leaving 8px gap.
+    */
+    margin-left: -2px;
+}
+
+div.primary-tabs li.tab-button a {
+    color: #FFFFFF;
+    height: 9px;
+    margin: 0 10px;
+    display: block;
+    padding: 7px 4px;
+    text-decoration: none;
+    background: transparent;
+}
+
+div.primary-tabs li.tab-button img {
+    position: absolute;
+    top: 0;
+    bottom: auto;
+    width: 10px;
+    height: 23px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;    
+}
+
+div.primary-tabs li.tab-button img.prefix {
+    right: auto;
+    left: 0;
+}
+
+div.primary-tabs li.tab-button img.suffix {
+    right: 0;
+    left: auto;
+}
+
+div.primary-tabs li.tab-button.selected {
+    font-weight: bold;
+}
+
+div.primary-tabs li.tab-button.selected a {
+    background: url(/public/images/tabs/tab_primary_selected.png);
+}
+
+div.primary-tabs li.tab-button.selected a img.prefix {
+    background: url(/public/images/tabs/tab_primary_selected_left.png);    
+}
+
+div.primary-tabs li.tab-button.selected a img.suffix {
+    background: url(/public/images/tabs/tab_primary_selected_right.png);    
+}
+
+div.primary-tabs li.tab-button a:hover {
+    color: #000000;
+    background: url(/public/images/tabs/tab_primary_hvr.png);
+}
+
+div.primary-tabs li.tab-button a:hover img.prefix {
+    background: url(/public/images/tabs/tab_primary_hvr_left.png);    
+}
+
+div.primary-tabs li.tab-button a:hover img.suffix {
+    background: url(/public/images/tabs/tab_primary_hvr_right.png);    
+}
+
+
+
+
+
+

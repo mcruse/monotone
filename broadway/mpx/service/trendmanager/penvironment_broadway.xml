@@ -1,0 +1,467 @@
+<mpxconfig node_version='LATEST'>
+  <node name='/' node_id='788' module=''  config_builder=''  inherant='false' description='User Definable Platform'>
+    <node name='aliases' node_id='480' module='mpx.service.aliases.factory'  config_builder=''  inherant='true' description='aka shortcuts, nicknames and links'>
+      <config>
+        <property name='__type__' value='point'/>
+        <property name='priority' value='2'/>
+      </config>
+    </node>
+    <node name='interfaces' node_id='789' module='mpx.ion.host.pc'  config_builder=''  inherant='true' description='User Definable I/O'>
+      <node name='virtuals' node_id='1122' module='mpx.lib.node.CompositeNode'  config_builder=''  inherant='true' description='Group for organizing virtual points'>
+      </node>
+    </node>
+    <node name='services' node_id='468' module='mpx.service.factory'  config_builder=''  inherant='true' description='Services'>
+      <config>
+        <property name='__type__' value='point'/>
+        <property name='priority' value='3'/>
+      </config>
+      <node name='Trend Manager' node_id='dd02942a-e402-4c6c-8794-45b46c552316' module='mpx.lib.node.user_definable.factory'  config_builder=''  inherant='false' description='User Definable Node'>
+        <config>
+          <property name='attributes'>
+            <list>
+              <dictionary>
+                <property name='name' value='enable'/>
+                <property name='definition' value='1'/>
+              </dictionary>
+              <dictionary>
+                <property name='name' value='debug'/>
+                <property name='definition' value='0'/>
+              </dictionary>
+            </list>
+          </property>
+          <property name='factory' value='mpx.service.trendmanager.trendmanager.TrendManager'/>
+        </config>
+      </node>
+      <node name='alarms' node_id='812' module='mpx.lib.node.CompositeNode'  config_builder=''  inherant='true' description='Alarm manager container'>
+      </node>
+      <node name='garbage_collector' node_id='d6da9764-7a46-4103-ae1b-9b8dbd2a86fe' module=''  config_builder=''  inherant='true' description='Garbage Collector Service'>
+        <config>
+          <property name='__type__' value='service'/>
+          <property name='debug' value='0'/>
+        </config>
+      </node>
+      <node name='logger' node_id='479' module='mpx.service.logger.factory'  config_builder='envenergy.wizard.log.LogWizardPlugin'  inherant='true' description='The Mediator&apos;s logging services'>
+        <config>
+          <property name='__type__' value='point'/>
+          <property name='debug' value='0'/>
+          <property name='enabled' value='1'/>
+        </config>
+        <node name='msglog' node_id='604' module='mpx.service.logger.log'  config_builder=''  inherant='true' description='Logs messages from the Mediator Framework'>
+          <config>
+            <property name='__type__' value='point'/>
+            <property name='minimum_size' value='250'/>
+            <property name='maximum_size' value='500'/>
+          </config>
+          <node name='exporters' node_id='461' module='mpx.lib.node.factory'  config_builder='envenergy.wizard.log.LogWizardPlugin_ToExporters'  inherant='true' description='Exporters'>
+          </node>
+        </node>
+        <node name='SillyTimeValues' node_id='261' module='mpx.service.logger.periodic_log.factory'  config_builder='envenergy.wizard.log.LogWizardPlugin_ToLog'  inherant='false' description='Periodic log'>
+          <config>
+            <property name='__type__' value='point'/>
+            <property name='debug' value=' 0'/>
+            <property name='period' value='15'/>
+            <property name='minimum_size' value='250'/>
+            <property name='maximum_size' value='500'/>
+          </config>
+          <node name='columns' node_id='460' module='mpx.lib.node.factory'  config_builder='envenergy.wizard.log.LogWizardPlugin_ToColumns'  inherant='true' description='Log Columns'>
+            <node name='timestamp' node_id='462' module='mpx.service.logger.periodic_column.factory'  config_builder=''  inherant='false' description='Timestamp column'>
+              <config>
+                <property name='__type__' value='point'/>
+                <property name='debug' value='0'/>
+                <property name='sort_order' value='ascending'/>
+                <property name='position' value='0'/>
+                <property name='context' value='None'/>
+                <property name='args' value='()'/>
+                <property name='function' value='self.scheduled_time'/>
+              </config>
+            </node>
+            <node name='day' node_id='264' module='mpx.service.logger.periodic_column.factory'  config_builder='envenergy.wizard.log.LogWizardPlugin_ToColumn'  inherant='false' description='Periodic column'>
+              <config>
+                <property name='__type__' value='point'/>
+                <property name='debug' value='0'/>
+                <property name='sort_order' value='none'/>
+                <property name='position' value='1'/>
+                <property name='context' value='None'/>
+                <property name='args' value='()'/>
+                <property name='function' value='mpx.lib.node.as_node(&quot;/services/time/local/day&quot;).get'/>
+                <property name='conversion' value='magnitude'/>
+              </config>
+            </node>
+            <node name='hour' node_id='264' module='mpx.service.logger.periodic_column.factory'  config_builder='envenergy.wizard.log.LogWizardPlugin_ToColumn'  inherant='false' description='Periodic column'>
+              <config>
+                <property name='__type__' value='point'/>
+                <property name='debug' value='0'/>
+                <property name='sort_order' value='none'/>
+                <property name='position' value='2'/>
+                <property name='context' value='None'/>
+                <property name='args' value='()'/>
+                <property name='function' value='mpx.lib.node.as_node(&quot;/services/time/local/hour&quot;).get'/>
+                <property name='conversion' value='magnitude'/>
+              </config>
+            </node>
+            <node name='minute' node_id='264' module='mpx.service.logger.periodic_column.factory'  config_builder='envenergy.wizard.log.LogWizardPlugin_ToColumn'  inherant='false' description='Periodic column'>
+              <config>
+                <property name='__type__' value='point'/>
+                <property name='debug' value='0'/>
+                <property name='sort_order' value='none'/>
+                <property name='position' value='3'/>
+                <property name='context' value='None'/>
+                <property name='args' value='()'/>
+                <property name='function' value='mpx.lib.node.as_node(&quot;/services/time/local/minute&quot;).get'/>
+                <property name='conversion' value='magnitude'/>
+              </config>
+            </node>
+            <node name='month' node_id='264' module='mpx.service.logger.periodic_column.factory'  config_builder='envenergy.wizard.log.LogWizardPlugin_ToColumn'  inherant='false' description='Periodic column'>
+              <config>
+                <property name='__type__' value='point'/>
+                <property name='debug' value='0'/>
+                <property name='sort_order' value='none'/>
+                <property name='position' value='4'/>
+                <property name='context' value='None'/>
+                <property name='args' value='()'/>
+                <property name='function' value='mpx.lib.node.as_node(&quot;/services/time/local/month&quot;).get'/>
+                <property name='conversion' value='magnitude'/>
+              </config>
+            </node>
+            <node name='second' node_id='264' module='mpx.service.logger.periodic_column.factory'  config_builder='envenergy.wizard.log.LogWizardPlugin_ToColumn'  inherant='false' description='Periodic column'>
+              <config>
+                <property name='__type__' value='point'/>
+                <property name='debug' value='0'/>
+                <property name='sort_order' value='none'/>
+                <property name='position' value='5'/>
+                <property name='context' value='None'/>
+                <property name='args' value='()'/>
+                <property name='function' value='mpx.lib.node.as_node(&quot;/services/time/local/second&quot;).get'/>
+                <property name='conversion' value='magnitude'/>
+              </config>
+            </node>
+          </node>
+          <node name='exporters' node_id='461' module='mpx.lib.node.factory'  config_builder='envenergy.wizard.log.LogWizardPlugin_ToExporters'  inherant='true' description='Exporters'>
+          </node>
+        </node>
+      </node>
+      <node name='network' node_id='469' module='mpx.service.network.factory'  config_builder=''  inherant='true' description='The Mediator&apos;s networking services'>
+        <config>
+          <property name='__type__' value='point'/>
+          <property name='debug' value='0'/>
+          <property name='enabled' value='1'/>
+        </config>
+        <node name='dynamic_dns' node_id='1250' module='mpx.ion.host.eth.dyndns.factory'  config_builder=''  inherant='true' description='Dynamic DNS for Mediators connected to a DHCP server'>
+          <config>
+            <property name='__type__' value='service'/>
+            <property name='debug' value='0'/>
+            <property name='ddns_service' value='dyndns.org'/>
+            <property name='minutes' value='15'/>
+            <property name='enable' value='0'/>
+          </config>
+        </node>
+        <node name='http_server' node_id='471' module='mpx.service.network.http.factory'  config_builder=''  inherant='true' description='HTTP server'>
+          <config>
+            <property name='__type__' value='point'/>
+            <property name='debug' value='0'/>
+            <property name='enabled' value='1'/>
+            <property name='thread_count' value='3'/>
+            <property name='port' value='8080'/>
+          </config>
+          <node name='XMLRPCv2' node_id='07ff4603-ca5b-44ef-827b-361f8cffbba9' module='mpx.service.network.http.handlers.xmlrpc.factory'  config_builder=''  inherant='true' description=''>
+          </node>
+          <node name='config_file_handler' node_id='903a9305-debe-4fce-b385-d1395fd94696' module='mpx.service.network.http.handlers.config.factory'  config_builder=''  inherant='true' description='HTTP Configuration File Handler.'>
+            <config>
+              <property name='__type__' value='point'/>
+              <property name='debug' value='0'/>
+              <property name='safe_save' value='1'/>
+              <property name='enabled' value='1'/>
+              <property name='keep_backup' value='0'/>
+            </config>
+          </node>
+          <node name='http_file_handler' node_id='474' module='mpx.service.network.http.request_handler.factory'  config_builder=''  inherant='true' description='HTTP File Handler.'>
+            <config>
+              <property name='__type__' value='point'/>
+              <property name='debug' value='0'/>
+              <property name='put_enabled' value='1'/>
+              <property name='delete_enabled' value='1'/>
+              <property name='request_path' value='/'/>
+              <property name='enabled' value='1'/>
+              <property name='server_root' value='/home/mevans/source/trunk/moe2/penvironment.d/var/mpx/www/http'/>
+            </config>
+          </node>
+          <node name='msglog_browser' node_id='450' module='mpx.lib.msglog.browser.factory'  config_builder=''  inherant='true' description='Enables browsing of the Mediator Framework Msglog'>
+            <config>
+              <property name='__type__' value='point'/>
+              <property name='debug' value='0'/>
+              <property name='request_path' value='^/msglog/.*|^/msglog$'/>
+              <property name='enabled' value='1'/>
+            </config>
+          </node>
+          <node name='node_browser' node_id='472' module='mpx.lib.node.browser.factory'  config_builder=''  inherant='true' description='Enables html browsing of Node Tree'>
+            <config>
+              <property name='__type__' value='point'/>
+              <property name='debug' value='0'/>
+              <property name='request_path' value='/nodebrowser'/>
+              <property name='enabled' value='1'/>
+            </config>
+          </node>
+          <node name='Trend Manager Handler' node_id='dd02942a-e402-4c6c-8794-45b46c552316' module='mpx.lib.node.user_definable.factory'  config_builder=''  inherant='false' description='User Definable Node'>
+            <config>
+              <property name='attributes'>
+                <list>
+                  <dictionary>
+                    <property name='name' value='enable'/>
+                    <property name='definition' value='1'/>
+                  </dictionary>
+                  <dictionary>
+                    <property name='name' value='debug'/>
+                    <property name='definition' value='0'/>
+                  </dictionary>
+                </list>
+              </property>
+              <property name='factory' value='mpx.service.trendmanager.request_handler.TrendManagerHandler'/>
+            </config>
+          </node>
+          <node name='xmlrpc_handler' node_id='473' module='mpx.service.network.http.xmlrpc_handler.factory'  config_builder=''  inherant='true' description='Enables XMLRPC'>
+            <config>
+              <property name='__type__' value='point'/>
+              <property name='debug' value='0'/>
+              <property name='request_path' value='/xmlrpc'/>
+              <property name='enabled' value='1'/>
+              <property name='security_handler' value='DefaultSecurityHandler'/>
+              <property name='deployed_objects'>
+                <list>
+                </list>
+              </property>
+            </config>
+            <node name='mediator_system' node_id='802' module='mpx.lib.xmlrpc.XMLRPC_Deploy'  config_builder=''  inherant='true' description='Mediator level methods'>
+              <config>
+                <property name='__type__' value='point'/>
+                <property name='lifetime' value='Runtime'/>
+                <property name='class_name' value='mpx.lib.xmlrpc.mediator.MediatorSystem'/>
+                <property name='alias' value='mediator_system'/>
+              </config>
+            </node>
+            <node name='rna_xmlrpc' node_id='603' module='mpx.lib.xmlrpc.XMLRPC_Deploy'  config_builder=''  inherant='true' description='RNA Over XMLRPC '>
+              <config>
+                <property name='__type__' value='point'/>
+                <property name='lifetime' value='Runtime'/>
+                <property name='class_name' value='mpx.lib.xmlrpc.rna_xmlrpc.RNA_XMLRPC_Handler'/>
+                <property name='alias' value='rna_xmlrpc'/>
+              </config>
+            </node>
+            <node name='rna_xmlrpc2' node_id='130069' module='mpx.lib.xmlrpc.XMLRPC_Deploy'  config_builder=''  inherant='true' description='RNA Over XMLRPC with  settable encodings'>
+              <config>
+                <property name='__type__' value='point'/>
+                <property name='lifetime' value='Runtime'/>
+                <property name='class_name' value='mpx.lib.xmlrpc.rna_xmlrpc.RNA_XMLRPC_Handler2'/>
+                <property name='alias' value='rna_xmlrpc2'/>
+              </config>
+            </node>
+          </node>
+        </node>
+        <node name='https_server' node_id='87f931f3-02d8-4d32-8c7d-2d1d7d8eab55' module='mpx.service.network.https.factory'  config_builder=''  inherant='true' description='Standard HTTPS server'>
+          <config>
+            <property name='__type__' value='service'/>
+            <property name='common_name' value='auto'/>
+            <property name='organizational_unit' value='Envenergy Self Signed Certificate'/>
+            <property name='server_cert' value='/home/mevans/source/trunk/moe2/penvironment.d/var/mpx/www/https/certificate.pem'/>
+            <property name='port' value='8443'/>
+            <property name='key_file' value='/home/mevans/source/trunk/moe2/penvironment.d/var/mpx/config/private.key'/>
+            <property name='debug' value='0'/>
+            <property name='country' value='US'/>
+            <property name='enabled' value='1'/>
+            <property name='state' value='CA'/>
+            <property name='email' value='support@envenergy.com'/>
+            <property name='thread_pool' value='3'/>
+            <property name='city' value='Carpinteria'/>
+            <property name='organization' value='Envenergy'/>
+          </config>
+          <node name='XMLRPCv2' node_id='07ff4603-ca5b-44ef-827b-361f8cffbba9' module='mpx.service.network.http.handlers.xmlrpc.factory'  config_builder=''  inherant='true' description=''>
+          </node>
+          <node name='config_file_handler' node_id='903a9305-debe-4fce-b385-d1395fd94696' module='mpx.service.network.http.handlers.config.factory'  config_builder=''  inherant='true' description='HTTP Configuration File Handler.'>
+            <config>
+              <property name='__type__' value='point'/>
+              <property name='debug' value='0'/>
+              <property name='safe_save' value='1'/>
+              <property name='enabled' value='1'/>
+              <property name='keep_backup' value='0'/>
+            </config>
+          </node>
+          <node name='https_file_handler' node_id='476' module='mpx.service.network.http.request_handler.factory'  config_builder=''  inherant='true' description='HTTP file server'>
+            <config>
+              <property name='__type__' value='point'/>
+              <property name='debug' value='0'/>
+              <property name='put_enabled' value='1'/>
+              <property name='delete_enabled' value='1'/>
+              <property name='request_path' value='/'/>
+              <property name='enabled' value='1'/>
+              <property name='server_root' value='/home/mevans/source/trunk/moe2/penvironment.d/var/mpx/www/https'/>
+            </config>
+          </node>
+          <node name='msglog_browser' node_id='450' module='mpx.lib.msglog.browser.factory'  config_builder=''  inherant='true' description='Enables browsing of the Mediator Framework Msglog'>
+            <config>
+              <property name='__type__' value='point'/>
+              <property name='debug' value='0'/>
+              <property name='request_path' value='^/msglog/.*|^/msglog$'/>
+              <property name='enabled' value='1'/>
+            </config>
+          </node>
+          <node name='node_browser' node_id='472' module='mpx.lib.node.browser.factory'  config_builder=''  inherant='true' description='Enables html browsing of Node Tree'>
+            <config>
+              <property name='__type__' value='point'/>
+              <property name='debug' value='0'/>
+              <property name='request_path' value='/nodebrowser'/>
+              <property name='enabled' value='1'/>
+            </config>
+          </node>
+          <node name='Trend Manager Handler' node_id='dd02942a-e402-4c6c-8794-45b46c552316' module='mpx.lib.node.user_definable.factory'  config_builder=''  inherant='false' description='User Definable Node'>
+            <config>
+              <property name='attributes'>
+                <list>
+                  <dictionary>
+                    <property name='name' value='enable'/>
+                    <property name='definition' value='1'/>
+                  </dictionary>
+                  <dictionary>
+                    <property name='name' value='debug'/>
+                    <property name='definition' value='0'/>
+                  </dictionary>
+                </list>
+              </property>
+              <property name='factory' value='mpx.service.trendmanager.request_handler.TrendManagerHandler'/>
+            </config>
+          </node>
+          <node name='properties_browser' node_id='1246' module='mpx.service.network.http.properties_request_handler.PropertiesRequestHandler'  config_builder=''  inherant='true' description='Displays the current Properties of the system in an HTML page'>
+            <config>
+              <property name='__type__' value='point'/>
+              <property name='debug' value='0'/>
+              <property name='request_path' value='^/properties$'/>
+              <property name='enabled' value='1'/>
+            </config>
+          </node>
+        </node>
+        <node name='rna' node_id='470' module='mpx.service.network.rna.factory'  config_builder=''  inherant='true' description='RPC service for nodes'>
+          <config>
+            <property name='__type__' value='point'/>
+            <property name='debug' value='0'/>
+            <property name='enabled' value='0'/>
+            <property name='interface' value='all'/>
+            <property name='port' value='5150'/>
+          </config>
+          <node name='configuration' node_id='478' module='mpx.service.configuration.factory'  config_builder=''  inherant='true' description='Runtime Configuration Tool'>
+            <config>
+              <property name='__type__' value='point'/>
+              <property name='debug' value='0'/>
+              <property name='enabled' value='1'/>
+            </config>
+          </node>
+        </node>
+        <node name='webdev' node_id='1251' module='mpx.service.network.webdev.WebDEV'  config_builder=''  inherant='true' description='Configuration options for web development'>
+          <config>
+            <property name='__type__' value='point'/>
+            <property name='debug' value='0'/>
+            <property name='allow_ftp' value='0'/>
+            <property name='enable' value='0'/>
+          </config>
+        </node>
+      </node>
+      <node name='status' node_id='1088' module='mpx.service.status.factory'  config_builder=''  inherant='true' description='Mediator status indicator'>
+        <config>
+          <property name='__type__' value='point'/>
+          <property name='debug' value='0'/>
+        </config>
+        <node name='framework_version' node_id='8cb149e2-fa7c-4ec9-ad46-1abe8cc7a83f' module='mpx.service.status.status.FWVersionNode'  config_builder=''  inherant='true' description='Frame Work Version'>
+        </node>
+        <node name='hostname' node_id='dfee6513-7037-43e6-b5b4-4b7a6f3e7f92' module='mpx.service.status.status.HostnameNode'  config_builder=''  inherant='true' description='Hostname'>
+        </node>
+        <node name='last_start_time' node_id='15e0b4ec-6392-4781-9737-18b7958d05e8' module='mpx.service.status.status.LastStartTimeNode'  config_builder=''  inherant='true' description='Last start time'>
+        </node>
+        <node name='moe_version' node_id='c0b38a30-d6f8-4438-bb4c-823fef4c6614' module='mpx.service.status.status.MoeVersionNode'  config_builder=''  inherant='true' description='Moe Version'>
+        </node>
+        <node name='serial_number' node_id='335a97a7-b159-4234-abf7-d76ca77e5a69' module='mpx.service.status.status.SerialNumberNode'  config_builder=''  inherant='true' description='Mediator serial number'>
+        </node>
+        <node name='resources' node_id='e83f54c0-772b-4263-b24f-23228c11cebc' module='mpx.service.status.resources.factory'  config_builder=''  inherant='true' description='Resources'>
+          <node name='memory' node_id='e1f8cb2b-3ee4-4512-ac15-03aea67539ae' module='mpx.service.status.memory.factory'  config_builder=''  inherant='true' description='Memory Status'>
+          </node>
+          <node name='storage' node_id='6f5b6a27-191a-4336-9961-7d050dfbebf3' module='mpx.service.status.storage.factory'  config_builder=''  inherant='true' description='Storage Status'>
+            <node name='root' node_id='7883838c-ddb3-42d3-b5c5-97f88478730f' module='mpx.service.status.storage.drive'  config_builder=''  inherant='true' description='Root Drive Storage Status'>
+              <config>
+                <property name='__type__' value='point'/>
+                <property name='mount_point' value='/'/>
+              </config>
+              <node name='available' node_id='29945bea-9259-4281-b055-0786dd53f042' module='mpx.service.status.storage.drive_attribute'  config_builder=''  inherant='true' description='Amount Available (in bytes)'>
+              </node>
+              <node name='size' node_id='367ab751-330c-483b-8a95-83474d973198' module='mpx.service.status.storage.drive_attribute'  config_builder=''  inherant='true' description='Size of Drive (in bytes)'>
+              </node>
+              <node name='used' node_id='bf1f389f-b2b1-449c-b0a5-6719104618d2' module='mpx.service.status.storage.drive_attribute'  config_builder=''  inherant='true' description='Amount Used (in bytes)'>
+              </node>
+            </node>
+          </node>
+        </node>
+      </node>
+      <node name='time' node_id='612' module='mpx.service.time.Time'  config_builder='envenergy.ion.config.DateTimeSet'  inherant='true' description='Time service'>
+        <node name='UTC' node_id='613' module='mpx.service.time.time_zone.UTC'  config_builder=''  inherant='true' description='Coordinated Universal Time'>
+          <node name='day' node_id='617' module='mpx.service.time.time_attribute.TimeAttribute'  config_builder=''  inherant='true' description='The day as an int'>
+          </node>
+          <node name='hour' node_id='618' module='mpx.service.time.time_attribute.TimeAttribute'  config_builder=''  inherant='true' description='The hour as an int'>
+          </node>
+          <node name='milliseconds' node_id='621' module='mpx.service.time.time_attribute.MilliSeconds'  config_builder=''  inherant='true' description='The milliseconds as a float'>
+          </node>
+          <node name='minute' node_id='619' module='mpx.service.time.time_attribute.TimeAttribute'  config_builder=''  inherant='true' description='The minute as in int'>
+          </node>
+          <node name='month' node_id='616' module='mpx.service.time.time_attribute.TimeAttribute'  config_builder=''  inherant='true' description='The month as an int'>
+          </node>
+          <node name='second' node_id='620' module='mpx.service.time.time_attribute.TimeAttribute'  config_builder=''  inherant='true' description='The second as an int'>
+          </node>
+          <node name='weekday' node_id='623' module='mpx.service.time.time_attribute.TimeAttribute'  config_builder=''  inherant='true' description='The weekday as an int'>
+          </node>
+          <node name='year' node_id='615' module='mpx.service.time.time_attribute.TimeAttribute'  config_builder=''  inherant='true' description='The year'>
+          </node>
+        </node>
+        <node name='local' node_id='614' module='mpx.service.time.time_zone.Local'  config_builder=''  inherant='true' description='Local time'>
+          <node name='day' node_id='617' module='mpx.service.time.time_attribute.TimeAttribute'  config_builder=''  inherant='true' description='The day as an int'>
+          </node>
+          <node name='hour' node_id='618' module='mpx.service.time.time_attribute.TimeAttribute'  config_builder=''  inherant='true' description='The hour as an int'>
+          </node>
+          <node name='milliseconds' node_id='621' module='mpx.service.time.time_attribute.MilliSeconds'  config_builder=''  inherant='true' description='The milliseconds as a float'>
+          </node>
+          <node name='minute' node_id='619' module='mpx.service.time.time_attribute.TimeAttribute'  config_builder=''  inherant='true' description='The minute as in int'>
+          </node>
+          <node name='month' node_id='616' module='mpx.service.time.time_attribute.TimeAttribute'  config_builder=''  inherant='true' description='The month as an int'>
+          </node>
+          <node name='second' node_id='620' module='mpx.service.time.time_attribute.TimeAttribute'  config_builder=''  inherant='true' description='The second as an int'>
+          </node>
+          <node name='weekday' node_id='623' module='mpx.service.time.time_attribute.TimeAttribute'  config_builder=''  inherant='true' description='The weekday as an int'>
+          </node>
+          <node name='year' node_id='615' module='mpx.service.time.time_attribute.TimeAttribute'  config_builder=''  inherant='true' description='The year'>
+          </node>
+        </node>
+        <node name='synch_continuous' node_id='800' module='mpx.service.time.time_synch.factory'  config_builder=''  inherant='true' description='Continuously synchronizes time with one or more time servers via a Broadband connection'>
+          <config>
+            <property name='__type__' value='service'/>
+            <property name='debug' value='0'/>
+            <property name='servers'>
+              <list>
+              </list>
+            </property>
+            <property name='connection_type' value='LAN'/>
+            <property name='enable' value='0'/>
+          </config>
+        </node>
+        <node name='synch_periodic' node_id='801' module='mpx.service.time.time_synch.factory'  config_builder=''  inherant='true' description='Periodically synchronizes time with one or more time servers over an intermittent Internet connection'>
+          <config>
+            <property name='__type__' value='service'/>
+            <property name='debug' value='0'/>
+            <property name='days' value='0'/>
+            <property name='servers'>
+              <list>
+              </list>
+            </property>
+            <property name='connection_type' value='Dial out'/>
+            <property name='hours' value='1'/>
+            <property name='minutes' value='0'/>
+            <property name='enable' value='0'/>
+          </config>
+        </node>
+      </node>
+    </node>
+  </node>
+</mpxconfig>
+

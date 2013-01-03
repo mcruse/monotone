@@ -1,0 +1,193 @@
+<mpx>
+  <node name='ion' module='mpx.ion.mpxs1'  description='MPX S1 -- Ion'>
+    <config>
+      <property name='hostname' value='mpx.envenergy.com'/>
+      <property name='masquerade' value='1'/>
+      <property name='netmask' value='255.255.255.0'/>
+      <property name='ipaddress' value='192.168.0.1'/>
+      <property name='be_firewall' value='1'/>
+      <property name='dsn_server' value='ns.envenergy.com'/>
+      <property name='use_dhcp' value='1'/>
+    </config>
+    <node name='counter1' module=''  description='counter input'>
+      <config>
+      </config>
+    </node>
+    <node name='counter2' module=''  description='counter input'>
+      <config>
+      </config>
+    </node>
+    <node name='counter3' module=''  description='counter input'>
+      <config>
+      </config>
+    </node>
+    <node name='counter4' module=''  description='counter input'>
+      <config>
+      </config>
+    </node>
+    <node name='dallas2' module=''  description='dallas bus'>
+      <config>
+      </config>
+    </node>
+    <node name='DI1' module=''  description='logic level on counter1'>
+      <config>
+      </config>
+    </node>
+    <node name='DI2' module=''  description='logic level on counter2'>
+      <config>
+      </config>
+    </node>
+    <node name='DI3' module=''  description='logic level on counter3'>
+      <config>
+      </config>
+    </node>
+    <node name='DI4' module=''  description='logic level on counter1'>
+      <config>
+      </config>
+    </node>
+    <node name='relay1' module=''  description='dry contact closure'>
+      <config>
+      </config>
+    </node>
+    <node name='relay2' module=''  description='dry contact closure'>
+      <config>
+      </config>
+    </node>
+    <node name='port1' module=''  description='RS232 console port, DB9 connector'>
+      <config>
+        <property name='baud' value='9600'/>
+        <property name='parity' value='none'/>
+        <property name='bits' value='8'/>
+        <property name='stop_bits' value='1'/>
+      </config>
+    </node>
+    <node name='port3' module=''  description='RS232/485 port, RJ45 and Phoenix'>
+      <config>
+        <property name='baud' value='9600'/>
+        <property name='parity' value='none'/>
+        <property name='bits' value='8'/>
+        <property name='stop_bits' value='1'/>
+      </config>
+    </node>
+    <node name='port5' module=''  description='RS232/485 port, RJ45 and Phoenix'>
+      <config>
+        <property name='baud' value='9600'/>
+        <property name='parity' value='none'/>
+        <property name='bits' value='8'/>
+        <property name='stop_bits' value='1'/>
+      </config>
+    </node>
+    <node name='port6' module=''  description='RS232/485 port, RJ45 and Phoenix'>
+      <config>
+        <property name='baud' value='9600'/>
+        <property name='parity' value='none'/>
+        <property name='bits' value='8'/>
+        <property name='stop_bits' value='1'/>
+      </config>
+    </node>
+    <node name='port4' module=''  description='RS232/485 port, RJ45 and Phoenix'>
+      <config>
+        <property name='baud' value='9600'/>
+        <property name='parity' value='none'/>
+        <property name='bits' value='8'/>
+        <property name='stop_bits' value='1'/>
+      </config>
+    </node>
+    <node name='port2' module=''  description='RS232 port, DB9 connector'>
+      <config>
+        <property name='baud' value='9600'/>
+        <property name='parity' value='none'/>
+        <property name='bits' value='8'/>
+        <property name='stop_bits' value='1'/>
+      </config>
+    </node>
+    <node name='dallas1' module=''  description='dallas bus'>
+      <config>
+      </config>
+      <node name='Temperature_1' module='mpx.ion.dallas.temperature'  description='dallas temperature sensor'>
+        <config>
+          <property name='address' value='28A9650B00000083'/>
+        </config>
+        <node name='C' module=''  description='degrees C'>
+          <config>
+          </config>
+        </node>
+        <node name='F' module=''  description='degrees F'>
+          <config>
+          </config>
+        </node>
+        <node name='K' module=''  description='degrees K'>
+          <config>
+          </config>
+        </node>
+      </node>
+    </node>
+  </node>
+  <node name='services' module='mpx.service'>
+    <node name='logger' module='mpx.service.logger'>
+      <config>
+        <property name='logs'>
+          <list>
+            <dictionary>
+              <property name='name' value='client_data_log'/>
+              <property name='columns'>
+                <list>
+                  <property value='timestamp'/>
+                  <property value='Temperature_1'/>
+                  <property value='C'/>
+                  <property value='F'/>
+                  <property value='K'/>
+                </list>
+              </property>
+              <property name='collector'>
+                <dictionary>
+                  <property name='period' value='900'/>
+                  <property name='columns'>
+                    <list>
+                      <dictionary>
+                        <property name='name' value='timestamp'/>
+                        <property name='function' value='self.scheduled_time'/>
+                        <property name='args'>
+                          <list/>
+                        </property>
+                      </dictionary>
+                      <dictionary>
+                        <property name='name' value='Temperature_1'/>
+                        <property name='function' value='mpx.lib.node.as_node("/ion/dallas1/Temperature_1").get'/>
+                        <property name='args'>
+                          <list/>
+                        </property>
+                      </dictionary>
+                      <dictionary>
+                        <property name='name' value='C'/>
+                        <property name='function' value='mpx.lib.node.as_node("/ion/dallas1/Temperature_1/C").get'/>
+                        <property name='args'>
+                          <list/>
+                        </property>
+                      </dictionary>
+                      <dictionary>
+                        <property name='name' value='F'/>
+                        <property name='function' value='mpx.lib.node.as_node("/ion/dallas1/Temperature_1/F").get'/>
+                        <property name='args'>
+                          <list/>
+                        </property>
+                      </dictionary>
+                      <dictionary>
+                        <property name='name' value='K'/>
+                        <property name='function' value='mpx.lib.node.as_node("/ion/dallas1/Temperature_1/K").get'/>
+                        <property name='args'>
+                          <list/>
+                        </property>
+                      </dictionary>
+                    </list>
+                  </property>
+                </dictionary>
+              </property>
+            </dictionary>
+          </list>
+        </property>
+      </config>
+    </node>
+  </node>
+</mpx>
+

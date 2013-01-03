@@ -1,0 +1,29 @@
+See README
+
+The following hack DOES NOT seem required for normal operation.
+
+/usr/lib/python2.2/site-packages/pysnmp/v4/smi/mibs/SNMPv2-SMI.py:
+
+    # HACK to display OIDs with complex indexes.
+
+    def getIndicesFromInstId(self, instId):
+        """Return index values for instance identification"""
+        indices = []
+        for impliedFlag, modName, symName in self.indexNames:
+            mibObj, = mibBuilder.importSymbols(modName, symName)
+            syntax, instId = self.setFromName(mibObj.syntax, instId,
+                                              impliedFlag)
+            # MME start - This SEEMS to work, I don't know why...
+            if instId:
+                indices.append(self.getIndicesFromInstId(instId))
+            else:
+                indices.append(syntax) # to avoid cyclic refs
+        #    indices.append(syntax) # to avoid cyclic refs
+        #if instId:
+        #    raise error.SmiError(
+        #        'Excessive instance identifier sub-OIDs left at '
+        #        '%s: %s indices: %s' %
+        #        (self, instId, indices)
+        #        )
+        #     MME end
+        return tuple(indices)

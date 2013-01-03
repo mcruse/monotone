@@ -1,0 +1,7 @@
+#!/bin/bash
+
+##
+# This shell script is used to update the vendor ID html file which is
+# used to generate our list of vendors.
+
+wget http://www.bacnet.org/VendorID/BACnet%20Vendor%20IDs.html

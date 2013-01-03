@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ics-config>
+  <msg-time>1970-01-01T00:00:00-0000</msg-time>
+  <last-config-time>1970-01-01T00:00:00-0000</last-config-time>
+  <ics-serial-id></ics-serial-id>
+  <site-name>Unknown</site-name>
+  <alarm-interval-min>00:01:00</alarm-interval-min>
+  <heartbeat-interval>00:01:00</heartbeat-interval>
+  <session-upload-interval>24:00:00</session-upload-interval>
+  <session-upload-start-timeofday>00:05:00</session-upload-start-timeofday>
+</ics-config>

@@ -1,0 +1,77 @@
+#!/bin/sh
+#
+# generate a whole lot of numbers from netperf to see the effects
+# of send size on thruput
+#
+# Encorp note(s):
+#   This is a modified version of the tcp_stream_test script
+#   distributed with the netperf package.  Basically I cut out
+#   a lot of the noise and some un-necessary stuff unrelated to
+#   our testing efforts.
+#
+
+#
+# usage : mediator_test netserver_host port
+#
+
+REM_HOST=$1
+
+# at what port will netserver be waiting? If you decide to run
+# netserver at a differnet port than the default of 12865, then set
+# the value of PORT apropriately
+PORT=$2
+
+# where is netperf, and are there any "constant" options such as 
+# the netserver port number
+NETHOME="/usr/bin"
+NETPERF="$NETHOME/netperf -p $PORT"
+
+# How accurate we want the estimate of performance: 
+#      maximum and minimum test iterations (-i)
+#      confidence level (99 or 95) and interval (percent)
+STATS_STUFF="-i 10,2 -I 99,3"
+
+#
+# some stuff for the arithmetic 
+#
+# we start at start, and then multiply by MULT and add ADD. by changing
+# these numbers, we can double each time, or increase by a fixed
+# amount, or go up by 4x, whatever we like...
+#
+START=256
+
+END=16385
+
+MULT=8
+
+ADD=0
+
+TIME="1"
+
+#
+# the maximum socket buffer size is system dependent. for the
+# "cannonical" tests we use 32KB, but this can be altered
+#
+SOCKET_SIZE="-s 32768 -S 32768"
+
+MESSAGE=$START
+while [ $MESSAGE -le $END ]; do
+  echo
+  echo ------------------------------------
+  echo Testing with the following command line:
+  echo  $NETPERF -l $TIME -H $REM_HOST -t TCP_STREAM\
+        $STATS_STUFF --\
+        -m $MESSAGE $SOCKET_SIZE 
+  echo
+  $NETPERF -l $TIME -H $REM_HOST -t TCP_STREAM\
+  $STATS_STUFF --\
+  -m $MESSAGE $SOCKET_SIZE || {
+    exit 1
+  }
+
+  MESSAGE=`expr $MESSAGE + $ADD`
+  MESSAGE=`expr $MESSAGE \* $MULT`
+
+done
+echo
+

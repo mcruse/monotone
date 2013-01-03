@@ -1,0 +1,75 @@
+<!-- saved from url=(0014)about:internet -->
+<html lang="en">
+
+<!-- 
+Smart developers always View Source. 
+
+This application was built using Adobe Flex, an open source framework
+for building rich Internet applications that get delivered via the
+Flash Player or to desktops via Adobe AIR. 
+
+Learn more about Flex at http://flex.org 
+// -->
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<!--  BEGIN Browser History required section -->
+<link rel="stylesheet" type="text/css" href="history/history.css" />
+<!--  END Browser History required section -->
+
+<title>${title}</title>
+<script src="AC_OETags.js" language="javascript"></script>
+
+<!--  BEGIN Browser History required section -->
+<script src="history/history.js" language="javascript"></script>
+<!--  END Browser History required section -->
+
+<style>
+body { margin: 0px; overflow:hidden }
+</style>
+
+	<script type="text/javascript"
+		src="/dojoroot/dojo/dojo.js">
+	</script>
+	<script type="text/javascript" src="js/nbm_as.js">
+		
+	</script>
+	<script type="text/javascript" src="js/swfobject.js"></script>
+	<script type="text/javascript">
+		var widget = null;
+		var topic = "/topic";
+
+
+		function handleTopicReceived(e)
+		{
+			var msg = "Topic Received\nEntity ID: '" + e.entity + "'\nDisplay URL: '" + e.display + "'";
+			alert(msg);
+			dojo.log(msg);
+		}
+
+		function init()
+		{
+			widget = cisco.NBMBridge.createWidget("${swf}.swf",
+				"entityNavigatorWidget", "${application}", "100%", "100%", {
+				'embedded' : "1", 'topic' : topic }, {}, {});
+	
+			dojo.subscribe(topic, null, "handleTopicReceived");
+
+		}
+				
+		dojo.addOnLoad(init);
+
+		
+	</script>
+
+
+<body>
+
+<h1>Entity Navigator Test Embed Page</h1>
+<div id="entityNavigatorWidget" style="width:400px;height:600px; border: 1px solid red;">
+	<h2>Flash Not Loaded</h2> 
+</div>
+
+</body>
+</html>

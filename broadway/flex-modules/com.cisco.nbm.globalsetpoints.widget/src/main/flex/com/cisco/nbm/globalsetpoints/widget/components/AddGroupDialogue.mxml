@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="400" height="220" title="New Global Setpoint Group">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.managers.PopUpManager;
+			import com.cisco.nbm.globalsetpoints.event.ListEvent;
+			
+			public var setpointList:ArrayCollection;
+
+			private function onDuplicateName():void{
+				errorMessage.text = "The name you have entered is already in use.\nEnter different name.";
+			}
+			
+			public function onClose(_groupname:String):void{}
+			
+			private function onCancel():void{
+				errorMessage.text = "";
+				PopUpManager.removePopUp(this);
+			}
+			
+			private function onAdd():void{
+				if(nameExists) {
+					onDuplicateName();
+					return;
+				}
+				var listEvent:ListEvent = new ListEvent(ListEvent.NEW_SETPOINT);
+				listEvent.newName = nameField.text;
+				dispatchEvent(listEvent);
+				onCancel();
+			}
+			private function onNameFieldChange():void{
+				var nameText:String = nameField.text;
+				if(nameText == null || nameText == ""){
+					AddButton.enabled = false;
+					return;
+				}
+				//
+				if(nameExists){
+					onDuplicateName();
+					AddButton.enabled = false;
+					return;
+				} else {
+					errorMessage.text = "";
+				}
+				AddButton.enabled = true;
+			}
+			
+			private function get nameExists():Boolean{
+				for(var i:int =0; i<setpointList.length; i++){
+					if(nameField.text == setpointList.getItemAt(i).toString()){
+						return true;
+					}
+				}
+				return false;
+			}
+		]]>
+	</mx:Script>
+	<mx:VBox verticalGap="16" left="10" top="10" right="10" bottom="10">
+		<mx:Label text="Enter the Group Name:" fontSize="12" fontWeight="bold"/>
+		<mx:HBox width="100%" cornerRadius="7" verticalAlign="middle" resizeEffect="Fade" maxHeight="{errorMessage.text == '' ? 0 : 100}">
+			<mx:Image source="@Embed('/assets/icons/alert_critical_2000_24.png')" width="24" height="24"/>
+			<mx:Text id="errorMessage" text="" fontWeight="bold" color="#FF0000" width="100%" fontSize="11"/>
+		</mx:HBox>
+		<mx:HBox width="100%" verticalAlign="middle">
+			<mx:Label text="Name:" fontWeight="bold"/>
+			<mx:TextInput id="nameField" width="100%" change="onNameFieldChange();"/>
+		</mx:HBox>
+		<mx:HBox width="100%" horizontalAlign="right">
+			<mx:Button label="Cancel" width="100" click="onCancel()"/>
+			<mx:Button id="AddButton" label="Add" width="100" click="onAdd()" enabled="false"/>
+		</mx:HBox>
+	</mx:VBox>
+	
+</mx:Panel>

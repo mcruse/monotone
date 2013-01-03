@@ -1,0 +1,195 @@
+PANDUIT-PRODUCTS-PANEL-COMMON-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+       	MODULE-IDENTITY,
+	OBJECT-IDENTITY,
+        OBJECT-TYPE,
+	Unsigned32
+                                FROM SNMPv2-SMI
+        MODULE-COMPLIANCE, 
+        OBJECT-GROUP
+                                FROM SNMPv2-CONF
+	DisplayString
+                                FROM SNMPv2-TC
+	panduitProdPanel 
+				FROM PANDUIT-REG
+	PanduitLongDisplayString
+				FROM PANDUIT-TC;
+
+--
+-- Managed Network Solutions contact information.
+--
+panduitProdPanelCommon MODULE-IDENTITY
+        LAST-UPDATED    "200504270000Z"         
+        ORGANIZATION    "Panduit Corp."
+        CONTACT-INFO
+                "       Panduit Corp.
+                        Managed Network Solutions Group
+
+                Postal: Panduit Corp.
+                        17301 Ridgeland Avenue
+                        Tinley Park, IL 60477-3091
+                        USA
+
+                   Tel: +1 708 532-1800/888-506-5400
+
+                E-mail: info@panduit.com"
+
+        DESCRIPTION
+                        "MIB module to support common features for 
+			Panduit managed Panel Products."
+
+        REVISION        "200503010000Z"         
+
+        DESCRIPTION
+                        "Initial version of this MIB module."
+
+        REVISION        "200504270000Z"         
+
+        DESCRIPTION
+                        "Updates:
+			 - Deprecated panduitProdPanelCommonLocation in 
+			   favor of panduitIdentificationLocation.
+			 - Deprecated panduitProdPanelCommonPortLocTable
+			   in favor of PANDUIT-APPS-PORTLOC-MIB
+			 - Deprecated panduitProdPanelCommonPowerSource 
+			   in favor of PANDUIT-APPS-POWER-MIB"
+
+        ::= { panduitProdPanel 1 }
+
+
+--
+--                      Common Panel Objects
+--
+
+panduitProdPanelCommonRackId OBJECT-TYPE
+        SYNTAX DisplayString( SIZE(0..64) )
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+		"An identifier for the rack used to mount the panel."
+        ::= { panduitProdPanelCommon 1 }
+
+panduitProdPanelCommonRackPositionId OBJECT-TYPE
+        SYNTAX 	Unsigned32(1..45)
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "The panel's location in the rack, expressed as 
+		a rack position number."
+        ::= { panduitProdPanelCommon 2 }
+
+panduitProdPanelCommonLocation OBJECT-TYPE
+        SYNTAX PanduitLongDisplayString
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+                "An object for the location of the Panel."
+        ::= { panduitProdPanelCommon 3 }
+
+panduitProdPanelCommonPowerSource OBJECT-TYPE
+        SYNTAX DisplayString(SIZE(1..64))
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+                "The name of the Power supply associated with the Panel."
+        ::= { panduitProdPanelCommon 4 }
+
+panduitProdPanelCommonPortLocTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF PanduitProdPanelCommonPortLocEntry 
+        MAX-ACCESS not-accessible
+        STATUS deprecated
+        DESCRIPTION
+                "A list of work area locations for each port in the panel."
+        ::= { panduitProdPanelCommon 5 }
+
+panduitProdPanelCommonPortLocEntry OBJECT-TYPE
+        SYNTAX PanduitProdPanelCommonPortLocEntry 
+        MAX-ACCESS not-accessible
+        STATUS deprecated
+        DESCRIPTION
+                "A row in the Port Location Table."
+	INDEX	{ panduitProdPanelCommonPortLocIndex }
+        ::= { panduitProdPanelCommonPortLocTable 1 }
+
+	PanduitProdPanelCommonPortLocEntry ::= SEQUENCE{
+		panduitProdPanelCommonPortLocIndex	Unsigned32,
+		panduitProdPanelCommonPortLocLocation	PanduitLongDisplayString
+		}
+
+panduitProdPanelCommonPortLocIndex	OBJECT-TYPE
+        SYNTAX Unsigned32(1..2147483647)
+        MAX-ACCESS not-accessible
+        STATUS deprecated
+        DESCRIPTION
+                "Port Location Table Index."
+        ::= { panduitProdPanelCommonPortLocEntry 1 }
+
+panduitProdPanelCommonPortLocLocation	OBJECT-TYPE
+        SYNTAX PanduitLongDisplayString
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+                "The work area location."
+        ::= { panduitProdPanelCommonPortLocEntry 2 }
+
+
+--
+--		Conformance Section 
+--
+
+panduitProdPanelCommonConformance OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of Compliance and Group information for MIB."
+	::= { panduitProdPanelCommon 6 }
+
+panduitProdPanelCommonGroups OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of groups within MIB."
+	::= { panduitProdPanelCommonConformance 1 }
+
+panduitProdPanelCommonCompliances OBJECT-IDENTITY
+	STATUS current
+	DESCRIPTION "Compliance specifications for MIB."
+	::= { panduitProdPanelCommonConformance 2 }
+
+panduitProdPanelCommonInfoGroup OBJECT-GROUP
+	OBJECTS {
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		panduitProdPanelCommonLocation,
+		panduitProdPanelCommonPowerSource,
+		panduitProdPanelCommonPortLocLocation
+	}
+        STATUS deprecated
+        DESCRIPTION "Common objects in the MIB."
+        ::= { panduitProdPanelCommonGroups 1 }
+
+panduitProdPanelCommonInfo2Group OBJECT-GROUP
+	OBJECTS {
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId
+	}
+        STATUS current
+        DESCRIPTION "Common objects in the MIB."
+        ::= { panduitProdPanelCommonGroups 2 }
+
+panduitCommonCompliance MODULE-COMPLIANCE
+	STATUS deprecated
+	DESCRIPTION "Compliance requirements for the MIB."
+	MODULE
+		MANDATORY-GROUPS {
+				panduitProdPanelCommonInfoGroup 
+				}
+	::=	{ panduitProdPanelCommonCompliances 1 }
+
+panduitCommonCompliance2 MODULE-COMPLIANCE
+	STATUS current
+	DESCRIPTION "Compliance requirements for the MIB."
+	MODULE
+		MANDATORY-GROUPS {
+				panduitProdPanelCommonInfo2Group 
+				}
+	::=	{ panduitProdPanelCommonCompliances 2 }
+
+END

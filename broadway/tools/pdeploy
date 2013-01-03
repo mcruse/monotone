@@ -1,0 +1,5 @@
+#!/bin/bash
+
+TOOLS_PATH=$(dirname $0)
+
+echo TOOLS_PATH: $TOOLS_PATH

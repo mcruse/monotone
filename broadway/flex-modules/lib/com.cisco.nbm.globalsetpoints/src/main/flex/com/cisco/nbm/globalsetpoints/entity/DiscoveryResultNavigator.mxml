@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:AdvancedDataGrid xmlns:mx="http://www.adobe.com/2006/mxml" height="100%" width="100%"
+	defaultLeafIcon="{null}" resizableColumns="true"
+	sortableColumns="false" allowMultipleSelection="false">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.collections.IHierarchicalCollectionView;
+			private var _results:ArrayCollection;
+			
+			public function get results():ArrayCollection{
+				return _results;
+			}
+			
+			public function set results(resultArrCol:ArrayCollection):void{
+				_results = resultArrCol;
+				group_collection.source = _results;
+				group_collection.refresh();
+				IHierarchicalCollectionView(this.dataProvider).filterFunction = dataProviderFilterFunction;
+			}
+			
+			public function refreshGroupCollection():void
+			{
+				count = 0;
+				var vScrollPos:Number = this.verticalScrollPosition;
+				var openNodes:Object = IHierarchicalCollectionView(this.dataProvider).openNodes;
+				group_collection.refresh();
+				this.validateNow();
+				IHierarchicalCollectionView(this.dataProvider).openNodes = openNodes;
+				this.verticalScrollPosition = vScrollPos;
+			}
+			
+			// counter to maintain the uid
+			private var count:int = 0;
+			
+			private function grpObjFunc(value:String):Object
+			{
+				// we need to assign the same uid for same grouped Objects
+				// use count or value + count
+				return {uid:value + count++};
+			}
+			
+			private function dataProviderFilterFunction( item:Object ):Boolean
+			{
+				if(item["property"] == "" ){
+					return false;
+				}
+			     return true;
+			}
+		]]>
+	</mx:Script>
+	<mx:dataProvider>
+		<mx:GroupingCollection id="group_collection">
+			<mx:grouping>
+				<mx:Grouping groupingObjectFunction="grpObjFunc">
+					<mx:GroupingField name="entity"/>
+				</mx:Grouping>
+			</mx:grouping>
+		</mx:GroupingCollection>
+	</mx:dataProvider>
+	<mx:columns>
+		<mx:AdvancedDataGridColumn headerText="" dataField="selected" width="270"
+				resizable="true">
+		   <mx:itemRenderer>
+		      <mx:Component>
+		         <mx:CheckBox click="data.selected=!data.selected"  selected="{data.selected}"
+		         	enabled="{data.enabled}"
+		         	paddingRight="5" textAlign="right" />
+		      </mx:Component>				
+		   </mx:itemRenderer>
+		</mx:AdvancedDataGridColumn>
+		<!--<mx:AdvancedDataGridColumn headerText="Entity" dataField="GroupLabel" width="300"/>-->
+		<mx:AdvancedDataGridColumn headerText="Property" dataField="property" />
+		<mx:AdvancedDataGridColumn headerText="Type" dataField="type" />
+		
+	</mx:columns>
+	
+</mx:AdvancedDataGrid>

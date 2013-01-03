@@ -1,0 +1,136 @@
+<!--
+Copyright (C) 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<table class="eventsTable">
+    <thead class="eventsTableHead">
+        <tr dojoAttachPoint="tableHeaderRowNode" class="tableHeaderRow">
+            <th scope="col" class="columnHeaderCell selectAllRowsHeader" abbr="select">
+                <input type="checkbox" 
+                    dojoType="dijit.form.CheckBox" 
+                    dojoAttachPoint="selectAllRows" 
+                    dojoAttachEvent="onChange: toggleSelectAll" />
+            </th>
+            <th scope="col" abbr="priority" 
+                class="columnHeaderCell priorityHeader sortHeader" 
+                dojoAttachEvent="onclick: toggleSort">
+                <img class="sortIcon sortNone" src="/public/images/transparent.png" />
+                PRI
+            </th>
+            <th scope="col" abbr="name" 
+                class="columnHeaderCell nameHeader sortHeader" 
+                dojoAttachEvent="onclick: toggleSort">
+                <img class="sortIcon sortNone" src="/public/images/transparent.png" />
+                Name
+            </th>
+            <th scope="col" abbr="origin" 
+                class="columnHeaderCell originHeader sortHeader" 
+                dojoAttachEvent="onclick: toggleSort">
+                <img class="sortIcon sortNone" src="/public/images/transparent.png" />
+                Origin
+            </th>
+            <th scope="col" abbr="state" 
+                class="columnHeaderCell stateHeader sortHeader" 
+                dojoAttachEvent="onclick: toggleSort">
+                <img class="sortIcon sortNone" src="/public/images/transparent.png" />
+                State
+            </th>
+            <th scope="col" abbr="createdUTC" 
+                class="columnHeaderCell timestampHeader sortHeader" 
+                dojoAttachEvent="onclick: toggleSort">
+                <img class="sortIcon sortDescending" src="/public/images/transparent.png" />
+                Time
+            </th>
+            <th scope="col" class="columnHeaderCell descriptionHeader" abbr="Desc">
+                Description
+            </th>
+            <th scope="col" abbr="Act" class="columnHeaderCell actionHeader control">
+                Apply
+            </th>
+        </tr>
+    </thead>
+    <tbody class="eventsTableBody" dojoAttachPoint="containerNode"></tbody>
+    <tfoot class="eventsTableFooter">
+        <tr class="tableFooterRow">
+            <td colspan="8" style="text-align: center;">
+                <table style="width: 100%">
+                    <tr>
+                        <td style="text-align: left; width: 25%;">
+                            <button type="button" 
+                                dojoType="dijit.form.Button"
+                                dojoAttachPoint="acknowledgeSelected">
+                                Acknowledge
+                            </button>                    
+                        </td>
+                        <td style="text-align: center; width: 50%;">
+                            <div id="pagination"
+                                jsId="pagination" 
+                                pageNumber="0" 
+                                class="pagination"
+                                dojoAttachPoint="pagination"
+                                dojoType="nbmweb.events.TablePager"
+                                dojoAttachEvent="onPageChanged: onPageChanged">
+                            </div>
+                        </td>
+                        <td>
+                            <div
+                                type="button"
+                                name="download-log"
+                                id="download-log"
+                                dojoType="dijit.form.Button">
+                                <script type="dojo/method" event="onClick" args="evt">
+                                    console.log("Downloading alarm log.");
+                                    window.location='/log_download_service/Alarm%20Log?action=download_sequence&format=CSV';
+                                </script>
+                                Download Log
+                            </div>
+                        </td>
+                        <td style="text-align: right;">
+                            <div dojoType="dijit.layout.ContentPane">
+                                Rows-per-page: 
+                                <select name="rowsPerPage"
+                                    style="width: 40px;"
+                                    value="${rowsPerPage}"
+                                    dojoType="dijit.form.Select"
+                                    dojoAttachPoint="selectRowsPerPage"
+                                    dojoAttachEvent="onChange: _onSelectRowsPerPage">
+                                    <option value="5">5</option>
+                                    <option value="10">10</option>
+                                    <option value="15">15</option>
+                                    <option value="25">25</option>
+                                </select>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+     </tfoot>   
+</table>

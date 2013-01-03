@@ -1,0 +1,59 @@
+Add back routing, somewhere...
+
+////
+// Send data to a BACnet device.
+//
+// @param npci Describes the NPCI information for the message.  npci.dspec
+//             MUST == 1 and npci.dnet MUST be valid. If
+//             npci.dlen == 0, then the message is a broadcast on the
+//             npci.dnet network.
+// @param apci Describes the APCI header (everything upto, but not
+//             including, the tag data).  Should be NULL for network
+//             messages (messages where ncpi.network_msg == 1).
+// @param data The data to send to the device.
+// @param length The length of the data to send.
+// @todo  Handle segmenting the messages.
+int bacnet_send(const struct BACNET_NPCI *npci,
+		const struct BACNET_APCI* apci,
+		void *data,
+		int length) {
+  const struct ADDR *destination;
+  const struct ADDR *source;
+  unsigned short network;
+  struct ADDR destination_copy;
+  struct BACNET_NPCI npci_copy;
+
+  npci_copy = *npci;
+  if (!npci_copy.dspec) {
+    // No destination address or network.
+    return -1;
+  }
+  network = npci_copy.dnet;
+  if (bacnet_network_is_local(network)) {
+    // We are 'directly' connected to the network.
+    destination_copy.length = npci_copy.dlen;
+    memcpy(destination_copy.address, npci_copy.dadr, destination_copy.length);
+    destination = &destination_copy;
+    npci_copy.dspec = 0;
+  } else {
+    // We need to send the data via a BACnet router.
+    destination = bacnet_router_addr(network);
+    if (!destination) {
+      // No route to network.
+      return -1;
+    }
+    if (!npci_copy.snet) {
+      // If we are using a router, then set the source address.
+      source = bacnet_interface_addr(network);
+      if (!source) {
+        // No such network.
+        return -1;
+      }
+      npci_copy.slen = source->length;
+      memcpy(npci_copy.sadr, source->address, npci_copy.slen);
+    }
+  }
+  return bacnet_send_message(network, destination, &npci_copy,
+                             apci, data, length);
+}
+

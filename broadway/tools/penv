@@ -1,0 +1,23 @@
+#!/bin/bash
+
+print_args () {
+    local i=0
+    local arg
+    for arg in "$0" "$@"
+    do
+	echo arg$i: $arg
+	i=$((i+1))
+    done
+}
+
+print_directories () {
+    echo pwd: $(pwd)
+}
+
+print_paths () {
+    echo PYTHONPATH: ${PYTHONPATH}
+}
+
+print_args "$@"
+print_directories
+print_paths

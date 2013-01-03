@@ -1,0 +1,17 @@
+Important changes in support of IE 7 (and sanity):
+
+1. The _name is MUST be set on each derived Widget's prototype.
+   Example:  EmbeddedGraph.prototype._name = 'EmbeddedGraph'
+2. The _factory function has been removed.  It was icky (and causing
+   confusion).
+3. So, references to the factory, are now references to the constructor.
+4. The constructor takes an editDoc argument so cerateElement will work
+   consistently in IE 7 (and presumably all browsers).
+5. In general, widget implementations should use this.edit_doc instead of
+   the global document.  Unfortunately there are exceptions, the
+   get_*_defaults and the after_config functions should use the current
+   global document which is the WebExpress Configuration window.
+
+NOTE:
+  Methinks it would be clearer to use a getter functions, although actually
+  a config_doc variable might be good enough...

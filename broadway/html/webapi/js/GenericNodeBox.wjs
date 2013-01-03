@@ -1,0 +1,634 @@
+/*
+Purpose: Generic NodeBox widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: GenericNodeBox.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+function GenericNodeBox(){
+  this.base = Widget;
+  this.base();
+  this._name = 'GenericNodeBox';
+  this._z_index = '1000';
+  this._node = '';
+  this.node_selector_node = 'true';
+  this._display_type = 'real';
+  this._precision = '2';
+  this._display_character_length = '10'; 
+  this._text_color = 'black';
+  this.color_selector_text_color = 'true';
+  this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+  this._text_font_size = '12px';
+  this._text_background_color = 'lightgrey';
+  this.color_selector_text_background_color = 'true';
+  this._text_align = 'center';
+  this._text_padding_bottom = '5px';
+  this._text_padding_left = '5px';
+  this._text_padding_right = '5px';
+  this._text_padding_top = '5px';
+ }
+
+GenericNodeBox.prototype = new Widget;
+
+GenericNodeBox.prototype.after_config_table = function() {
+  document.getElementById('GenericNodeBox_display_type').value = this._display_type;
+  document.getElementById('GenericNodeBox_text_align').value = this._text_align;
+}
+
+GenericNodeBox.prototype.get_text_align_defaults = function() {
+  var s = document.createElement('select');
+
+  s.setAttribute('id', 'GenericNodeBox_text_align');
+
+  var o = document.createElement('option');
+
+  o.value = 'center';
+  o.innerHTML = 'center';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'left';
+  o.innerHTML = 'left';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'right';
+  o.innerHTML = 'right';
+  s.appendChild(o);
+  return s;
+}
+
+GenericNodeBox.prototype.get_display_type_defaults = function(){
+ 
+  var s = document.createElement('select');
+   
+  s.setAttribute('id','GenericNodeBox_display_type');
+
+  var o =  document.createElement('option');
+
+  o.value = 'active/inactive';
+  o.innerHTML = 'active/inactive';  
+  s.appendChild(o);  
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'binary';
+  o.innerHTML = 'binary';  
+  s.appendChild(o);  
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'boolean';
+  o.innerHTML = 'boolean';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'integer';
+  o.innerHTML = 'integer';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'on/off';
+  o.innerHTML = 'on/off';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'real';
+  o.innerHTML = 'real';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'string';
+  o.innerHTML = 'string';
+  s.appendChild(o);
+  return s;
+}
+
+GenericNodeBox.prototype.init = function(element) {
+  this._name = 'GenericNodeBox';
+  this._z_index = element.getAttribute('zindex');
+  var container = this.get_element(element,'div','container');
+  if(container.currentStyle) {
+    this._text_background_color = container.currentStyle['backgroundColor'];
+  }
+  else if(window.getComputedStyle) {
+    var compStyle = window.getComputedStyle(container,"");
+    this._text_background_color = compStyle.getPropertyValue('background-color');
+  }
+  var nodedisplayspan = this.get_element(element,'div','nodedisplay');
+  this._node = nodedisplayspan.getAttribute('node');
+  if(nodedisplayspan.currentStyle) {
+    this._text_color = nodedisplayspan.currentStyle['color'];
+    this._text_font_family = nodedisplayspan.currentStyle['fontFamily'];
+    this._text_font_size = nodedisplayspan.currentStyle['fontSize'];
+    this._text_padding_bottom = nodedisplayspan.currentStyle['paddingBottom'];
+    this._text_padding_left = nodedisplayspan.currentStyle['paddingLeft'];
+    this._text_padding_right = nodedisplayspan.currentStyle['paddingRight'];
+    this._text_padding_top = nodedisplayspan.currentStyle['paddingTop'];
+  }
+  else if(window.getComputedStyle) {
+    var compStyle = window.getComputedStyle(nodedisplayspan,"");
+    this._text_color = compStyle.getPropertyValue('color');
+    this._text_font_family = compStyle.getPropertyValue('font-family');
+    this._text_font_size = compStyle.getPropertyValue('font-size');
+    this._text_padding_bottom = compStyle.getPropertyValue('padding-bottom');
+    this._text_padding_left = compStyle.getPropertyValue('padding-left');
+    this._text_padding_right = compStyle.getPropertyValue('padding-right');
+    this._text_padding_top = compStyle.getPropertyValue('padding-top');
+  }
+  else {
+    this._text_color = 'black';
+    this._text_background_color = 'lightgrey';
+    this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+    this._text_font_size = '12px';
+    this._text_padding_bottom = '10px';
+    this._text_padding_left = '10px';
+    this._text_padding_right = '10px';
+    this._text_padding_top = '10px';
+  }
+  var infospan = this.get_element(element,'div','info');
+  this._display_type = this.get_span_attr(infospan, 'display_type');
+  this._precision = this.get_span_attr(infospan, 'precision');
+  this._display_character_length = this.get_span_attr(infospan, 'display_character_length');
+  this._text_align = this.get_span_attr(infospan, 'text_align');
+}
+
+GenericNodeBox.prototype.init_element = function (){
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version','1_0_dev_2');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  this.element.style.position = 'absolute';
+  this.element.style.zIndex = this._z_index;
+
+  var container = document.createElement('div');
+  container.setAttribute('element','container');
+  container.style.position = 'relative';
+  container.style.verticalAlign = 'middle';
+  container.style.height = 'auto';
+  container.style.width = 'auto';
+  if(this._text_background_color != ''){
+    container.style.backgroundColor = this._text_background_color;
+  }
+  container.style.textAlign = 'left';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.zIndex = '0';
+
+  var placeholderspan = document.createElement('div');
+  placeholderspan.setAttribute('element', 'placeholder');
+  //placeholderspan.style.position = 'absolute';
+  placeholderspan.style.backgroundColor = 'transparent';
+  if(this._text_font_family != ''){
+    placeholderspan.style.fontFamily = this._text_font_family;
+  }  
+  if(this._text_font_size != ''){
+    placeholderspan.style.fontSize = this._text_font_size;
+  }  
+  if(this._text_padding_bottom != ''){
+    placeholderspan.style.paddingBottom = this._text_padding_bottom;
+  }  
+  if(this._text_padding_left != ''){
+    placeholderspan.style.paddingLeft = this._text_padding_left;
+  }  
+  if(this._text_padding_right != ''){
+    placeholderspan.style.paddingRight = this._text_padding_right;
+  }  
+  if(this._text_padding_top != ''){
+    placeholderspan.style.paddingTop = this._text_padding_top;
+  }  
+  var pstring = '';
+  for(var i = 0; i < parseInt(this._display_character_length); i++)
+	pstring += 'X';
+  placeholderspan.innerHTML = pstring;
+  placeholderspan.style.top = '0';
+  placeholderspan.style.left = '0';
+  placeholderspan.style.zIndex = '1';
+  placeholderspan.style.visibility = 'hidden';
+  container.appendChild(placeholderspan);
+  
+  var nodedisplayspan = document.createElement('div');
+  nodedisplayspan.setAttribute('element', 'nodedisplay');
+  nodedisplayspan.setAttribute('node', this._node);
+  switch(this._display_type) {
+    case 'active/inactive':
+      nodedisplayspan.setAttribute('display_function', 'GenericNodeBoxDisplayActiveInactive');
+      break;
+    case 'binary':
+      nodedisplayspan.setAttribute('display_function', 'GenericNodeBoxDisplayBinary');
+      break;
+    case 'boolean':
+      nodedisplayspan.setAttribute('display_function', 'GenericNodeBoxDisplayBoolean');
+      break;
+    case 'integer':
+      nodedisplayspan.setAttribute('display_function', 'GenericNodeBoxDisplayInteger');
+      break;
+    case 'on/off':
+      nodedisplayspan.setAttribute('display_function', 'GenericNodeBoxDisplayOnOff');
+      break;
+    case 'real':
+      nodedisplayspan.setAttribute('display_function', 'GenericNodeBoxDisplayReal');
+      break;
+    case 'string':
+      nodedisplayspan.setAttribute('display_function', 'GenericNodeBoxDisplayString');
+      break;
+  }
+  nodedisplayspan.style.position = 'absolute';
+  nodedisplayspan.style.backgroundColor = 'transparent';
+  if(this._text_color != ''){
+    nodedisplayspan.style.color = this._text_color;
+  }
+  if(this._text_font_family != ''){
+    nodedisplayspan.style.fontFamily = this._text_font_family;
+  }  
+  if(this._text_font_size != ''){
+    nodedisplayspan.style.fontSize = this._text_font_size;
+  }  
+  if(this._text_padding_bottom != ''){
+    nodedisplayspan.style.paddingBottom = this._text_padding_bottom;
+  }  
+  if(this._text_padding_left != ''){
+    nodedisplayspan.style.paddingLeft = this._text_padding_left;
+  }  
+  if(this._text_padding_right != ''){
+    nodedisplayspan.style.paddingRight = this._text_padding_right;
+  }  
+  if(this._text_padding_top != ''){
+    nodedisplayspan.style.paddingTop = this._text_padding_top;
+  }  
+  nodedisplayspan.style.top = '0';
+  nodedisplayspan.style.left = '0';
+  nodedisplayspan.style.zIndex = '2';
+
+  container.appendChild(nodedisplayspan);
+
+  var infospan = document.createElement('div');
+  infospan.setAttribute('element','info');
+  infospan.setAttribute('type','hidden');  
+  infospan.setAttribute('display_type', this._display_type);  
+  infospan.setAttribute('precision', this._precision);
+  infospan.setAttribute('display_character_length', this._display_character_length);  
+  infospan.setAttribute('text_align', this._text_align);
+  //infospan.style.position = 'relative';
+  infospan.style.backgroundColor = 'transparent';
+  infospan.style.top = '0';
+  infospan.style.left = '0';
+  infospan.style.height = '1';
+  infospan.style.width = '1';
+  infospan.style.zIndex = '0';
+  infospan.style.visibility = 'hidden';
+  infospan.style.display = 'none';
+   
+  container.appendChild(infospan);
+  this.element.appendChild(container);
+}
+
+
+GenericNodeBox.prototype.create = function (){
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function GenericNodeBox_factory(){
+  return new GenericNodeBox();
+}
+
+function GenericNodeBoxDisplayNoErrors(v) {
+  try {    
+    var pattern1 = /\?/;      
+    var pattern2 = /error\:/;      
+    if (pattern1.exec(v.toString()) == null && pattern2.exec(v.toString()) == null) {
+      return 1;
+    }
+  }
+  catch(err) {
+    return 0;
+  }
+  return 0;
+}
+
+function GenericNodeBoxDisplayActiveInactive(e,v){
+  try{    
+    if(GenericNodeBoxDisplayNoErrors(v)){
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(v == 0) {
+          e.innerHTML = 'inactive';
+	}
+        else {
+          e.innerHTML = 'active';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(v == 0) {
+          e.value = 'inactive';
+	}
+        else {
+          e.value = 'active';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  GenericNodeBoxTextAlign(e);
+}
+
+function GenericNodeBoxDisplayBinary(e,v){
+  try{    
+    if(GenericNodeBoxDisplayNoErrors(v)){
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(v.as_magnitude){
+          v = v.as_magnitude();
+        }
+        if(v == 0) {
+          e.innerHTML = '0';
+	}
+        else {
+          e.innerHTML = '1';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(v == 0) {
+          e.value = '0';
+	}
+        else {
+          e.value = '1';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  GenericNodeBoxTextAlign(e);
+}
+
+function GenericNodeBoxDisplayBoolean(e,v){
+  try{    
+    if(GenericNodeBoxDisplayNoErrors(v)){
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(v == 0) {
+          e.innerHTML = 'false';
+	}
+        else {
+          e.innerHTML = 'true';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(v == 0) {
+          e.value = 'false';
+	}
+        else {
+          e.value = 'true';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  GenericNodeBoxTextAlign(e);
+}
+
+function GenericNodeBoxDisplayInteger(e,v){
+  try{    
+    if(GenericNodeBoxDisplayNoErrors(v)){
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      precision(e,v,0);
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  GenericNodeBoxTextAlign(e);
+}
+
+function GenericNodeBoxDisplayOnOff(e,v){
+  try{    
+    if(GenericNodeBoxDisplayNoErrors(v)){
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(v == 0) {
+          e.innerHTML = 'off';
+	}
+        else {
+          e.innerHTML = 'on';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(v == 0) {
+          e.value = 'off';
+	}
+        else {
+          e.value = 'on';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  GenericNodeBoxTextAlign(e);
+}
+
+function GenericNodeBoxDisplayReal(e,v){
+  try{    
+    if(GenericNodeBoxDisplayNoErrors(v)){
+      var ielement = GenericNodeBoxGetElement(e.parentNode.parentNode, 'div', 'info');
+      var places = parseInt(ielement.getAttribute('precision'));
+      if(isNaN(places)){
+        places = 2;
+      }
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      precision(e,v,places);
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  GenericNodeBoxTextAlign(e);
+}
+
+function GenericNodeBoxDisplayString(e,v){
+  try{    
+    if(GenericNodeBoxDisplayNoErrors(v)){
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = v.toString();
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = v.toString();
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  GenericNodeBoxTextAlign(e);
+}
+
+function GenericNodeBoxTextAlign(e) {
+  var phelement = GenericNodeBoxGetElement(e.parentNode.parentNode,'div','placeholder');
+  var ielement = GenericNodeBoxGetElement(e.parentNode.parentNode,'div','info');
+  var myOffsetWidth = parseInt(e.offsetWidth);
+  var myOffsetLeft = parseInt(e.offsetLeft);
+  var myParentOffsetWidth = parseInt(e.offsetParent.offsetWidth);
+  var myParentOffsetLeft = parseInt(e.offsetParent.offsetLeft);
+  var myAlign = ielement.getAttribute('text_align');
+  var myLeftPad = parseInt(e.style.paddingLeft);
+  var myRightPad = parseInt(e.style.paddingRight);
+  var myHorizontalPad = myLeftPad + myRightPad;
+  var placeHolderContentSize = parseInt(phelement.offsetWidth) - myHorizontalPad;
+  //alert('myOffsetWidth=' + myOffsetWidth + ', myOffsetLeft=' + myOffsetLeft + ', myParentOffsetWidth=' + myParentOffsetWidth + ', myParentOffsetLeft=' + myParentOffsetLeft + ', myAlign=' + myAlign + ', myLeftPad = ' + myLeftPad + ', myRightPad=' + myRightPad + ', phelement.offsetWidth=' + phelement.offsetWidth);
+  if(document.compatMode == 'BackCompat') { //IE6 in backward compatibility mode (IE6 default)
+    switch(myAlign) {
+      case 'right':
+        e.style.left = Math.round((placeHolderContentSize - myOffsetWidth) - myLeftPad) + 'px';
+        break;
+      case 'center':
+        e.style.left = Math.round(((myParentOffsetWidth / 2) - myOffsetLeft) - (((myOffsetWidth + myHorizontalPad) / 2) - myOffsetLeft)) + 'px';
+        break;
+      case 'left':
+        e.style.left = myLeftPad + 'px';
+        break;
+      default:
+        break;
+    }
+  }
+  else { // CSS1Compat
+    switch(myAlign) {
+      case 'right':
+        e.style.left = Math.round(myParentOffsetWidth - myOffsetWidth);
+        break;
+      case 'center':
+        e.style.left = Math.round(myParentOffsetWidth / 2 - myOffsetWidth / 2);
+        break;
+      case 'left':
+        e.style.left = myLeftPad + 'px';
+        break;
+      default:
+        break;
+    }
+  }
+  //alert('e.style.left=' + e.style.left);
+}
+
+function GenericNodeBoxGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e
+}
+
+var GenericNodeBox_loaded = true;

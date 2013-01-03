@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project default="create flex library com.cisco.ui.components" basedir=".">
+
+	<property environment="env" />	
+	<property file="../../common.properties" />
+	<property file="build.properties" />
+
+	<!-- Information for tasks -->
+	<taskdef resource="flexTasks.tasks" classpath="${flex.task}" />
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+		<classpath>
+			<pathelement location="${flex.antcontrib}" />
+		</classpath>
+	</taskdef>
+
+	<!-- file description -->
+	<description>Build Script</description>
+
+	<!-- timestamp -->
+	<tstamp>
+		<format property="timestamp" pattern="ddMMyyyy" />
+	</tstamp>
+
+	<!-- load previously defined configuration properties file -->
+	<property file="build.properties" />
+
+	<!-- Personal setting  -->
+	<property name="FLEX_HOME" value="${flex.SDK}" />
+	<property name="BIN_DIR" value="${project.binDir}" />
+
+	<!-- project setting -->
+	<property name="SRC_DIR" value="${project.src}" />
+
+	<!-- - - - - - - - - - - - - - - - - -
+				          target: Clean Bin-debug
+				         - - - - - - - - - - - - - - - - - -->
+
+	<macrodef name="cleanBin" description="delete and create bin-debug folder">
+		<sequential>
+			<echo message="Deleting ${BIN_DIR} Directory..." />
+			<delete dir="${BIN_DIR}" failOnError="false" includeEmptyDirs="true" />
+			<echo message="Deleted ${BIN_DIR} Directory..." />
+			<echo message="Creating ${BIN_DIR} Directory..." />
+			<mkdir dir="${BIN_DIR}" />
+			<echo message="Created ${BIN_DIR} Directory..." />
+		</sequential>
+	</macrodef>
+
+	<!-- - - - - - - - - - - - - - - - - -
+		          target: Creates Assets.swc
+		         - - - - - - - - - - - - - - - - - -->
+	<macrodef name="createAssetLibrary">
+		<sequential>
+			<echo message="Creating Assset.swc for the project static files..." />
+			<fileset id="assets.flex" dir="src" includes="**/*.css,**/*.swf,**/*.gif,**/*.jpg,**/*.png,**/*.css,**/*.TTF,**/*.jpeg" />
+			<pathconvert pathsep=" " property="assets.flex.output" refid="assets.flex" dirsep="/">
+				<map from="${basedir}/" to="" />
+			</pathconvert>
+			<echo message="...Resources being considered..." />
+			<var name="filelist" value="" />
+			<var name="prefixfilelist" value="-include-file" />
+			<for list="${assets.flex.output}" delimiter=" " param="asset">
+				<sequential>
+					<echo>Asset:  @{asset}</echo>
+					<propertyregex property="prop" input="@{asset}" regexp="(.*)main/flex/(.*)" select="\2" casesensitive="false" />
+					<var name="filelist_tmp" value="${filelist}" />
+					<var name="filelist" unset="true" />
+					<var name="filelist" value="${filelist_tmp} ${prefixfilelist} ${prop} @{asset}" />
+					<var name="prop" unset="true" />
+				</sequential>
+			</for>
+			<echo message="-output ${project.libs}/assets.swc ${filelist}" />
+			<!--Next Line Only for Linux-->
+			<!--<exec executable="${FLEX_HOME}/bin/compc" failonerror="true">-->
+			<!--Next Line Only for Windows-->
+			<exec executable="${compc.path}" failonerror="true">
+				<arg line="-output libs/assets.swc ${filelist}" />
+			</exec>
+		</sequential>
+	</macrodef>
+
+	<!-- - - - - - - - - - - - - - - - - -
+				          target: Create flex library"
+				         - - - - - - - - - - - - - - - - - -->
+	<target name="create flex library com.cisco.ui.components" description="compiles project and create swc">
+		<echo>*******************************************************</echo>
+		<echo>Clean up and Compile of ${project.name} project started</echo>
+		<cleanBin />
+		<createAssetLibrary />
+		<compc output="${BIN_DIR}/${project.name}.swc">
+			<source-path path-element="${basedir}/${project.src}/main/flex" />
+			<include-libraries file="${project.assets}" />
+			<include-libraries file="${project.core.swc}/" />
+			<include-sources dir="${project.src}/main/flex/com" includes="*">
+			</include-sources>
+		</compc>
+		<echo>Clean up and Compile of ${project.name} project finished</echo>
+		<echo>*******************************************************</echo>
+	</target>
+
+</project>

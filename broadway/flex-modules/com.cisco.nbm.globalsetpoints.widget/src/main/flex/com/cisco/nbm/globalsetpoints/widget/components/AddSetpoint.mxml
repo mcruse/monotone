@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" width="400" title="{EditMode ? 'Edit Setpoint':'Add New Setpoint'}"
+	xmlns:components="com.cisco.nbm.globalsetpoints.widget.components.*"
+	creationComplete="init();">
+	
+	<mx:Metadata>
+	   [ Event( name="onSave", type="flash.events.Event") ]
+	</mx:Metadata>
+	
+	<mx:Script>
+	<![CDATA[
+		import mx.collections.ArrayCollection;
+		import mx.effects.easing.Bounce;
+		import mx.managers.PopUpManager;
+		import com.cisco.nbm.globalsetpoints.SetpointDatatype;
+		import com.cisco.nbm.globalsetpoints.KnownPointType;
+		import mx.controls.ToolTip;
+        import mx.managers.ToolTipManager;
+		// Icon overlay
+		[Embed(source="/assets/icons/expand_Arrow_Open.png")]
+		private var arrowOpen:Class;
+		
+		public var EditMode:Boolean;
+		public var configData:ArrayCollection;
+
+		[Bindable]
+		private var savedSetpoint:Object;
+		private var selectedDatatype:String;
+		private var point_type:String;
+		private var errorTip:ToolTip;
+		
+		[Bindable]
+		private var enumItems:ArrayCollection;
+	
+		private function init():void{
+			if(enumItems == null) enumItems = new ArrayCollection();
+			//pointTypeList.editable = true;
+			// Render Point type combo
+			var pt_arr:Array = KnownPointType.list;
+			pointTypeList.dataProvider = pt_arr;
+			
+			if(point_type != null){
+				if(pointTypeIndex(pt_arr) > -1){
+					pointTypeList.selectedIndex = pointTypeIndex(pt_arr);
+				} else {
+					// Show user enterd string in combo and select it
+					pt_arr.unshift(point_type);
+					pointTypeList.dataProvider = pt_arr;
+					pointTypeList.selectedIndex = 0;
+				}
+			}
+		}
+		
+		private function pointTypeIndex(pt_arr:Array):Number{
+			for(var i:int =0; i<pt_arr.length; i++){
+				if(pt_arr[i] == point_type){
+					return i;
+				}
+			}
+			return -1;
+		}
+		
+		private function showCutomizeWindow():void{
+			currentState = currentState == 'Customize' ? '':'Customize';
+		}
+		
+		public function get setPoint():Object{
+			var newSetPoint:Object = new Object();
+			if(EditMode) newSetPoint = savedSetpoint;
+			newSetPoint.name = setpointname.text;
+			newSetPoint.point_type = pointTypeList.text;
+			newSetPoint.data_type = new Object();
+			newSetPoint.data_type[typeCombo.selectedLabel] = new Object();
+			if(typeCombo.selectedLabel == SetpointDatatype.NUMERIC){
+				try {
+					if((maxinput.value == 0 &&  mininput.value == 0)){
+						max_nolimit.selected = true;
+						min_nolimit.selected = true;
+					} 
+					if(max_nolimit.selected){
+						newSetPoint.data_type[typeCombo.selectedLabel].max = 'NA';
+					} else {
+						newSetPoint.data_type[typeCombo.selectedLabel].max = maxinput.value;
+					}
+					
+					if(min_nolimit.selected){
+						newSetPoint.data_type[typeCombo.selectedLabel].min = 'NA';
+					} else {
+						newSetPoint.data_type[typeCombo.selectedLabel].min = mininput.value;
+					}
+					
+				} catch(e:Error){
+					newSetPoint.data_type[typeCombo.selectedLabel].max = 'NA';
+					newSetPoint.data_type[typeCombo.selectedLabel].min= 'NA';
+				}
+				
+				// Set defualt values for number
+				if(!EditMode){
+					if(!isNaN(newSetPoint.data_type[typeCombo.selectedLabel].min)){
+						newSetPoint.value = newSetPoint.data_type[typeCombo.selectedLabel].min;
+					} else if(!isNaN(newSetPoint.data_type[typeCombo.selectedLabel].max)){
+						newSetPoint.value = newSetPoint.data_type[typeCombo.selectedLabel].max;
+					} else {
+						newSetPoint.value = 0;
+					}
+					
+				}
+			} else if(typeCombo.selectedLabel == SetpointDatatype.ENUMERATED){
+				// Add ENUM data
+				var items:Object = new Object();
+				for(var i:int=0; i<enumConfig.dataProvider.length; i++){
+					items[enumConfig.dataProvider.getItemAt(i).label] = enumConfig.dataProvider.getItemAt(i).value;
+				}
+				newSetPoint.data_type[typeCombo.selectedLabel] = items;
+				
+				// Set first item as selected value in case of new setpoint
+				if(!EditMode && enumConfig.dataProvider.length > 0) newSetPoint.value = enumConfig.dataProvider.getItemAt(0).value;
+				if(EditMode && enumConfig.dataProvider.length > 0 && newSetPoint.value == null) newSetPoint.value = enumConfig.dataProvider.getItemAt(0).value;
+			}
+			return newSetPoint;
+		}
+		
+		public function set setPoint(_savedSetpoint:Object):void{
+			savedSetpoint = _savedSetpoint;
+			point_type = savedSetpoint.point_type;
+			for(var i in savedSetpoint.data_type){
+				selectedDatatype = i;
+				break;
+			}
+			if(selectedDatatype == SetpointDatatype.ENUMERATED){
+				enumItems = new ArrayCollection();
+				for(var i in savedSetpoint.data_type[SetpointDatatype.ENUMERATED]){
+					enumItems.addItem({'label':i, 'value':savedSetpoint.data_type[SetpointDatatype.ENUMERATED][i]});
+				}
+			} else {
+				enumItems = new ArrayCollection();
+			}
+		}
+		
+		private function save():void{
+			if(isDuplicateName) return;
+			// Dispatch save event
+			var onSaveEvent:Event = new Event( "onSave" );
+			dispatchEvent( onSaveEvent );
+			// Close
+			close();
+		}
+		
+		private function close():void{
+			if(errorTip != null) ToolTipManager.destroyToolTip(errorTip);
+			errorTip = null;
+			PopUpManager.removePopUp(this);
+		}
+		
+		private function get isDuplicateName():Boolean
+		{
+			if(errorTip != null) ToolTipManager.destroyToolTip(errorTip);
+			errorTip = null;
+			if(EditMode) return false;
+			if(configData == null) return false;
+			for(var i:int = 0; i<configData.length; i++){
+				if(configData.getItemAt(i).name.toUpperCase() == setpointname.text.toUpperCase()){
+					var errorStr:String = "Setpoint name already exists.";
+                    var pt:Point = new Point(setpointname.x, setpointname.y);
+               		pt = setpointname.contentToGlobal(pt);
+                    errorTip = ToolTipManager.createToolTip(errorStr, pt.x + (setpointname.width/2), pt.y, null, this) as ToolTip;
+                    errorTip.setStyle("styleName", "errorTip");
+					return true;
+				}
+			}
+			return false;
+		}
+	]]>
+	</mx:Script>
+	<mx:Resize id="customization_resize" duration="500" />
+	
+	<mx:states>
+        <mx:State name="Customize">
+            <mx:SetProperty target="{customizePanel}" name="height" value="150"/>
+            <mx:SetStyle target="{customizeButton}" name="icon" value="{arrowOpen}"/>
+        </mx:State>
+    </mx:states>
+    
+	<mx:VBox height="100%" width="100%" verticalGap="6">
+		<mx:Form width="100%">
+			<mx:FormItem label="Name">
+				<mx:TextInput id="setpointname" text="{savedSetpoint.name}"  change="{var valid:Boolean = isDuplicateName}"/>
+			</mx:FormItem>
+			<mx:FormItem label="Data Type">
+				<mx:ComboBox id="typeCombo" selectedIndex="{EditMode ? SetpointDatatype.indexOf(selectedDatatype):0}" dataProvider="{SetpointDatatype.LIST}"
+					 enabled="{!EditMode}" change=" if(typeCombo.selectedItem == SetpointDatatype.TEXT) currentState = ''"/>
+			</mx:FormItem>
+			
+			<!--Customize Button-->
+			<mx:FormItem width="100%">
+				<mx:VBox height="100%">
+					<mx:HBox width="100%" verticalAlign="middle">
+						<mx:LinkButton id="customizeButton" label="Customize" icon="@Embed('/assets/icons/expand_Arrow.png')" click="showCutomizeWindow()"
+							enabled="{typeCombo.selectedItem != SetpointDatatype.TEXT}"/>
+					</mx:HBox>
+				</mx:VBox>
+			</mx:FormItem>
+			
+			<!--Customize panel-->
+			<mx:FormItem width="100%">
+				<mx:VBox height="100%" width="100%" verticalGap="-2">
+				
+					<mx:ViewStack id="customizePanel" width="100%" height="0" selectedIndex="{typeCombo.selectedIndex}"
+						 resizeEffect="{customization_resize}" resize="PopUpManager.centerPopUp(this);"> 
+						 
+					<mx:Canvas></mx:Canvas>
+					
+					<mx:VBox width="100%" verticalAlign="top" horizontalScrollPolicy="off" verticalScrollPolicy="off"  showEffect="Fade" hideEffect="Fade" horizontalAlign="left" paddingLeft="20" paddingTop="20">
+							
+							<mx:HBox>
+								<mx:Label text="Max:" width="40" textAlign="right"/>
+								<mx:NumericStepper id="maxinput" value="{savedSetpoint.data_type[selectedDatatype].max}" maximum="{undefined}" minimum="{min_nolimit.selected ? undefined:mininput.value}" enabled="{!max_nolimit.selected}" width="60"/>
+								<mx:CheckBox id="max_nolimit" label="No Limit" selected="{ isNaN(savedSetpoint.data_type[selectedDatatype].max) }"/>
+							</mx:HBox>
+							
+							<mx:HBox>
+								<mx:Label text="Min:" width="40" textAlign="right"/>
+								<mx:NumericStepper id="mininput" value="{savedSetpoint.data_type[selectedDatatype].min}" maximum="{max_nolimit.selected ? undefined:maxinput.value}" minimum="{undefined}" enabled="{!min_nolimit.selected}" width="60"/>
+								<mx:CheckBox id="min_nolimit" label="No Limit" selected="{ isNaN(savedSetpoint.data_type[selectedDatatype].min) }"/>
+							</mx:HBox>
+					</mx:VBox>
+					
+					<components:EnumConfig dataProvider="{enumItems}" id="enumConfig" verticalScrollPolicy="off"  showEffect="Fade" hideEffect="Fade">
+					</components:EnumConfig>
+					
+					</mx:ViewStack>
+					
+				</mx:VBox>
+			</mx:FormItem>
+			
+			
+			<mx:FormItem label="Point Purpose">
+				<mx:ComboBox id="pointTypeList"></mx:ComboBox>
+			</mx:FormItem>
+		</mx:Form>
+		<mx:HBox width="100%" horizontalAlign="center" height="35" verticalAlign="middle">
+			<mx:Button label="Cancel" width="100" click="close();"/>
+			<mx:Button label="{EditMode ? 'Update': 'Add'}" width="100" click="save()" enabled="{setpointname.text.length > 0}"/>
+		</mx:HBox>
+	</mx:VBox>
+	
+</mx:Panel>

@@ -1,0 +1,5 @@
+BLADE-MIB.py, mmblade.mib, patched mmblade.patch email attachments from David.Shroyer@netapp.com
+BLADESPPALT-MIB.py, mmalert.mib, patched mmalert.patch email attachment from David.Shroyer@netapp.com
+CISCO-ENERGYWISE-MIB.py, CISCO-ENERGYWISE-MIB.my, wget http://wwwin-ipmulticast.cisco.com/projects/netman/mibs/v2/CISCO-ENERGYWISE-MIB.my
+CISCO-SMI.py, CISCO-SMI.my, wget http://wwwin-ipmulticast.cisco.com/projects/netman/mibs/v2/CISCO-SMI.my
+* ENTITY-MIB.py, ENTITY-MIB.my, http://wwwin-ipmulticast.cisco.com/projects/netman/mibs/v2/ENTITY-MIB.my

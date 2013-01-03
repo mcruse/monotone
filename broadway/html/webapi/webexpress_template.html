@@ -1,0 +1,206 @@
+<!--
+Copyright (C) 2008 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!-- 
+$Name: mediator_3_1_2_branch $
+$Id: webexpress_template.html 20101 2011-03-06 16:02:15Z bhagn $ -->
+<div style="border:1px ridge #444444;width:100%;" id="WebExpress">
+
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+
+  <tr>
+
+    <td height="30" class="webexpressheader">WebExpress</td>
+
+    <td align="right" valign="top" class="copyright">&copy; Envenergy</td>
+
+  </tr>
+
+  <tr class="section"> 
+
+    <td width="10%" height="30" align="right" class="title" style="margin-right:2px">Messages:&nbsp;</td>
+
+    <td  width="90%" align="left" id="msg">&nbsp;</td>
+
+  </tr>
+
+</table> 
+
+<div onclick="javascript:section(this)" id="widget_section_header" class="widgetheader" >
+
+          <img width="8px" height="8px" src="/webapi/images/arrow_down.png"/>&nbsp;
+
+        <span onMouseOver="this.style.color='#cccccc'" onmouseout="this.style.color='#ffffff'">Widget</span></div>
+
+<div class="section" id="widget_section" style="display:block;visibility:visible"> 
+
+  <table width="100%" border="0" cellpadding="5" cellspacing="0">
+
+    <tr>
+
+      <td width="50%"> <table border="0" cellspacing="0" cellpadding="0">
+
+          <tr> 
+
+            <td width="53"  rowspan="2" align="left" valign="bottom" class="section"><img id="trashcan" onmouseover="this.src='/webapi/images/trashcan_open.jpeg'" onmouseout="this.src='/webapi/images/trashcan.jpeg'" src="/webapi/images/trashcan.jpeg" width="45" height="45"></td>
+
+            <td width="115" align="right" valign="middle" class="title">Select 
+
+              Widget:&nbsp;</td> 
+
+            <td colspan="2" valign="middle" class="section"> 
+
+             <table>
+
+              <tr>
+
+               <td>
+
+             <select name="select" class="webexpressselect" id="WebExpressWidgets">
+
+                <option value=" "> </option>               
+
+              </select>
+
+              </td>
+
+               <td>&nbsp;&nbsp;<input class="webexpressbutton" type="button" name="Button" value="Create" onclick="WebExpress_CreateWidget()"/> 
+
+               </td>
+
+               </tr></table>
+
+            </td>
+
+          </tr>
+
+          <tr> 
+
+            <td colspan="3" align="right" valign="bottom" class="section">&nbsp; </td>
+
+          </tr>
+
+        </table></td>
+
+      <td width="50%"> 
+
+	  	<table width="100%" border="0" cellpadding="2" cellspacing="0">
+
+            <tr> 
+
+              <td height="25" colspan="4" class="title">Current Widget</td>
+
+            </tr>
+
+            <tr> 
+
+              <td width="12%" height="23" align="right" class="title">Type:</td>
+
+              <td width="26%" class="section" id="widget_type"></td>
+
+              <td width="30%" align="right" class="title">Location:</td>
+
+              <td width="32%" class="section">x = 
+
+                <input id="xaxis" size="10" class="webexpressinput" type="text" /> 
+
+              </td>
+
+            </tr>
+
+            <tr> 
+
+              <td align="right" class="title">ID:</td>
+
+              <td class="section" id="widget_id" ></td>
+
+              <td class="section">&nbsp;</td>
+
+              <td class="section">y = 
+
+                <input id="yaxis"  size="10" class="webexpressinput" type="text"/> 
+
+              </td>
+
+            </tr>
+
+            <tr>
+
+              <td align="right" class="title">&nbsp;</td>
+
+              <td class="section" id="widget_id" ></td>
+
+              <td class="section">&nbsp;</td>
+
+              <td class="section">z =
+
+			  	<input id="zaxis"  size="10" class="webexpressinput" type="text"/> </td>
+
+            </tr>
+
+          </table>
+
+
+
+	  </td>      
+
+  </tr>
+
+</table>
+
+</div>
+
+<div onclick="javascript:section(this)" id="page_section_header" class="widgetheader" >
+
+<img width="8px" height="8px" src="/webapi/images/arrow_down.png"/>&nbsp;<span onMouseOver="this.style.color='#cccccc'" onmouseout="this.style.color='#ffffff'">Page</span></div>
+
+<div class="section" id="page_section" style="display:block;visibility:visible"> 
+
+  <table width="100%" border="0" cellpadding="5" cellspacing="0">
+
+    <tr>
+
+      <td width="10%" align="right" class="title">File Name:</td>
+
+      <td><input size="50" type="text" class="webexpressinput" id="filename" value="" />
+
+        &nbsp;<input name="button" type="button" class="webexpressbutton" onclick="WebExpress_save()" value="Save"/>
+
+        &nbsp;<input name="button" type="button" class="webexpressbutton" value="Delete" onclick="alert('Not implemented yet')"/>  </td>
+
+     </tr>
+
+  </table>
+
+</div>
+
+</div>
+

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<mx:Panel 
+	title="Override Value Editor"
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="vertical" minWidth="300"
+	creationComplete="init()">
+	<mx:Metadata>
+		[Event(name="close", type="flex.events.CloseEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import mx.core.IFlexDisplayObject;
+			import mx.managers.PopUpManager;
+			import mx.core.UIComponent;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.core.Application;
+			import mx.managers.ISystemManager;
+			import mx.controls.Alert;
+			import com.cisco.nbm.entities.EntityProperty;
+			
+			public var level:int;
+			
+			private var _value:Object;
+			
+			private var _property:EntityProperty;
+			
+			private var newValue:Object;
+			
+			private function init():void
+			{
+				updateEditors();
+			} 
+			
+			private function updateValue():void
+			{
+				newValue = tiValueEditor.text;
+			}
+			
+			private function updateEditors():void
+			{
+				if (!initialized)
+				{
+					return;
+				}
+				
+				if (_property == null)
+				{
+					return;
+				}
+				
+				labelCurrentValue.text = _value == null ? "" : new String(_value);
+				labelLevel.text = new String(level);
+				tiValueEditor.text = _value == null ? "" : new String(_value);
+			}
+			
+			public function set value(v:Object):void
+			{
+				if (v != _value)
+				{
+					_value = v;
+					updateEditors();
+				}
+			}
+			
+			public function get value():Object
+			{
+				return newValue;
+			}
+			
+			public function set property(v:EntityProperty):void
+			{
+				if (v != _property)
+				{
+					_property = v;
+					updateEditors();
+				}
+			}
+			
+			public function get property():EntityProperty
+			{
+				return _property;
+			}
+			
+			public static function show(property:EntityProperty,
+				level:int, currentValue:Object, closeHandler:Function,
+				parent:DisplayObject=null):CustomValueEditorPanel
+			{
+				var panel:CustomValueEditorPanel = new CustomValueEditorPanel();
+				panel.property = property;
+				panel.level = level;
+				panel.value = currentValue;
+				
+				if (!parent)
+		        {
+		            var sm:ISystemManager = ISystemManager(Application.application.systemManager);
+		            if (sm.useSWFBridge())
+		                parent = Sprite(sm.getSandboxRoot());
+		            else
+		                parent = Sprite(Application.application);
+		        }		
+				
+				if (closeHandler != null)
+				{
+					panel.addEventListener(CloseEvent.CLOSE, closeHandler);
+				}
+				
+				if (parent is UIComponent)
+        			panel.moduleFactory = UIComponent(parent).moduleFactory;
+		        	
+		        PopUpManager.addPopUp(panel, parent, true);
+		
+		        panel.setActualSize(panel.getExplicitOrMeasuredWidth(),
+		                            panel.getExplicitOrMeasuredHeight());
+		        panel.addEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+				
+				return panel;	
+			}
+			
+			private static function static_creationCompleteHandler(event:FlexEvent):void
+			{
+				if (event.target is IFlexDisplayObject && event.eventPhase == EventPhase.AT_TARGET)
+		        {
+		            event.target.removeEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+		            PopUpManager.centerPopUp(IFlexDisplayObject(event.target));
+		        }
+			}
+			
+			private function handleOK():void
+			{
+				updateValue();
+				removeSelf(Alert.OK);
+			}
+			
+			private function handleCancel():void
+			{
+				removeSelf(Alert.CANCEL);
+			}
+			
+			private function removeSelf(detail:int):void
+			{
+				this.visible = false;
+				
+				var event:CloseEvent = new CloseEvent(CloseEvent.CLOSE);
+				event.detail = detail;
+				
+				dispatchEvent(event);
+				
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</mx:Script>
+	<mx:HBox width="100%">
+		<mx:Label text="Level:" fontWeight="bold" width="100" textAlign="right" />
+		<mx:Label id="labelLevel" text="" /> 
+	</mx:HBox>
+	<mx:HBox width="100%">
+		<mx:Label text="Current Value:" fontWeight="bold" textAlign="right"
+			width="100"/>
+		<mx:Label text="" id="labelCurrentValue" width="100%" />
+	</mx:HBox>
+	<mx:HBox width="100%">
+		<mx:Label text="New Value:" textAlign="right" width="100" />
+		<mx:TextInput id="tiValueEditor" width="200" 
+			change="updateValue()" />
+	</mx:HBox>	
+	<mx:HRule width="100%" />
+	<mx:HBox width="100%" horizontalAlign="right" paddingLeft="10" paddingRight="10" paddingBottom="10">
+		<mx:Button label="OK" click="handleOK()" />
+		<mx:Button label="Cancel" click="handleCancel()" />
+	</mx:HBox>
+</mx:Panel>

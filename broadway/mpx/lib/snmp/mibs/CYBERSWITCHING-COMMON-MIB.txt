@@ -1,0 +1,81 @@
+CYBERSWITCHING-COMMON-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+     enterprises, IpAddress,
+     Counter, Gauge FROM RFC1155-SMI
+     OBJECT-TYPE FROM RFC-1212
+     TRAP-TYPE FROM RFC-1215
+     DisplayString FROM RFC1213-MIB;
+
+--
+--     CyberSwitching MIB ver 4.0.2
+--
+--     Copyright (C) 2008 CyberSwitching, Inc.  ALL RIGHTS RESERVED.
+--
+--     Title: CyberSwitching Top Level Definitions For All Products
+--
+--     This file may be freely copied and distributed as
+--     long as no changes are made to it.
+--
+
+cyberswitching             OBJECT IDENTIFIER ::= { enterprises 14300 }
+cyberswitching-products    OBJECT IDENTIFIER ::= { cyberswitching 1 }
+systemInfo                 OBJECT IDENTIFIER ::= { cyberswitching 2 }
+
+-- ========== System Info Objects ==========
+
+series OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The name of the product line of this product."
+    ::= { systemInfo 1 }
+
+model OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The specific model of the product."
+    ::= { systemInfo 2 }
+
+firmware-rev OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  optional
+    DESCRIPTION
+            "The firmware revision of the product."
+    ::= { systemInfo 3 }
+
+hardware-rev OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  optional
+    DESCRIPTION
+            "The hardware revision of the product."
+    ::= { systemInfo 4 }
+
+serialNumber OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  optional
+    DESCRIPTION
+            "The serial number of the product."
+    ::= { systemInfo 5 }
+    
+manufactureDate OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  optional
+    DESCRIPTION
+            "The date of loading MAC address to unit."
+    ::= { systemInfo 6 }
+
+-- ========== CyberSwitching products ==========
+
+tricomG2                   OBJECT IDENTIFIER ::= { cyberswitching-products 2 }
+
+pm8                        OBJECT IDENTIFIER ::= { cyberswitching-products 3 }
+
+END

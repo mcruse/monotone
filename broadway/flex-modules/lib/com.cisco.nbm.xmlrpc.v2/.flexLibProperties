@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flexLibProperties version="1">
+<includeClasses>
+<classEntry path="com.cisco.nbm.xmlrpc.v2.IMediatorNode"/>
+<classEntry path="com.cisco.nbm.xmlrpc.v2.IMediatorNodeCallFactory"/>
+<classEntry path="com.cisco.nbm.xmlrpc.v2.IXMLRPCStruct"/>
+<classEntry path="com.cisco.nbm.xmlrpc.v2.MediatorNode"/>
+<classEntry path="com.cisco.nbm.xmlrpc.v2.MediatorNodeCall"/>
+<classEntry path="com.cisco.nbm.xmlrpc.v2.MediatorNodeCallEvent"/>
+<classEntry path="com.cisco.nbm.xmlrpc.v2.XMLRPCDeserializer"/>
+<classEntry path="com.cisco.nbm.xmlrpc.v2.XMLRPCSerializer"/>
+<classEntry path="com.cisco.nbm.xmlrpc.v2.XMLRPCService"/>
+<classEntry path="com.cisco.nbm.xmlrpc.v2.XMLRPCServiceEvent"/>
+<classEntry path="com.cisco.nbm.xmlrpc.v2.calls.GetMediatorNodesCall"/>
+</includeClasses>
+<includeResources/>
+<namespaceManifests/>
+</flexLibProperties>

@@ -1,0 +1,945 @@
+CYBERSWITCHING-DUALCOM-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+     enterprises, IpAddress,
+     Counter, Gauge FROM RFC1155-SMI
+     OBJECT-TYPE FROM RFC-1212
+     TRAP-TYPE FROM RFC-1215
+     DisplayString FROM RFC1213-MIB
+     cyberswitching, tricomG2 FROM CYBERSWITCHING-COMMON-MIB;
+
+--
+--     CyberSwitching Dualcom/Tricom MIB ver 4.0.2
+--
+--     Copyright (C) 2007 CyberSwitching, Inc.  ALL RIGHTS RESERVED.
+--
+--     Title: CyberSwitching Definitions For Dualcom and Tricom series PDUs.
+--
+--     This file may be freely copied and distributed as
+--     long as no changes are made to it.
+--
+
+-- ========== Dualcom/Tricom OIDs based on tricomG2 ==========
+
+tricomG2-ctrl              OBJECT IDENTIFIER ::= { tricomG2 1 }
+tricomG2-mgmt              OBJECT IDENTIFIER ::= { tricomG2 2 }
+tricomG2-traps             OBJECT IDENTIFIER ::= { tricomG2 3 }
+
+nOutlets OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The number of managed outlets present on this system."
+    ::= { tricomG2-ctrl 1 }
+
+oTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF OEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+            "A list of outlet entries.  The number of
+            entries is given by the value of nOutlets."
+    ::= { tricomG2-ctrl 2 }
+
+oEntry OBJECT-TYPE
+    SYNTAX  OEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+            "An outlet entry containing status and properties
+            of a managed outlet."
+    INDEX   { oIndex }
+    ::= { oTable 1 }
+
+OEntry ::=
+    SEQUENCE {
+        oIndex
+            INTEGER,
+        oLabel
+            DisplayString,
+        oState
+            INTEGER,
+        oCurrentStr
+            DisplayString,
+        oCurrentInt
+            INTEGER,
+        oRebootDelayTime
+            INTEGER,
+        oRebootOffTime
+            INTEGER,
+        oRebootDelayTimeOverride
+            INTEGER,
+        oRebootOffTimeOverride
+            INTEGER
+    }
+
+oIndex OBJECT-TYPE
+    SYNTAX  INTEGER (0..255)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "A unique value for each outlet.  Its value
+            ranges between 0 and the value of nOutlets.
+            0 is used to access 'All Outlets'."
+    ::= { oEntry 1 }
+
+oLabel OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..15))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "A textual string containing the outlet's
+            user-friendly name."
+    ::= { oEntry 2 }
+
+oState OBJECT-TYPE
+    SYNTAX  INTEGER {
+                off(1),     -- outlet is off
+                on(2),      -- outlet is on
+                tripped(3), -- outlet is tripped
+                reboot(4)   -- outlet should reboot
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "The outlet's state. (ON/OFF/TRIPPED). Reading oState 
+            returns the outlet's state. Setting oState to off
+            turns the outlet off. Setting oState to on turns the
+            outlet on. The outlet can not be set to tripped state.
+            Setting ostate to reboot will reboot the outlet. A GET
+            of ostate returns the current state, it will never
+            return reboot."
+    ::= { oEntry 3 }
+
+oCurrentStr OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The amount of current the outlet is drawing, string
+            formatted."
+    ::= { oEntry 4 }
+
+oCurrentInt OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The amount of current the outlet is drawing, in Amps
+            This is rounded to an integer for applications that can't
+            handle strings or floats."
+    ::= { oEntry 5 }
+
+oRebootDelayTime OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Number of Seconds (0-6,000) before outlet reboots after a
+             reboot request. This is a non-volatile setting.
+             Writing this object for Outlet 0 (all outlets) will cause this
+             value to be written to all outlets. Reading this object for
+             Outlet 0 will always return 0."
+    ::= { oEntry 6 }
+
+oRebootOffTime OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Number of Seconds (0-6,000) outlet stays off before turning
+             back on during a reboot. This is a non-volatile setting.
+             Writing this object for Outlet 0 (all outlets) will cause this
+             value to be written to all outlets. Reading this object for
+             Outlet 0 will always return 0."
+    ::= { oEntry 7 }
+
+oRebootDelayTimeOverride OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "This is the same as oRebootDelayTime except that it is volatile
+             and only applies to the next reboot of the associated outlet.
+             If frequently changing the reboot duration while a unit is
+             operating, use this object instead of setting oRebootDelayTime.
+             A read of this object will return the last setting until a reboot
+             of the associated outlet is initiated. It will then return the
+             same value as oRebootDelayTime. Writing this object for Outlet 0
+             (all outlets) will cause this value to be written to all outlets.
+             Reading this object for Outlet 0 will always return 0."
+    ::= { oEntry 8 }
+
+oRebootOffTimeOverride OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "This is the same as oRebootOffTime except that it is volatile
+             and only applies to the next reboot of the associated outlet.
+             If frequently changing the reboot duration while a unit is
+             operating, use this object instead of setting oRebootOffTime.
+             A read of this object will return the last setting until a reboot
+             of the associated outlet is initiated. It will then return the
+             same value as oRebootOffTime. Writing this object for Outlet 0
+             (all outlets) will cause this value to be written to all outlets.
+             Reading this object for Outlet 0 will always return 0."
+    ::= { oEntry 9 }
+
+nBanks OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The number of banks (circuits) present on this system.
+             All models have at least 1 bank. Models with multiple
+             feeds or circuit breakers may have more than 1 bank."
+    ::= { tricomG2-ctrl 3 }
+
+bTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF BEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+            "A list of bank entries.  The number of
+            entries is given by the value of nBanks."
+    ::= { tricomG2-ctrl 4 }
+
+bEntry OBJECT-TYPE
+    SYNTAX  BEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+            "An bank entry containing status of a bank."
+    INDEX   { bIndex }
+    ::= { bTable 1 }
+
+BEntry ::=
+    SEQUENCE {
+        bIndex
+            INTEGER,
+        bCurrentStr
+            DisplayString,
+        bCurrentInt
+            INTEGER
+    }
+
+bIndex OBJECT-TYPE
+    SYNTAX  INTEGER (1..255)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "A unique value for each bank.  Its value
+            ranges between 1 and the value of nBanks."
+    ::= { bEntry 1 }
+
+bCurrentStr OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The amount of current the bank is drawing, string
+            formatted."
+    ::= { bEntry 2 }
+
+bCurrentInt OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The amount of current the bank is drawing, in Amps
+            This is rounded to an integer for applications that can't
+            handle strings or floats."
+    ::= { bEntry 3 }
+
+oTotCurrentStr OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The total amount of current the unit is supplying.
+            (String Formatted)"
+    ::= { tricomG2-ctrl 5 }
+
+oTotCurrentInt OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The total amount of current the unit is supplying, in Amps.
+            This is rounded to an integer for applications that can't
+            handle strings or floats."
+    ::= { tricomG2-ctrl 6 }
+
+oStateMask OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "8 or 16 bit mask representing the current state of all
+             8 or 16 outlets. For each bit: 0=outlet is off,
+             1=outlet is on."
+    ::= { tricomG2-ctrl 7 }
+
+oPowerOnMask OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "8 or 16 bit mask representing power on state of all
+             8 or 16 outlets. For each bit: 0=outlet is off when
+             unit boots, 1=outlet is on when unit boots."
+    ::= { tricomG2-ctrl 8 }
+
+oInputCurL1 OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  optional
+    DESCRIPTION
+            "The input current on the L1 wire in a
+             dual-voltage model."
+    ::= { tricomG2-ctrl 9 }
+
+oInputCurL2 OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  optional
+    DESCRIPTION
+            "The input current on the L2 wire in a
+             dual-voltage model."
+    ::= { tricomG2-ctrl 10 }
+
+oNeutralCurrent OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  optional
+    DESCRIPTION
+            "The input current on the neutral wire in a
+             dual-voltage model."
+    ::= { tricomG2-ctrl 11 }
+
+triSysTimeDate OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Time in seconds since January 1, 1980."
+    ::= { tricomG2-mgmt 1 }
+
+triTimeZone OBJECT-TYPE
+    SYNTAX  INTEGER (-13..13)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Time zone as an offset from GMT"
+    ::= { tricomG2-mgmt 2 }
+
+triDaylightSavings OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disabled(1),   -- Time is in standard time.
+                enabled(2)     -- Time is in daylight savings time.
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "When enabled, the clock is adjusted for daylight savings."
+    ::= { tricomG2-mgmt 3 }
+
+triNTPEnabled OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disabled(1),   -- NTP is disabled. Time must be set manually.
+                enabled(2)     -- NTP is enabled. Unit will attempt to get network time.
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "When enabled, the unit will attempt to set its clock from the
+            network using NTP servers 1 & 2."
+    ::= { tricomG2-mgmt 4 }
+
+triNTPServer1 OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..59))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Time server #1. Set to 255.255.255.255 to broadcast time requests."
+    ::= { tricomG2-mgmt 5 }
+
+triNTPServer2 OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..59))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Time server #2. Will be used if Timer Server #1 fails.
+             Set to 255.255.255.255 to broadcast time requests."
+    ::= { tricomG2-mgmt 6 }
+
+triDHCPEnabled OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disabled(1),   -- DHCP is disabled. Network Settings must be set manually.
+                enabled(2)     -- DHCP is enabled. Unit will attempt to get settings from DHCP server.
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "When enabled, the unit will attempt to get its network settings from a DHCP
+            server upon booting. If this fails, it will revert to the manual settings."
+    ::= { tricomG2-mgmt 7 }
+
+triNetworkIP OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "IP of this unit."
+    ::= { tricomG2-mgmt 8 }
+
+triSubnetMask OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Subnet Mask of this unit."
+    ::= { tricomG2-mgmt 9 }
+
+triGateway OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Gateway of this unit."
+    ::= { tricomG2-mgmt 10 }
+
+triDNS OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Domain Name Server of this unit."
+    ::= { tricomG2-mgmt 11 }
+
+triHostName OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..15))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Host Name of this unit."
+    ::= { tricomG2-mgmt 12 }
+
+triDomain OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..32))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Domain of this unit."
+    ::= { tricomG2-mgmt 13 }
+
+triPhoneEnabled OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disabled(1),   -- Phone interface is DISABLED
+                enabled(2)     -- Phone interface is ENABLED
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Operational mode of the phone interface.
+            This object is accessible but not used on
+            dualcom units."
+    ::= { tricomG2-mgmt 14 }
+
+triBlockNoCallerID OBJECT-TYPE
+    SYNTAX  INTEGER {
+                noblock(1),   -- Calls with no CallerID are allowed
+                block(2)      -- Calls with no CallerID are blocked
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "No CallerID blocking mode.
+            This object is accessible but not used on
+            dualcom units."
+    ::= { tricomG2-mgmt 15 }
+
+triPhonePin OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..15))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "PIN used to access the phone interface. This must be
+            at least 6 characters. This object is accessible but
+            not used on dualcom units."
+    ::= { tricomG2-mgmt 16 }
+
+triSyslogServer OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..59))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Server name to send BSD Syslog style log events to. Set this to a
+            NULL string to disable Syslog. (events will still be logged locally)"
+    ::= { tricomG2-mgmt 17 }
+
+triLoggingFacility OBJECT-TYPE
+    SYNTAX  INTEGER {
+                local-0(1),
+                local-1(2),
+                local-2(3),
+                local-3(4),
+                local-4(5),
+                local-5(6),
+                local-6(7),
+                local-7(8)
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "BSD Syslog Logging Facility."
+    ::= { tricomG2-mgmt 18 }
+
+triLoggingLevel OBJECT-TYPE
+    SYNTAX  INTEGER {
+                emergency(1),
+                alert(2),
+                critical(3),
+                error(4),
+                warning(5),
+                notice(6),
+                informational(7),
+                debug(8)
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "BSD Syslog Logging Level. This affects the amount of logging performed."
+    ::= { tricomG2-mgmt 19 }
+
+triDumpLogs OBJECT-TYPE
+    SYNTAX  INTEGER {
+                nodump(1),   -- do not dump logs to email
+                dump(2)      -- dump logs to email
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Dump Logs to email when full option."
+    ::= { tricomG2-mgmt 20 }
+
+triSMTPServer OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..59))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Server used to send email."
+    ::= { tricomG2-mgmt 21 }
+
+triEmailTo OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..59))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Address to send email to."
+    ::= { tricomG2-mgmt 22 }
+
+triEmailFrom OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..59))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Address to send email from."
+    ::= { tricomG2-mgmt 23 }
+
+triEmailSubject OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..59))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Subject of email."
+    ::= { tricomG2-mgmt 24 }
+
+triOutletConfirmation OBJECT-TYPE
+    SYNTAX  INTEGER {
+                noconfirm(1),   -- do not confirm outlet changes
+                confirm(2)      -- confirm outlet changes
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Whether or not to confirm outlet changes from web
+            interface."
+    ::= { tricomG2-mgmt 32 }
+
+triWebRefresh OBJECT-TYPE
+    SYNTAX  INTEGER (5..999)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Number of seconds (5-999) to wait before refreshing
+            outlets on web interface."
+    ::= { tricomG2-mgmt 33 }
+
+triOSchedules OBJECT-TYPE
+    SYNTAX  SEQUENCE OF TriScheduleEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+            "A List of Schedules."
+    ::= { tricomG2-mgmt 35 }
+
+triScheduleEntry OBJECT-TYPE
+    SYNTAX  TriScheduleEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+            "An outlet schedule entry"
+    INDEX   { triScheduleIndex }
+    ::= { triOSchedules 1 }
+
+TriScheduleEntry ::=
+    SEQUENCE {
+        triScheduleIndex
+            INTEGER,
+        triScheduleEnabled
+            INTEGER
+    }
+
+triScheduleIndex OBJECT-TYPE
+    SYNTAX  INTEGER (0..255)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "A unique value for each outlet. Its value
+            ranges between 0 and nOutlets. Outlet '0' is
+            ALL Outlets."
+    ::= { triScheduleEntry 1 }
+
+triScheduleEnabled OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disabled(1),   -- outlet schedule is disabled
+                enabled(2)     -- outlet schedule is enabled
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Enable status of schedule."
+    ::= { triScheduleEntry 2 }
+
+trilogs OBJECT-TYPE
+    SYNTAX  SEQUENCE OF TriLogEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+            "A List of Log Entries."
+    ::= { tricomG2-mgmt 38 }
+
+triLogEntry OBJECT-TYPE
+    SYNTAX  TriLogEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+            "A Log Entry Display String."
+    INDEX   { triLogIndex }
+    ::= { trilogs 1 }
+
+TriLogEntry ::=
+    SEQUENCE {
+        triLogIndex
+            INTEGER,
+        triLogString
+            DisplayString
+    }
+
+triLogIndex OBJECT-TYPE
+    SYNTAX  INTEGER (1..32)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "A unique value for each log entry. Its value
+            ranges between 1 and trinumlogs."
+    ::= { triLogEntry 1 }
+
+triLogString OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The log entry in string form."
+    ::= { triLogEntry 2 }
+
+triNumLogs OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The number of Log entries available"
+    ::= { tricomG2-mgmt 39 }
+
+triSerBAUD OBJECT-TYPE
+    SYNTAX  INTEGER {
+                baud-9600(1),
+                baud-19200(2),
+                baud-38400(3),
+                baud-57600(4)
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Serial Interface BAUD rate."
+    ::= { tricomG2-mgmt 40 }
+
+triOutletStaggerOn OBJECT-TYPE
+    SYNTAX  INTEGER (0..5000)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Number of milliseconds (0-5,000) to pause between outlets when
+            turning on multiple outlets at once."
+    ::= { tricomG2-mgmt 41 }
+
+triOutletStaggerOff OBJECT-TYPE
+    SYNTAX  INTEGER (0..5000)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Number of milliseconds (0-5,000) to pause between outlets when
+            turning off multiple outlets at once."
+    ::= { tricomG2-mgmt 42 }
+
+triORebootDelayTime OBJECT-TYPE
+    SYNTAX  INTEGER (0..6000)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Number of Seconds (0-6,000) before outlet reboots after a
+            reboot request."
+    ::= { tricomG2-mgmt 43 }
+
+triORebootOffTime OBJECT-TYPE
+    SYNTAX  INTEGER (0..6000)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Number of Seconds (0-6,000) outlet stays off before turning
+            back on during a reboot."
+    ::= { tricomG2-mgmt 44 }
+
+-- TRAPS
+triOutletCurrentTraps OBJECT-TYPE
+    SYNTAX  SEQUENCE OF TriCurrentTrapEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+            "Table of current trap limits."
+    ::= { tricomG2-traps 1 }
+
+triCurrentTrapEntry OBJECT-TYPE
+    SYNTAX  TriCurrentTrapEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+            "An outlet entry containing status and properties
+            of a managed outlet."
+    INDEX   { triCurIndex }
+    ::= { triOutletCurrentTraps 1 }
+
+TriCurrentTrapEntry ::=
+    SEQUENCE {
+        triCurIndex
+            INTEGER,
+        triCurLoEnabled
+            INTEGER,
+        triCurLoBound
+            DisplayString,
+        triCurLoGracePeriod
+            INTEGER (0..65535),
+        triCurHiEnabled
+            INTEGER,
+        triCurHiBound
+            DisplayString,
+        triCurHiGracePeriod
+            INTEGER (0..65535),
+        triCircuitBreakerEnabled
+            INTEGER
+    }
+
+triCurIndex OBJECT-TYPE
+    SYNTAX  INTEGER (0..255)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "A unique value for each outlet.  Its value
+            ranges between 0 and the value of nOutlets.
+            0 is used to access 'All Outlets'."
+    ::= { triCurrentTrapEntry 1 }
+
+triCurLoEnabled OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disabled(1),   -- trap is disabled
+                enabled(2)     -- trap is enabled
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Low current bound trap enable. When enabled, a trap will
+            be generated when current falls below triCurLoBound and
+            stays below for longer than triCurLoGracePeriod."
+    ::= { triCurrentTrapEntry 2 }
+
+triCurLoBound OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE(0..20))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Low current boundary. This string must contain only a valid
+            floating-point number representing current in Amps between
+            0.0 and 99.9. When the outlet current falls below this value,
+            and stays below for longer than triCurLoGracePeriod a trap
+            will be generated."
+    ::= { triCurrentTrapEntry 3 }
+
+triCurLoGracePeriod OBJECT-TYPE
+    SYNTAX  INTEGER (0..65535)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Low current grace period in Seconds. When the outlet
+            current falls below triCurLoBound, and stays below for longer
+            than this value, a trap will be generated. Care should be
+            taken not to set this too low, or the network might be
+            flooded with traps if the current rapidly fluctuates around
+            triCurLoBound."
+    ::= { triCurrentTrapEntry 4 }
+
+triCurHiEnabled OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disabled(1),   -- trap is disabled
+                enabled(2)     -- trap is enabled
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "High current bound trap enable. When enabled, a trap will
+            be generated when current rises above triCurHiBound and
+            stays above for longer than triCurHiGracePeriod."
+    ::= { triCurrentTrapEntry 5 }
+
+triCurHiBound OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE(0..20))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "High current boundary. This string must contain only a valid
+            floating-point number representing current in Amps between
+            0.0 and 99.9. When the outlet current rises above this value,
+            and stays above for longer than triCurHiGracePeriod a trap
+            will be generated."
+    ::= { triCurrentTrapEntry 6 }
+
+triCurHiGracePeriod OBJECT-TYPE
+    SYNTAX  INTEGER (0..65535)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "High current grace period in Milliseconds. When the outlet
+            current rises above triCurHiBound, and stays above for longer
+            than this value, a trap will be generated. Care should be
+            taken not to set this too low, or the network might be
+            flooded with traps if the current rapidly fluctuates around
+            triCurHiBound."
+    ::= { triCurrentTrapEntry 7 }
+
+triCircuitBreakerEnabled OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disabled(1),   -- Virtual Circuit Breaker(TM) is disabled
+                enabled(2)     -- Virtual Circuit Breaker(TM) is enabled
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "High current bound Virtual Circuit Breaker(TM) enable.
+            When enabled, the outlet will automatically shut off
+            when current rises above triCurHiBound and stays above
+            for longer than triCurHiGracePeriod. This is only available
+            on Plus models. Setting this property for Outlet 0
+            (all outlets)is not allowed."
+    ::= { triCurrentTrapEntry 8 }
+
+
+triOutletTrapped OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The outlet that caused a trap (0-nOutlets). This trap variable
+            is supplied for convenience. It should allow a management tool
+            to respond to outlet-specific traps with less parsing. Outlet 0
+            corresponds to 'All Outlets'."
+    ::= { tricomG2-traps 2 }
+
+triBankTrapped OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The bank that caused a trap (1-nBanks). This trap variable
+            is supplied for convenience. It should allow a management tool
+            to respond to bank-specific traps with less parsing."
+    ::= { tricomG2-traps 3 }
+
+
+
+tricomG2UnitCurrentCritical TRAP-TYPE
+    ENTERPRISE cyberswitching
+    VARIABLES { oTotCurrentStr, oTotCurrentInt }
+    DESCRIPTION                   
+            "Unit current has gone above the unit's circuit protection."
+    ::= 10
+
+tricomG2UnitCurrentWarning TRAP-TYPE
+    ENTERPRISE cyberswitching
+    VARIABLES { oTotCurrentStr, oTotCurrentInt }
+    DESCRIPTION                   
+            "Unit current has gone above the unit's rated capacity."
+    ::= 11
+
+tricomG2BankCurrentCritical TRAP-TYPE
+    ENTERPRISE cyberswitching
+    VARIABLES { triBankTrapped, bCurrentStr, bCurrentInt }
+    DESCRIPTION                   
+            "Bank current has gone above the bank's circuit protection."
+    ::= 12
+
+tricomG2BankCurrentWarning TRAP-TYPE
+    ENTERPRISE cyberswitching
+    VARIABLES { triBankTrapped, bCurrentStr, bCurrentInt }
+    DESCRIPTION                   
+            "Bank current has gone above the bank's rated capacity."
+    ::= 13
+
+tricomG2OutletLowCurrentWarning TRAP-TYPE
+    ENTERPRISE cyberswitching
+    VARIABLES { triOutletTrapped, oCurrentStr, oCurrentInt }
+    DESCRIPTION                   
+            "Current has gone below triCurLoBound and
+            stayed there for longer than triCurLoGracePeriod."
+    ::= 14
+
+tricomG2OutletHighCurrentWarning TRAP-TYPE
+    ENTERPRISE cyberswitching
+    VARIABLES { triOutletTrapped, oCurrentStr, oCurrentInt }
+    DESCRIPTION                   
+            "Current has gone above triCurHiBound and
+            stayed there for longer than triCurHiGracePeriod."
+    ::= 15
+
+tricomG2OutletTripped TRAP-TYPE
+    ENTERPRISE cyberswitching
+    VARIABLES { triOutletTrapped, oCurrentStr, oCurrentInt }
+    DESCRIPTION                   
+            "An outlet's Virtual Circuit Breaker(TM) tripped
+            because current has gone above triCurHiBound and
+            stayed there for longer than triCurHiGracePeriod.
+            This is only avaialble on Plus models."
+    ::= 16
+
+END

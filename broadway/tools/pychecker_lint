@@ -1,0 +1,155 @@
+#!/bin/bash
+#-*-Shell-Script-*- Hint to [X]Emacs on colorization, etc...
+
+INITIAL_DIRECTORY="$(pwd)"
+COMMAND="$(basename $0)"
+TOOLSDIR="$(pushd $(dirname $0) >/dev/null && pwd && popd >/dev/null)"
+AS_NCDATA="${TOOLSDIR}/as_ncdata"
+DIRECTORY="."
+HELP_MESSAGE="$COMMAND [options] [directory]
+
+  Generate a simple report based on the output of pychecker.
+
+  OPTIONS:
+    -h or --help                Display this message.
+    -D or --debug               Outputs all script commands being parsed and
+                                executed.
+  ARGUMENTS:
+     directory                  The directory to generate output for (and
+                                relative to).  Defaults to the current
+				directory.
+  EXAMPLES:
+  BUGS:
+    @fixme Should have an option not the recurse the directory.
+    @fixme Should support a list of diroectories and/or files to be useful
+           to developers.
+"
+
+OPTION_SETS_ARG () {
+    local variable="$1"
+    shift
+    local option
+    for option in "$@"
+    do
+	if [ "${argv[$argn]}" == "$option" ]
+	then
+	    argn=$((argn+1))
+	    arg="${argv[$argn]}"
+	    if [ $argn -ge $argc ] ||
+               [ "${arg:0:1}" == "-" ]
+	    then
+		echo -n "Option \"$option\" requires an argument," >&2
+		echo " use $COMMAND --help for valid options." >&2
+		exit 1 # Failure
+	    fi
+	    eval ${variable}="'$arg'"
+	    argn=$((argn+1))
+	    return 0 # Found and set it.
+	fi
+    done
+    return 1 # Not found.
+}
+
+OPTION_IS () {
+    for option in "$@"
+    do
+	if [ "${argv[$argn]}" == "$option" ]
+	then
+	    argn=$((argn+1))
+	    return 0
+	fi
+    done
+    return 1
+}
+
+HELP () {
+    echo "$HELP_MESSAGE" | more
+    exit 0
+}
+
+PARSE_ARGS () {
+    local argc=$#
+    local -a argv
+    local argn=0 # The current argument.
+    local arg=""
+    while [ $argn -lt $argc ]
+    do
+        argv[$argn]="$1"
+        argn="$((argn+1))"
+        shift
+    done
+    argn=0
+    while [ $argn -lt $argc ]
+    do
+	OPTION_IS "-h" "--help" && HELP
+	OPTION_IS "-D" "--debug" && set -v -x && continue
+        break
+    done
+    while [ $argn -lt $argc ]
+    do
+	ndir=0
+	arg="${argv[$argn]}"
+	if [ "${arg:0:1}" == "-" ]
+	then
+	    echo \
+	      "Unknown option '$arg', use $COMMAND --help for valid options."\
+              >&2
+	    exit 1
+	fi
+	DIRECTORY="$arg"
+	ndir=$((ndir+1))
+	argn=$((argn+1))
+    done
+}
+
+
+FILES_TO_CHECK () {
+    cd $DIRECTORY || exit 1
+    find . -name "*.py" || exit 1
+}
+
+AS_NCDATA_ELEMENT () {
+    echo '<NCDATA>'
+    echo -n '<![CDATA['
+    ${AS_NCDATA} # Stdin -> Nestable CDATA -> stdout.
+    echo ']]>'
+    echo "</NCDATA>"
+}
+
+AS_PYCHECKED_FILE () {
+    echo '<PYCHECKED_FILE path="'"$1"'">'
+    cat
+    echo '</PYCHECKED_FILE>'
+}
+
+XML_HEADER='<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE PYCHECKER_LINT [
+  <!ELEMENT NCDATA (CDATA)>
+  <!ELEMENT PYCHECKED_FILE (NCDATA)>
+  <!ATTLIST PYCHECKED_FILE path CDATA #REQUIRED>
+  <!ELEMENT PYCHECKED_DIR (PYCHECKED_FILE|PYCHECKED_DIR)*>
+  <!ATTLIST PYCHECKED_DIR path CDATA #REQUIRED>
+  <!ELEMENT PYCHECKER_LINT (PYCHECKED_FILE|PYCHECKER_DIR)*>
+  <!ATTLIST PYCHECKER_LINT initial_directory CDATA #REQUIRED>
+]>'
+
+CHECK_FILES () {
+    local filename
+    echo "${XML_HEADER}"
+    echo '<PYCHECKER_LINT initial_directory="'"$INITIAL_DIRECTORY"'">'
+    echo '<PYCHECKED_DIR path="'"$DIRECTORY"'">'
+    while read filename
+    do
+	pychecker "${filename}" 2>&1 |
+	    AS_NCDATA_ELEMENT |
+	    AS_PYCHECKED_FILE "${filename}"
+    done
+    echo '</PYCHECKED_DIR>'
+    echo "</PYCHECKER_LINT>"
+}
+
+PARSE_ARGS "$@"
+
+FILES_TO_CHECK | CHECK_FILES
+
+exit 0

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" title="Remove Setpoint" width="380">
+	
+	<mx:Metadata>
+	   [ Event( name="onConfirm", type="flash.events.Event") ]
+	   [ Event( name="onCancel",  type="flash.events.Event") ]
+	</mx:Metadata>
+	
+	<mx:Script>
+		<![CDATA[
+		
+		public function get ReleaseOverride():Boolean{
+			return ReleaseOverrideCheckbox.selected;
+		}
+		
+		public function set ReleaseOverride(_releseOverrideState:Boolean):void{
+			ReleaseOverrideCheckbox.selected = _releseOverrideState;
+		}
+		
+		private function onConfirm():void{
+			// Dispatch save event
+			var onConfirmEvent:Event = new Event( "onConfirm" );
+			dispatchEvent( onConfirmEvent );
+		}
+		
+		private function onCancel():void{
+			// Dispatch cancel event
+			var onCancelEvent:Event = new Event( "onCancel" );
+			dispatchEvent( onCancelEvent );
+		}
+		
+		]]>
+	</mx:Script>
+	<mx:VBox left="10" right="10" bottom="10" top="10">
+		<mx:HBox width="100%" horizontalAlign="center" verticalAlign="middle">
+			<mx:Image source="@Embed(source='/assets/icons/alert_minor_2002_48.png')" width="48" height="48"/>
+			<mx:Label text="Are you sure you want to remove selected setpoint?" width="100%" height="18"/>
+		</mx:HBox>
+		<mx:HBox width="100%" horizontalAlign="center" height="35" verticalAlign="middle">
+			<mx:CheckBox id="ReleaseOverrideCheckbox" label="Release Overrides" selected="true"/>
+		</mx:HBox>
+		<mx:HBox width="100%" horizontalAlign="center" horizontalGap="25">
+			<mx:Button label="OK" width="100" click="onConfirm();"/>
+			<mx:Button label="Cancel" width="100" click="onCancel();"/>
+		</mx:HBox>
+	</mx:VBox>
+	
+</mx:TitleWindow>

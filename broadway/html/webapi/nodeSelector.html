@@ -1,0 +1,269 @@
+<!--
+Copyright (C) 2008 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+
+<head>
+
+<!-- 
+Cisco Network Building Mediator © 2005-2011
+
+
+Purpose: provides node tree for node selection
+
+$Name: mediator_3_1_2_branch $
+$Id: nodeSelector.html 20445 2011-05-11 12:06:12Z bisarkar $ -->
+
+	<title>Node Selector</title>
+
+</head>
+
+<body topmargin="0" leftmargin="0" marginheight="0" marginwidth="0">
+
+<table width="600">
+
+<tr>
+
+	<td align="center"><img src="/webapi/images/cisco_webexpress.png" width="112" height="59" alt="" border="0"></td>
+
+</tr>
+
+<tr>
+
+  <td>
+
+	<!-- this table is for the background image -->
+
+		<table width="600" cellpadding="0" cellspacing="0" background="" height="379">
+
+		<tr>
+
+			<td class="orangeText">&nbsp;&nbsp;<img src="/webapi/images/spacer.gif" width="1" height="30" alt="" border="0">Select a node from the options below:</td>
+
+		</tr>
+
+		<tr>
+
+			<td align="center" valign="top">
+
+
+
+						<table>
+
+						<tr>
+
+							<td style="background:#ffffff" ><IFRAME ID="editFrame" SRC="/webapi/psp/nodeSelector.psp" WIDTH=450 HEIGHT=250></IFRAME></td>
+
+						</tr>
+
+						</table>
+
+
+
+			</td>
+
+		</tr>
+
+		<tr>
+
+			<td class="orangeText" valign="top">&nbsp;&nbsp;<img src="/webapi/images/spacer.gif" width="1" height="30" alt="" border="0">Node location:&nbsp;&nbsp;<input id="node_path" type="text" size="60"></td>
+
+		</tr>
+
+		<tr>
+
+			<td>&nbsp;</td>
+
+		</tr>
+
+		</table>
+
+
+
+	</td>
+
+</tr>
+
+
+
+<tr>
+
+	<td align="center"><img src="/webapi/images/button_cancel.gif" width="95" height="33" alt="" border="0" onclick="javascript:close_window()">&nbsp;&nbsp;&nbsp;&nbsp;<img src="/webapi/images/button_save.gif" onclick="javascript:ok()"  width="95" height="33" alt="" border="0">&nbsp;&nbsp;&nbsp;cache:&nbsp;<input type="checkbox" id="stayopen" /></td>
+
+</tr>
+
+</table>
+
+
+
+<script type="text/javascript">
+
+
+
+//@@
+
+// @function get_query_string_args
+
+// returns an associative array of the query string arguments if any or  empty object
+
+// @return associative array
+
+function get_query_string_args(){
+  var args = new Object();
+  var query_string = window.location.search.substring(1);
+  var pairs = query_string.split("&");
+  var name_value = null;
+  for(x=0;x<pairs.length;x++){
+    if (pairs[x].indexOf('=') != -1){
+      name_value = pairs[x].split('='); 
+      args[name_value[0]] = decodeURIComponent(name_value[1]);
+    } 
+  }
+  return args;
+}
+// Find the original opener, typically webexpress page, and 
+//   save string value of location.  In IE location is object 
+//   so comparisons don't work between pages loaded into same 
+//   window.
+var original_opener = window.opener;
+while (original_opener.opener) {
+  original_opener = original_opener.opener;
+}
+var original_location = original_opener.location.toString();
+
+// Function runs while Node Selector is persistently open 
+//   to make sure the window closes gracefully if/when the 
+//   user moves away from the web express editing page for 
+//   which this node selection window is intended.
+var zombie_watcher = false;
+function zombie_check() {
+  zombie_watcher = false;
+  if (!window.closed) {
+    if (original_opener.closed || (original_opener.location != original_location)) {
+      window.close();
+    } else {
+      window.setTimeout(zombie_check, 1000);
+      zombie_watcher = true;
+    }
+  }
+}
+
+// Should be called by any opener who may be opening an already 
+//   existing window, rather than creating a new one.  Must explicitly 
+//   modify writable alternative to opener attribute because IE does not 
+//   modify the attribute anytime open returns a non-new window reference.
+var ID = get_query_string_args()['textid'];
+function set_target(opened_by, input_id) {
+  window.openedBy = opened_by;
+  ID = input_id;
+}
+
+function clear_target() {
+  set_target();
+}
+
+function get_opener() {
+  var opened_by = window.opener;
+  if (window.openedBy) {
+    opened_by = window.openedBy;
+  }
+  if (opened_by.closed) {
+    clear_target();
+    opened_by = null;
+  } 
+  return opened_by;
+}
+
+function close_window(){
+   var closewindow = true;
+   var stayopen = document.getElementById('stayopen').checked;
+   if (stayopen) {
+     closewindow = confirm('The Node Selector has been configured to remain open.  Do you want to close it?');
+   }
+   if (closewindow) {
+     window.close();
+   } else {
+     deactivate_window();
+   }
+}
+
+// Function loops through chain of openers starting with the oldest and 
+//   ending with whatever window opened the current window, calling focus 
+//   in order to Node Selector window behind all other related windows.
+function deactivate_window() {
+  var opened_by = get_opener();
+  if (!opened_by) {
+    alert('Attempt to deactivate Node Selector when no opener exists.  Node Selector closing.');
+    window.close();
+  } else {
+    document.getElementById('node_path').value = '';
+    var openers = [opened_by];
+    while (openers[0].opener) {
+      openers.unshift(openers[0].opener);
+    }
+    for (var i = 0; i < openers.length; i++) {
+      openers[i].focus();
+    }
+    if (!zombie_watcher) {
+      zombie_check();
+    }
+  }
+}
+
+function ok() {
+   var nodepath =  document.getElementById('node_path').value;
+   var stayopen = document.getElementById('stayopen').checked;
+   var opened_by = get_opener();
+   if (!opened_by || opened_by.closed || ID == null) {
+     alert('The Node Selector is not attached to any configuration windows.');
+     if (!stayopen) window.close();
+   } else if (nodepath == '') {
+     alert('Please select a node path from tree before saving.');
+   } else {
+    opened_by.document.getElementById(ID).value = nodepath;
+    if (stayopen) {
+      deactivate_window();
+    } else {
+      window.close();
+    }
+  }
+}
+
+</script>
+
+
+
+</body>
+
+</html>
+

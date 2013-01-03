@@ -1,0 +1,158 @@
+<!--
+Copyright (C) 2002 2009 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Cache-Control" content="no-store">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="expires" content="0">
+<link rel="stylesheet" type="text/css" href="/stylesheets/main.css">
+<link rel="stylesheet" type="text/css" href="includes/msglog.css">
+<title>Control</title>
+<script language="JavaScript">
+window.onError = null;
+function send_form(){
+   document.msglog.start.value = '-' + document.msglog.last.value;
+   document.msglog.submit();
+}
+</script>
+<style type="text/css">
+<!--
+A.homelink {
+	font-size: 12px;
+	color: #FFFFFF;
+	text-decoration: none;
+}
+-->
+</style>
+</head>
+<body bgcolor="#FFFFFF">
+<form method="GET" name="msglog" action="/msglog/msglog" target="msglog">
+  <table width="100%" border="0">
+    <tr align="center"> 
+      <td class="msglog_header" height="38"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td width="100">&nbsp;</td>
+            <td height="38" align="center" valign="middle" class="msglog_header">Mediator 
+              Message Log</td>
+            <td width="100" align="center" valign="middle"><a href="../index.html" class="homelink" target="_top">Home</a></td>
+          </tr>
+        </table>
+        </td>
+    </tr>
+    <tr> 
+      <td width="72%" align="left" valign="top" height="29"> 
+        <table width="100%" border="0" height="26" cellpadding="4" cellspacing="2">
+          <tr> 
+            <td width="12%" bgcolor="#999933" height="15" id="td_web_server_status"> 
+              <span id="web_server_status" class="webserver_status" width="40">WebServer 
+              Online</span></td>
+            <td width="40%" class="infomation_header" height="15" valign="middle" align="center"><span onClick="switch_follow_select()"">Refreshing 
+              of MsgLog</span> 
+              <select name="select" size="1" id="follow_select" onchange="follow_log()">
+                <option value="1" selected>on</option>
+                <option value="0">off</option>
+              </select>
+            </td>
+            <td width="40%" class="infomation_header" height="15" valign="middle" align="center">Refresh 
+              rate: 
+              <select name="refresh_rate" size="1" onChange="change_refresh_rate()">
+                <option value="2000" >2 secs</option>
+                <option value="5000">5 secs</option>
+                <option value="10000" selected>10 secs</option>
+                <option value="20000">20 secs</option>
+                <option value="30000">30 secs</option>
+                <option value="60000">1 min</option>
+              </select>
+            </td>
+            <td class="infomation_header" height="15" valign="middle" align="center" width="30" ><span style="cursor: pointer;"onClick="open_setup()">Setup</span></td>
+          </tr>
+          <tr> 
+            <td width="12%" class="infomation_header" height="15"  align="right">Current 
+              Status </td>
+            <td colspan="3" class="infomation_header" height="15" valign="middle" align="left"><span id="status"></span></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  <input type="hidden" name="start" >
+  <input type="hidden" name="column">
+  <input type="hidden" name="end" >
+</form>
+</body>
+<script language="javascript" src="includes/functions.js"></script>
+<script language="javascript">
+
+function switch_follow_select(){
+  var value = this.document.msglog.follow_select.value;
+  if(value==0){
+    this.document.msglog.follow_select.options[0].selected = true;
+  }
+  else{
+     this.document.msglog.follow_select.options[1].selected = true;
+   
+   }
+   follow_log();
+
+}
+
+function change_refresh_rate(){
+    top.REFRESH_RATE = this.document.msglog.refresh_rate.value;
+}
+
+function follow_log(){   
+   var v = this.document.msglog.follow_select.value;
+   if (v == "1"){
+       top.update = true;
+   }
+   else{
+       top.update = false;
+   }
+}
+
+function open_setup(){
+  var setup_win = create_window("setup","setup.html");
+  center(setup_win,375,300);
+
+}
+
+
+function setup_refresh_rate(){
+top.REFRESH_RATE = this.document.msglog.refresh_rate.value;
+top.update = true;
+}
+
+setup_refresh_rate();
+</script>
+</html>

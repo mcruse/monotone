@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project default="create flex library com.cisco.nbm.entities" basedir=".">
+	<property environment="env" />	
+	<property file="../../common.properties" />
+	<property file="build.properties" />
+	
+	<!-- Information for tasks -->
+	<taskdef resource="flexTasks.tasks" classpath="${flex.task}" />
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+		<classpath>
+			<pathelement location="${flex.antcontrib}" />
+		</classpath>
+	</taskdef>
+
+	<!-- file description -->
+	<description>Build Script</description>
+
+	<!-- timestamp -->
+	<tstamp>
+		<format property="timestamp" pattern="ddMMyyyy" />
+	</tstamp>
+
+	<!-- load previously defined configuration properties file -->
+	<property file="build.properties" />
+
+	<!-- Personal setting  -->
+	<property name="FLEX_HOME" value="${flex.SDK}" />
+	<property name="BIN_DIR" value="${project.binDir}" />
+
+	<!-- project setting -->
+	<property name="SRC_DIR" value="${project.src}" />
+
+	<!-- - - - - - - - - - - - - - - - - -
+				          target: Clean Bin-debug
+				         - - - - - - - - - - - - - - - - - -->
+
+	<macrodef name="cleanBin" description="delete and create bin-debug folder">
+		<sequential>
+			<echo message="Deleting ${BIN_DIR} Directory..." />
+			<delete dir="${BIN_DIR}" failOnError="false" includeEmptyDirs="true" />
+			<echo message="Deleted ${BIN_DIR} Directory..." />
+			<echo message="Creating ${BIN_DIR} Directory..." />
+			<mkdir dir="${BIN_DIR}" />
+			<echo message="Created ${BIN_DIR} Directory..." />
+		</sequential>
+	</macrodef>
+
+	<!-- - - - - - - - - - - - - - - - - -
+				          target: Create flex library"
+				         - - - - - - - - - - - - - - - - - -->
+	<target name="create flex library com.cisco.nbm.entities" description="compiles project and create swc">
+		<echo>*******************************************************</echo>
+		<echo>Clean up and Compile of ${project.name} project started</echo>
+		<cleanBin />
+		<compc output="${BIN_DIR}/${project.name}.swc">
+			<source-path path-element="${basedir}/${project.src}/main/flex" />
+			<include-sources dir="${basedir}/${project.src}/main/flex/com" includes="*">
+						</include-sources>
+			<!--<include-libraries file="${project.core.swc}/" />-->
+			<compiler.library-path append="true" dir="${basedir}/../com.cisco.app.core/bin-release/">
+                                <include name="*.swc"/>
+                        </compiler.library-path>
+
+			<include-libraries file="${project.component.swc}/" />
+			<include-libraries file="${project.xmlrpc.swc}/" />
+			<!--Compiler Debug-->
+			<compiler.debug>false</compiler.debug>
+			<!--Compiler Strict-->
+			<compiler.strict>true</compiler.strict>
+			<!--Compiler Optmize-->
+			<compiler.optimize>true</compiler.optimize>
+			<!--Compiler Individual Warnings-->
+			<compiler.show-actionscript-warnings>false</compiler.show-actionscript-warnings>
+			<compiler.show-binding-warnings>false</compiler.show-binding-warnings>
+		</compc>
+		<echo>Clean up and Compile of ${project.name} project finished</echo>
+		<echo>*******************************************************</echo>
+	</target>
+
+</project>

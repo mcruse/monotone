@@ -1,0 +1,164 @@
+<!--
+Copyright (C) 2009 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+    <div id="message-symbol" 
+         dojoType="dijit.layout.ContentPane">
+        <img id="symbol"
+             alt="message-symbol" 
+             class="active symbol"
+             src="/public/images/transparent.gif" /> 
+        <div id="symbol-library">
+            <img alt="error-symbol" 
+                 class="symbol error" src="/public/images/error.png" />
+            <img alt="info-symbol" 
+                 class="symbol information" src="/public/images/information.png" />
+            <img alt="success-symbol" 
+                 class="symbol success" src="/public/images/success.png" />
+            <img alt="warning-symbol" 
+                 class="symbol warning" src="/public/images/warning.png" />
+        </div>
+        <script type="dojo/method">
+            dojo.mixin(this, {
+                selected: null, 
+                typeNames: ["failure", "information", "success", "warning"], 
+                select: function(type) {
+                    var specifier = "img." + type.toLowerCase();
+                    var selected = dojo.query(specifier, "symbol-library");
+                    var source = selected.attr("src")[0];
+                    dojo.attr("symbol", "src", source);
+                    return type;
+                }, 
+                addSymbol: function(type, element) {
+                    element = dojo.clone(element);
+                    dojo.addClass(element, "symbol");
+                    dojo.removeClass(element, "active");
+                    dojo.addClass(element, type.toLowerCase());
+                    dojo.place(element, "symbol-library", "last");
+                    return type;
+                }
+            });
+        </script>
+    </div>
+    <div id="message-content" 
+         class="text-content" 
+         dojoType="dijit.layout.ContentPane">
+         <script type="dojo/method">
+            dojo.mixin(this, {
+                content: null, 
+                symbol: null, 
+                dialog: null,
+                detail: null, 
+                detailDisplayed: false, 
+                notifications: new Array(),
+                getDialog: function() {
+                    if (!this.dialog)
+                        this.dialog = dijit.byId("message-box");
+                    return this.dialog;
+                }, 
+                getSymbol: function() {
+                    if (!this.symbol)
+                        this.symbol = dijit.byId("message-symbol");
+                    return this.symbol;
+                }, 
+                configureType: function(type) {
+                    type = this.getSymbol().select(type);
+                    var firstChar = type.slice(0, 1).toUpperCase();
+                    this.getDialog().attr("title", firstChar + type.slice(1));
+                },
+                configureMessage: function(message) {
+                    this.attr("content", message);
+                }, 
+                configureDetail: function(details) {
+                    // Quick cleanup so that boolean and int 0 are 
+                    // displayed, but non-values clear exand arrow.
+                    if (details === undefined || details === null)
+                        details = "";
+                    else if (!dojo.isString(details))
+                        details = String(details);
+                    if (details) {
+                        if (!this.detail) {
+                            this.detail = new dijit.TitlePane({
+                                id: "message-detail", 
+                                className: "message-detail", 
+                                title: "More information"
+                            });  
+                        }
+                        this.detail.attr("open", false);
+                        this.detail.attr("content", details);
+                        dojo.place(this.detail.domNode, 
+                                   this.getDialog().domNode, "last");
+                        this.detailDisplayed = true;
+                    }
+                    return details;
+                }, 
+                display: function(type, message, detail) {
+                    this.notifications.push([type, message, detail]);
+                    if (!this.getDialog().open)
+                        this.displayNextMessage();
+                }, 
+                displayNextMessage: function() {
+                    var notification = this.notifications[0];
+                    console.log("showing notification:", notification);
+                    this.configureType(notification[0]);
+                    this.configureMessage(notification[1]);
+                    this.configureDetail(notification[2]);
+                    this.getDialog().show();
+                }, 
+                clear: function() {
+                    var cleared = this.notifications.shift();
+                    console.log("User acked: ", cleared.join(", "));
+                    if (this.detailDisplayed) {
+                        var parent = this.detail.domNode.parentNode;
+                        parent.removeChild(this.detail.domNode);
+                        this.detailDisplayed = false;
+                    }
+                    this.getDialog().hide();
+                    /* ensure that the underlay is always removed
+                     * once the dialog is hidden */
+                    dijit._underlay.hide();
+                    if (this.notifications.length)
+                        this.displayNextMessage();
+                }
+            });
+         </script>
+    </div>
+    <div id="message-actions"
+         class="response-options"
+         dojoType="dijit.layout.ContentPane">
+        <button type="button" 
+                style="float: right;"
+                dojoType="dijit.form.Button">
+                OK
+            <script type="dojo/method" event="onClick">
+                dijit.byId("message-content").clear();
+            </script>
+        </button>
+    </div>

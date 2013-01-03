@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resize:ResizablePanel
+	xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"  title="Auto Discovery"
+	effectEnd="checkForTypeAndLoad();" resize="PopUpManager.centerPopUp(this);" 
+	xmlns:controls="it.sephiroth.controls.*"
+	xmlns:ui      ="com.cisco.nbm.globalsetpoints.entity.*"
+	xmlns:resize="flex.utils.ui.resize.*"
+	verticalScrollPolicy="off" horizontalScrollPolicy="off"
+	creationComplete="init();">
+	
+	<mx:Metadata>
+	   [ Event( name="onClose", type="flash.events.Event") ]
+	</mx:Metadata>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.cisco.nbm.entities.Entity;
+			import com.cisco.nbm.entities.EntityEvent;
+			import com.cisco.nbm.entities.EntityManager;
+			import com.cisco.nbm.entities.ui.PropertyCollectionWrapper;
+			import com.cisco.nbm.globalsetpoints.entity.DiscoveryManager;
+			import com.cisco.nbm.globalsetpoints.ui.ProgressPopup;
+			import com.cisco.nbm.xmlrpc.v2.MediatorNode;
+			import com.cisco.nbm.xmlrpc.v2.MediatorNodeCall;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.ItemClickEvent;
+			import mx.events.ListEvent;
+			import mx.logging.ILogger;
+			import mx.logging.Log;
+			import mx.managers.PopUpManager;
+			import mx.states.*;
+			
+			[Embed(source="/assets/folderClosed.png")]
+   			private var folderClosed:Class;
+			
+			[Embed(source="/assets/close_icon_16x16.png")]
+   			private var clearIcon:Class;
+   		
+			private var _propertyWrapper:PropertyCollectionWrapper;
+			private var entity:Entity;
+			private var progressPanel:ProgressPopup;
+			
+			private var logger:ILogger = Log.getLogger("cisco.globalsetpoints.widget");
+			public var node:MediatorNode;
+			public  var entityManager:EntityManager;
+			public var selectedEntities:ArrayCollection;
+			public var disabledEntities:ArrayCollection;
+			public var entitypath:String;
+			public var point_type:String;
+			
+			private var searchByTypeLoaded:Boolean;
+			
+			private var discoveryManager:DiscoveryManager;
+			private var newEntities:ArrayCollection;
+			private var loadedEntities:Array = [];
+			
+			private var openedItem:Object = {};
+			
+			[Bindable]
+			public var pagedData:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var nav:ArrayCollection = new ArrayCollection();
+			public var nameResultData:ArrayCollection = new ArrayCollection();
+			public var pageSize:uint = 10;
+			public var navSize:uint = 10;
+			private var index:uint = 0;
+			private var navPage:uint = 1;
+			private var lastSelectedPage:uint;
+			
+			private function init():void{
+				
+				var st:State =  new State();
+				st.name = "maximized";
+				this.states.push(st);
+				
+				discoveryManager = new DiscoveryManager();
+				discoveryManager.addEventListener("onChangeResult", updateResultDisplay);
+				discoveryManager.point_type = point_type;
+				discoveryManager.selectedEntities = selectedEntities;
+				discoveryManager.disabledEntities = disabledEntities;
+				discoveryManager.entityManager = entityManager;
+				
+				_propertyWrapper = new PropertyCollectionWrapper();
+				
+				// Disable search by type if point type is not defined
+				if(point_type == "" || point_type == null){
+					typeRadioButton.enabled = false;
+					discoveryTypeGroup.selectedValue = "NAME";
+				}
+			}
+            
+            public function  get entityList():ArrayCollection{
+            	var retCol:ArrayCollection = new ArrayCollection();
+            	var resultColl:ArrayCollection;
+            	var i:int;
+            	
+            	if(discoveryTypeGroup.selectedValue == "TYPE"){
+            		resultColl = typeResultNavigator.results as ArrayCollection;
+				} else {
+					resultColl = new ArrayCollection();
+					for(var k:String in loadedEntities){
+						for(i=0; i<loadedEntities[k].length; i++){
+							resultColl.addItem(loadedEntities[k][i]);
+						}
+					}
+				}
+				// Add old selection (already added)
+				for(i=0; i<selectedEntities.length; i++){
+					retCol.addItem(selectedEntities.getItemAt(i));
+				}
+				
+				if(resultColl == null) return retCol;
+				
+				// Add newly selcetd entities
+				for(i=0; i<resultColl.length; i++){
+					if(resultColl.getItemAt(i).selected && resultColl.getItemAt(i).enabled){
+						var obj:Object = new Object();
+						obj.entity = resultColl.getItemAt(i).entity;
+						obj.property = resultColl.getItemAt(i).property;
+						obj.type = resultColl.getItemAt(i).type;
+						retCol.addItem(obj);
+					}
+				}
+				return retCol;
+            }
+            
+            private function finish():void{
+				// Dispatch close event
+				var onCloseEvent:Event = new Event( "onClose" );
+				dispatchEvent( onCloseEvent );
+			}
+			
+            private function checkForTypeAndLoad():void{
+            	if(mainView.selectedIndex == 1 && !searchByTypeLoaded){
+            		searchByType();
+            	}
+            }
+            
+            // Serach By TYPE call
+			public function searchByType():void
+			{
+				// Show progress bar
+				var progress:ProgressPopup = getProgressPopup();
+				progress.text = "Searching for point type '" + point_type + "'";
+				progress.canCancel = false;
+				
+				var call:MediatorNodeCall = node.execute("discover_by_type", [entitypath, [point_type]]);
+				call.addCallback(handleSearchByTypeResult, handleCreatePolledError);
+			}
+			
+			// On search by type loaded
+			private function handleSearchByTypeResult(method:MediatorNodeCall, result:Object):void
+			{
+				discoveryManager.typeResults = result as Object;
+				searchByTypeLoaded = true;
+			}
+			
+			 // Serach By NAME call
+			public function searchByName():void
+			{
+				loadedEntities = new Array();
+				// Show progress bar
+				var progress:ProgressPopup = getProgressPopup();
+				progress.text = "Searching for name '" + searchField.text + "'";
+				progress.canCancel = false;
+				
+				var call:MediatorNodeCall = node.execute("discover_by_name", [entitypath, searchField.text]);
+				call.addCallback(handleSearchByNameResult, handleCreatePolledError);
+			}
+			
+			// On search by type loaded
+			private function handleSearchByNameResult(method:MediatorNodeCall, result:Object):void
+			{
+				discoveryManager.nameResults = result as Array;
+			}
+			
+			// ERROR :: XML-RPC
+			private function handleCreatePolledError(method:MediatorNodeCall, result:Object):void
+			{
+				Alert.show("Failed = "+result.toString());
+				logger.error("handleCreatePolledError: {0}", result);
+				
+				var progress:ProgressPopup = getProgressPopup();
+				destroyProgressPopup(progress);
+			}
+			
+			private function updateResultDisplay(event:Event):void{
+				if(discoveryTypeGroup.selectedValue == "TYPE"){
+					typeResultNavigator.results = discoveryManager.results;
+					if(discoveryManager.results.length <= 0){
+						typeResultInfo.text = 'No devices are found.'
+					} else {
+						typeResultInfo.text = 'Following devices were discovered. Select the devices you want to add.'
+					}
+				} else {
+					nameResultInfo.visible = true;
+					//nameList.dataProvider = discoveryManager.results;
+					loadedEntities = new Array();
+					propList.dataProvider = new ArrayCollection();
+					nameResultData = discoveryManager.results;
+					refreshDataProvider(index);
+					createNavBar(Math.ceil(nameResultData.length/pageSize));
+				}
+				
+				// Close progress pop-up
+				var progress:ProgressPopup = getProgressPopup();
+				destroyProgressPopup(progress);
+			}
+			
+			private function next():void{
+				if(discoveryTypeGroup.selectedValue == "TYPE"){
+					mainView.selectedIndex = 1;
+				} else {
+					mainView.selectedIndex = 2;
+				}
+				checkState();
+				checkForTypeAndLoad();
+			}
+			
+			private function checkState():void{
+				if(mainView.selectedIndex != 0){
+					currentState = "maximized";
+				} else {
+					currentState = "";
+				}
+				
+				if(currentState == "maximized"){
+					this.width = 600;
+					this.height = 400;
+				} else {
+					this.width = undefined;
+					this.height = undefined;
+				}
+			}
+			
+			private function close():void{
+				PopUpManager.removePopUp(this);
+			}
+			
+			// Find key handle
+			function onSerchFieldKey(event:KeyboardEvent):void
+            {
+                if(event.charCode == 13 && findButton.enabled)
+                       searchByName();
+            }
+            
+			private function getProgressPopup():ProgressPopup
+			{
+				if (progressPanel == null)
+				{
+					progressPanel = ProgressPopup.show();		
+				}
+				
+				return progressPanel;
+			}
+			private function destroyProgressPopup(popup:ProgressPopup):void
+			{
+				PopUpManager.removePopUp(popup);
+				popup.destroy();
+				
+				this.progressPanel = null;
+			}
+			
+			
+			private function nameResultItemClick(event:ListEvent):void
+			{
+				openedItem =  nameList.selectedItem;
+				
+				// Search if node is already laoded. If loaded then return
+				if (loadedEntities.hasOwnProperty(openedItem.entity)) {
+					propList.dataProvider = loadedEntities[openedItem.entity];
+					loadedEntities[openedItem.entity].refresh();
+					return;
+				}
+				
+				for(var i:int = 0; i<discoveryManager.results.length; i++){
+					if(discoveryManager.results.getItemAt(i).entity == openedItem.entity){
+						discoveryManager.results.getItemAt(i).property = "";
+						break;
+					}
+				}
+				
+				nameList.enabled = false;
+				propList.dataProvider = new ArrayCollection([{property:'Pending...'}]);
+				loadProperties(openedItem.entity);
+			}
+			
+			private function loadProperties(_entityPath:String):void{
+			// Remove 'aliases' path from entity path
+			var entityPathArr:Array = _entityPath.split("/");
+			entityPathArr.shift();
+			entityPathArr.shift();
+			var entityPathStr:String = "/"+entityPathArr.join("/");
+
+			entity = entityManager.getEntity(entityPathStr);
+			_propertyWrapper.update(entity);
+			
+			if(entity.properties.length > 0){
+				parseProperties();
+			} else {
+				entity.addEventListener(EntityEvent.PROPERTIES_LOADED, onPropertyLoad);
+				entity.loadProperties(true);
+			};
+			
+		}
+		public function onPropertyLoad(event:EntityEvent):void{
+			entity.removeEventListener(EntityEvent.PROPERTIES_LOADED,onPropertyLoad);
+			parseProperties();
+		}
+		
+		private var tempObj:Object = {};
+		private function parseProperties():void{
+			// Remove dupes
+			tempObj = {};
+			var propertyArray:ArrayCollection = new ArrayCollection();
+			for(var i:int=0; i<_propertyWrapper.length; i++){
+				var obj:Object = new Object();
+				if (!tempObj.hasOwnProperty(_propertyWrapper.getItemAt(i).propertyName)) {
+					tempObj[_propertyWrapper.getItemAt(i).propertyName] = _propertyWrapper.getItemAt(i);
+					obj.entity   = _propertyWrapper.getItemAt(i).entity.canonicalPath;
+					obj.property = _propertyWrapper.getItemAt(i).propertyName;
+					obj.type     = _propertyWrapper.getItemAt(i).type;
+					obj.selected = false;
+					obj.enabled  = true;
+					// Check if already selected
+					for(var k:int=0; k<selectedEntities.length; k++){
+						if(selectedEntities.getItemAt(k).entity == obj.entity &&
+						   selectedEntities.getItemAt(k).property == obj.property &&
+						   selectedEntities.getItemAt(k).type == obj.type){
+						   	obj.selected = true;
+							obj.enabled = false;
+						}
+					}
+					
+					// Checl if disabled
+					for(var j:int=0; j<disabledEntities.length; j++){
+						if(disabledEntities.getItemAt(j).entity == obj.entity &&
+						   disabledEntities.getItemAt(j).property == obj.property &&
+						   disabledEntities.getItemAt(j).type == obj.type){
+						   	obj.selected = false;
+							obj.enabled = false;
+						}
+					}
+					if(obj.entity != null) propertyArray.addItem(obj);
+				}
+				
+			}
+			nameList.enabled = true;
+			
+			loadedEntities[openedItem.entity] = propertyArray;
+			loadedEntities[openedItem.entity].filterFunction = propertyFilterFunction;
+			propList.dataProvider = loadedEntities[openedItem.entity];
+			loadedEntities[openedItem.entity].refresh();
+		}
+		
+		private function nameListIconFunction(item:Object):Class {
+			return folderClosed;
+ 		}
+ 		
+		private function handleFilterChange(e:Event):void
+		{
+			
+			e.stopImmediatePropagation();
+			if(openedItem.entity != null) loadedEntities[openedItem.entity].refresh();
+		}
+		
+ 		private function propertyFilterFunction(item:Object):Boolean
+		{
+			if(propertyFilterText.text == "") return true;
+			return item.property.toLowerCase().indexOf(propertyFilterText.text.toLowerCase())!= -1;
+		}
+		
+ 		private function clearFilter():void
+		{
+			propertyFilterText.text = "";
+			if(openedItem.entity != null) loadedEntities[openedItem.entity].refresh();
+		}
+		
+		private function createNavBar(pages:uint = 1,set:uint = 0):void
+		{
+			nav.removeAll();
+			if( pages > 1 )
+			{
+				if( set != 0 )
+				{
+					nav.addItem({label:"<<",data:0});
+					if( (set - navSize ) >= 0 )
+					{
+						nav.addItem({label:"<",data:set - navSize});
+					}
+					else
+					{
+						nav.addItem({label:"<",data:0});
+					}
+				}
+				
+				for( var x:uint = 0; x < navSize; x++)
+				{
+					var pg:uint = x + set;
+					nav.addItem({label: pg + 1,data: pg});
+				}
+				if( pg < pages - 1 )
+				{
+					nav.addItem({label:">",data:pg + 1});
+					nav.addItem({label:">>",data:pages - pageSize});
+				}
+			}
+			
+		}
+		
+		private function navigatePage(event:ItemClickEvent):void
+		{
+			refreshDataProvider(event.item.data);
+			
+			var lb:String = event.item.label.toString();
+			if( lb.indexOf("<") > -1 || lb.indexOf(">") > -1 )
+			{
+				createNavBar(Math.ceil(nameResultData.length/pageSize),event.item.data);
+				if( event.item.data == 0 )
+				{
+					pageNav.selectedIndex = 0;
+				}
+				else
+				{
+					pageNav.selectedIndex = 2;
+				}
+			}
+		}
+		
+		private function refreshDataProvider(start:uint):void
+		{
+			nameResultData = discoveryManager.results;
+			pagedData = new ArrayCollection( nameResultData.source.slice((start * pageSize),(start * pageSize) + pageSize) );
+			nameList.dataProvider = pagedData;
+			
+			if(start != lastSelectedPage){
+				propList.dataProvider = new ArrayCollection();
+			}
+			lastSelectedPage = start;
+			var startIndex:uint = start * pageSize + 1;
+			var endIndex:uint = startIndex + pageSize - 1;
+			var totalIndex:uint = nameResultData.length + 1;
+			pageInfo.text = "Displaying results " + startIndex + "-" + endIndex + " of " + totalIndex
+		}
+		]]>
+	</mx:Script>
+	
+	<!--<mx:states>
+        <mx:State name="maximized">
+            <mx:SetProperty target="{this}" name="width" value="500"/>
+            <mx:SetProperty target="{this}" name="height" value="400"/>
+        </mx:State>
+    </mx:states>-->
+    
+    <mx:ViewStack id="mainView" left="10" right="10" top="10" bottom="10" change="checkState()" >
+    
+    <!-- Selection -->
+	<mx:VBox >
+		<mx:Label text="Select a discovery method" fontSize="12" height="30" fontWeight="bold"/>
+		<mx:RadioButtonGroup id="discoveryTypeGroup"/>
+		<mx:HBox width="100%" paddingLeft="20">
+			<mx:RadioButton label="Discover device by purpose" selected="true" groupName="discoveryTypeGroup" value="TYPE" id="typeRadioButton"/>
+		</mx:HBox>
+		<mx:HBox width="100%" paddingLeft="20">
+			<mx:RadioButton label="Discover device by name" groupName="discoveryTypeGroup" value="NAME" id="nameRadioButton"/>
+		</mx:HBox>
+		
+	</mx:VBox>
+	
+	<!-- Search By Type -->
+	<mx:VBox  id="SearchByType">
+		<mx:Label text="{'Discovery results for purpose: ' + point_type}" fontSize="12" fontWeight="bold"/>
+		<mx:Label id="typeResultInfo" text="" fontSize="12" fontWeight="bold"/>
+
+		<ui:DiscoveryResultNavigator id="typeResultNavigator" width="100%" height="100%" displayItemsExpanded="true" >
+		</ui:DiscoveryResultNavigator>
+		
+	</mx:VBox>
+	
+	<!-- Search By name -->
+	<mx:VBox  id="SearchByNameBox">
+		<mx:Label text="Auto Discovery: By Name" fontSize="12" fontWeight="bold"/>
+		<mx:Label id="nameResultInfo" text="{'Discovery results for name: ' + searchField.text}" visible="false"/>
+		<mx:HBox width="100%">
+			<mx:Label text="Name:"/>
+			<mx:TextInput id="searchField" width="300" fontSize="12" fontWeight="bold"
+				keyDown="onSerchFieldKey(event)"/>
+			<mx:Button id="findButton" label="Find" width="65" click="searchByName();" enabled="{searchField.text != ''}" />
+
+		</mx:HBox>
+		
+		<mx:HDividedBox width="100%" height="100%">
+		
+			<!-- Name result display -->
+			
+			<!-- Entity List -->
+			<mx:List id="nameList" width="55%" height="100%" iconFunction="nameListIconFunction"
+				labelField="entity" itemClick="nameResultItemClick(event)"/>
+			
+			<!-- Property List -->
+			<mx:VBox width="250" height="100%" verticalGap="0" backgroundColor="#CCCCCC">
+			
+			<mx:HBox width="100%" horizontalGap="3" verticalAlign="middle" paddingRight="4" paddingTop="4" paddingLeft="4" paddingBottom="4">
+				<mx:Label text="Filter: "/>
+				<mx:TextInput id="propertyFilterText"  width="100%" change="handleFilterChange(event)"/>
+				<mx:Image width="16" height="16" source="{clearIcon}" click="clearFilter()" toolTip="Clear Filter"/>
+			</mx:HBox>
+			<mx:DataGrid id="propList"  width="100%" height="100%" resizableColumns="true">
+				<mx:columns>
+					<mx:DataGridColumn headerText="" dataField="selected" width="25" 
+							resizable="false">
+					  	 <mx:itemRenderer>
+					      <mx:Component>
+					         <mx:CheckBox click="data.selected=!data.selected"  selected="{data.selected}"
+					         	enabled="{data.enabled}"
+					         	paddingRight="5" textAlign="right" />
+					      </mx:Component>				
+					   </mx:itemRenderer>
+					</mx:DataGridColumn>
+					<mx:DataGridColumn headerText="Property" dataField="property" resizable="true"/>
+					<mx:DataGridColumn headerText="Type" dataField="type" resizable="true" width="50"/>
+				</mx:columns>
+			</mx:DataGrid>
+			
+			
+			</mx:VBox>
+		</mx:HDividedBox>
+		<mx:Label text="Displaying results 1-10 of 100" width="100%" id="pageInfo" height="{nav.length > 0 ? undefined:0}"/>
+		<mx:ToggleButtonBar id="pageNav" width="{SearchByNameBox.width}"
+			dataProvider="{nav}"  itemClick="navigatePage(event)"/>
+	</mx:VBox>
+	
+	</mx:ViewStack>
+    <mx:ControlBar height="40">
+    <mx:HBox width="100%" horizontalAlign="right" height="100%" verticalAlign="bottom">
+			<mx:HBox width="100%">
+				<mx:Button label="Cancel" click="close();"/>
+			</mx:HBox>
+			<mx:Button label="Back" click="{mainView.selectedIndex = 0; checkState();}" enabled="{currentState == 'maximized'}"/>
+			<mx:Button label="Next" click="next();" enabled="{currentState != 'maximized'}"/>
+			<mx:Button label="Finish" click="finish();" enabled="{currentState == 'maximized'}"/>
+		</mx:HBox>
+    </mx:ControlBar>
+
+</resize:ResizablePanel>
+

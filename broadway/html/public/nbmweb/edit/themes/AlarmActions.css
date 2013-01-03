@@ -1,0 +1,15 @@
+@CHARSET "UTF-8";
+
+.alarmsGrid .alarmActionsPanel .alarmActionButton {
+    font-size: 10px;
+}
+
+.alarmsGrid .actionColumn {
+    padding: 1px; 
+    border-left-color: transparent !important;
+    border-right-color: transparent !important;
+}
+
+.alarmsGrid .actionColumnHeader div {
+    visibility: hidden;
+}

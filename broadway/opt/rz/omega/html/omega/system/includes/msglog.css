@@ -1,0 +1,106 @@
+body {
+	font-size: 11px;
+}
+.header_row {  
+    font-size: 16px; 
+    font-style: normal; 
+    color: #FFFFFF; 
+    background-color: #003399; 
+    font-weight: bold;  
+    valign: top; 
+    text-align: left
+}
+
+.normal_text {  
+    font-size: 16px; 
+    font-weight: bold; color: #333333
+}
+
+.webserver_status {  
+    font-size: 12px; 
+    font-weight: bold; 
+    color: #FFFFFF
+}
+
+.error_text {  
+    font-size: 16px; 
+    font-weight: bold; 
+    color: #FF0000
+}
+
+.even_row {  
+    background-color: #FFFFFF; 
+    vertical-align: top; 
+    text-align: left
+}
+
+.odd_row {  
+    background-color: #efefef;
+    vertical-align: top; 
+    text-align: left
+}
+
+.msglog_header { 
+    font-size: 18px; 
+    font-weight: bold; 
+    color: #FFFFFF;
+    background-color: #666666 }
+
+td.infomation_header {  
+    font-size: 12px; 
+    font-weight: bold; 
+    color: #FFFFFF; 
+    background-color: #999933}
+
+.information_text { 
+    font-size: 16px; 
+    font-weight: bold; 
+    color: #000099 }
+
+.fatal_text {  
+    font-size: 16px; 
+    font-weight: bold; 
+    color: #660033
+}
+
+.traceback_text{ 
+    font-size: 16px; 
+    font-weight: bold; 
+    color: #FF8000
+}
+
+.exception_text{ 
+    font-size: 16px; 
+    font-weight: bold; 
+    color: #CFCF07
+}
+
+.debug_text{ 
+    font-size: 16px; 
+    font-weight: bold; 
+    color: #666666
+}
+
+.warning_text{ 
+    font-size: 16px; 
+    font-weight: bold; 
+    color: #CFCF77
+}
+
+.nav_header{
+    background-color: #0000CC; 
+    font-size: 14px; 
+    font-weight: bold; 
+    color: #FFFFFF
+}
+
+.back_ground{ 
+    background-color: #FFFFFF;
+}
+
+.sort_table{ 
+    border-style: none
+}
+
+
+.sort_row {  }

@@ -1,0 +1,3 @@
+#!/bin/sh
+python-mpx /opt/moe25/usr/lib/python2.5/site-packages/production/hw_test.pyc "$@"
+

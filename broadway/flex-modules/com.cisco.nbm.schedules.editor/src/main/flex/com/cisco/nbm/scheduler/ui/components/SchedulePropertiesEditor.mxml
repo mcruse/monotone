@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%"
+	paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10"
+	creationComplete="init()" xmlns:components="com.cisco.ui.components.*">
+	<mx:Script>
+		<![CDATA[
+			import com.cisco.nbm.scheduler.ui.ScheduleDocumentEvent;
+			import com.cisco.nbm.scheduler.ScheduleDocument;
+			import mx.logging.Log;
+			import mx.logging.ILogger;
+			import com.cisco.nbm.entities.ui.EntityPropertySelectionEntry;
+			import mx.managers.ISystemManager;
+			import com.cisco.nbm.xmlrpc.v2.MediatorNodeCall;
+			import mx.events.CloseEvent;
+			import mx.controls.Alert;
+			import mx.collections.ArrayCollection;
+			import com.cisco.nbm.entities.ui.PropertyWrapper;
+			import mx.core.Application;
+			import com.cisco.ui.components.DialogCloseReason;
+			import mx.managers.PopUpManager;
+			import com.cisco.nbm.scheduler.ui.schedules.EntityPropertySelectionPanel;
+			import com.cisco.nbm.entities.Entity;
+			import com.cisco.nbm.entities.ui.EntityNavigator;
+			import com.cisco.nbm.entities.EntityManager;
+			import com.cisco.nbm.scheduler.ui.schedules.SchedulePropertiesModel;
+			import com.cisco.nbm.scheduler.ScheduleProperty;
+			import com.cisco.nbm.scheduler.HierarchicalSchedule;
+			
+			private var _schedule:HierarchicalSchedule;
+
+			private var _scheduleDocument:ScheduleDocument;
+
+			public var _initialized:Boolean = false;
+			
+			public var model:SchedulePropertiesModel;
+			
+			public var _entityManager:EntityManager;
+			
+			private var selectedProperty:ScheduleProperty;
+			
+			private var entityPropertySelectionPanel:EntityPropertySelectionPanel;
+			
+			[Bindable]
+			private var canEdit:Boolean = false;
+			
+			private var entityRoot:String;
+			
+			private var logger:ILogger;
+			
+			private function init():void
+			{
+				logger = Log.getLogger("scheduler.ui.SchedulePropertiesEditor");
+				
+				_initialized = true;
+				
+				updateValues();
+			}
+			
+			private function updateValues():void
+			{
+				if (!initialized)
+				{
+					return;
+				}
+				
+				if (_scheduleDocument != null)
+				{
+					schedule = _scheduleDocument.schedule;
+				}
+				
+				if (_schedule == null)
+				{
+					return;
+				}
+				
+				if (_entityManager == null)
+				{
+					return;
+				}
+				
+				model = new SchedulePropertiesModel(_entityManager, _schedule.properties);
+				//gc.source = null;
+				gc.source = model;
+				gc.refresh();
+				propertyGrid.validateNow();
+				propertyGrid.expandAll();
+			}
+			
+			public function set entityManager(value:EntityManager):void
+			{
+				_entityManager = value;
+				
+				updateValues();
+			}
+			
+			public function set scheduleDocument(value:ScheduleDocument):void
+			{
+				
+				if (_scheduleDocument != null)
+				{
+					_scheduleDocument.removeEventListener(ScheduleDocumentEvent.SCHEDULE_CHANGE,
+						handleScheduleDocumentModified);
+				}
+			
+				_scheduleDocument = value;
+			
+				if (_scheduleDocument != null)
+				{
+					_scheduleDocument.addEventListener(ScheduleDocumentEvent.SCHEDULE_CHANGE,
+						handleScheduleDocumentModified);
+						
+					schedule = _scheduleDocument.schedule;
+				}	
+				
+									
+			}
+			
+			private function handleScheduleDocumentModified(event:ScheduleDocumentEvent):void
+			{
+				if (!initialized)
+				{
+					return;
+				}
+				
+				schedule = _scheduleDocument.schedule;
+				
+				//weeklyTimeValueEditor.invalidateDisplayList();
+				//updateValues();
+			}
+			
+			private function set schedule(value:HierarchicalSchedule):void
+			{
+				if (_schedule != value)
+				{
+					removeScheduleListeners();
+					
+					_schedule = value;
+					
+					if (_schedule != null && !_schedule.initialized)
+					{
+						_schedule.addEventListener(Event.COMPLETE, handleScheduleComplete);
+					}
+					
+					updateValues();
+				}
+			}
+			
+			private function handleScheduleComplete(event:Event):void
+			{
+				removeScheduleListeners();
+				updateValues();
+			}
+			
+			private function removeScheduleListeners():void
+			{
+				if (_schedule != null)
+				{
+					_schedule.removeEventListener(Event.COMPLETE, handleScheduleComplete);
+				}
+			}
+			
+			private function handleAddProperty():void
+			{
+				var panelParent:DisplayObject = null;
+				
+				var sm:ISystemManager = ISystemManager(Application.application.systemManager);
+	            if (sm.useSWFBridge())
+	                panelParent = Sprite(sm.getSandboxRoot());
+	            else
+	                panelParent = Sprite(Application.application);
+				
+				entityPropertySelectionPanel = PopUpManager.createPopUp(panelParent, EntityPropertySelectionPanel, true) as EntityPropertySelectionPanel;
+				PopUpManager.centerPopUp(entityPropertySelectionPanel);
+				
+				entityPropertySelectionPanel.entityManager = _entityManager;
+				
+				entityPropertySelectionPanel.initialSelection = createInitialSelection();
+				
+				if (selectedProperty != null)
+				{
+					entityPropertySelectionPanel.selectedEntityPath = selectedProperty.entity;
+				}
+				
+				entityPropertySelectionPanel.addEventListener(Event.CLOSE, handleClosePanel);
+				
+				var call:MediatorNodeCall = _schedule.getEntityRoot();
+				call.addCallback(handleGotRootResult, handleGotRootFail);
+			}
+			
+			private function handleGotRootResult(call:MediatorNodeCall, result:Object):void
+			{
+				logger.debug("got entity root: '{0}'", result);
+				entityRoot = result as String;
+				doNextThing();
+			}
+			
+			private function handleGotRootFail(call:MediatorNodeCall, error:Object):void
+			{
+				throw new Error("Unable to get entity root: " + error);
+			}
+			
+			// 
+			private function doNextThing():void
+			{
+				entityPropertySelectionPanel.entityRoot = entityRoot;
+			}
+			
+			private function createInitialSelection():Array
+			{
+				var arr:Array = [];
+				
+				for each (var prop:ScheduleProperty in _schedule.properties)
+				{
+					var selEntry:EntityPropertySelectionEntry = 
+						new EntityPropertySelectionEntry(prop.entity,
+							prop.property, prop.type);
+					arr.push(selEntry);
+				}
+				
+				return arr;
+			}
+			
+			private function handleClosePanel(event:Event):void
+			{
+				PopUpManager.removePopUp(entityPropertySelectionPanel);
+				entityPropertySelectionPanel.removeEventListener(Event.CLOSE, handleClosePanel);
+				
+				var reason:String = entityPropertySelectionPanel.reason;
+				
+				if (reason == DialogCloseReason.OK)
+				{
+					var selectedPaths:Array = entityPropertySelectionPanel.propertyPaths;
+					
+					var newProperties:Array = [];
+					
+					for each (var selEntry:EntityPropertySelectionEntry in selectedPaths)//(var wrapper:PropertyWrapper in selectedPaths)
+					{
+						var newProp:ScheduleProperty = ScheduleProperty.fromEntityPropTuple(
+						selEntry.entityCanonicalPath,
+						selEntry.propertyName,
+						selEntry.type);
+						
+						newProperties.push(newProp);
+					} 
+					
+					if (_schedule.replaceProperties(newProperties))
+					{
+						_scheduleDocument.dirty = true;
+						// TODO Empty entities are not removed
+						updateValues();
+					}
+				}
+				
+				entityPropertySelectionPanel.destroy();
+				entityPropertySelectionPanel = null;
+			}
+			
+			private var deleteMultipleToken:ArrayCollection;
+			
+			private function handleDeleteProperty():void
+			{
+				
+				var item:Object = propertyGrid.selectedItem;
+				
+				if (!(item is ScheduleProperty))
+				{
+					deleteMultipleToken = item.children;
+					showDeleteAllPropsPanel(item.GroupLabel, item.children.length);
+				}
+				else
+				{
+					var idx:int = _schedule.properties.getItemIndex(item);
+					
+					if (idx != -1)
+					{
+						_schedule.properties.removeItemAt(idx);
+						updateValues();
+					}
+					
+					_scheduleDocument.dirty = true;
+				}
+				
+				
+			}
+			
+			private function showDeleteAllPropsPanel(entityName:String, countProps:int):void
+			{
+				var alert:Alert = Alert.show("Delete all the properties of " + entityName + "?", 
+					"Delete Properties of " + entityName, 
+					Alert.YES | Alert.NO, 
+					this, handleCloseDeleteAllPropsPanel, null, Alert.NO); 
+			}
+			
+			private function handleCloseDeleteAllPropsPanel(event:CloseEvent):void
+			{
+				if (event.detail == Alert.YES)
+				{
+					for each (var prop:ScheduleProperty in deleteMultipleToken)
+					{
+						var idx:int = _schedule.properties.getItemIndex(prop);
+						_schedule.properties.removeItemAt(idx);
+					}	
+					
+					updateValues();
+					
+					_scheduleDocument.dirty = true;
+				}
+				
+				if (deleteMultipleToken != null)
+				{
+					deleteMultipleToken.removeAll();
+					deleteMultipleToken = null;
+				}
+			}
+			
+			private function handlePropertyChange():void
+			{
+				selectedProperty = propertyGrid.selectedItem as ScheduleProperty;
+				
+				updateEnablement();
+			}
+			
+			private function updateEnablement():void
+			{
+				canEdit = selectedProperty is ScheduleProperty && selectedProperty.type != "BO" && selectedProperty.type != "BV";
+			}
+			
+			private function handleEditCustomValues():void
+			{
+				var panel:EditCustomValueMapPanel = 
+					EditCustomValueMapPanel.show(null, 
+						_schedule.metaData, selectedProperty,
+						handleCloseCustomValueMapPanel);
+			}
+			
+			private function handleCloseCustomValueMapPanel(event:CloseEvent):void
+			{
+				if (event.detail == Alert.OK)
+				{
+					var panel:EditCustomValueMapPanel = event.target as EditCustomValueMapPanel;
+					var newValueMap:Object = panel.valueMap;
+					
+					// TODO Move to schedule document
+					if (_schedule.updatePropertyValueMap(selectedProperty, newValueMap))
+					{
+						_scheduleDocument.dirty = true;
+					}
+				}
+				
+			}
+			
+			private function propertyLabelFunction(item:Object, column:AdvancedDataGridColumn):String {
+				return unescape(item.GroupLabel);
+			}
+		]]>
+	</mx:Script>
+	<mx:HBox width="100%">
+		<mx:Button label="Add Property" click="handleAddProperty()" />
+		<mx:Button label="Remove Property" click="handleDeleteProperty()" enabled="{propertyGrid.selectedItem != null}" />
+	</mx:HBox>
+
+	<mx:AdvancedDataGrid width="100%" height="50%"
+		id="propertyGrid"
+		defaultLeafIcon="{null}"
+		change="handlePropertyChange()"
+		initialize="gc.refresh();"
+		doubleClickEnabled="true"
+		doubleClick="handleEditCustomValues()"
+		groupLabelFunction="propertyLabelFunction">
+		<mx:dataProvider>
+			<mx:GroupingCollection id="gc">
+				<mx:grouping>
+					<mx:Grouping>
+						<mx:GroupingField name="entity" />
+					</mx:Grouping>
+				</mx:grouping>
+			</mx:GroupingCollection>
+		</mx:dataProvider>
+		<mx:columns>
+			<mx:AdvancedDataGridColumn headerText="Entity" dataField="GroupLabel"  />
+			<mx:AdvancedDataGridColumn headerText="Property" dataField="property"  />
+			<mx:AdvancedDataGridColumn headerText="Type" dataField="type" />
+		</mx:columns>
+	</mx:AdvancedDataGrid>
+	<mx:HBox width="100%">
+		<mx:Button label="Edit Custom Values" click="handleEditCustomValues()" enabled="{canEdit}" />
+	</mx:HBox>
+</mx:VBox>

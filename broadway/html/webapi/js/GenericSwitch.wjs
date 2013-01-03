@@ -1,0 +1,646 @@
+/*
+Purpose: Generic Switch widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: GenericSwitch.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+function GenericSwitch(){
+  this.base = Widget;
+  this.base();
+  this._name = 'GenericSwitch';
+  this._z_index = '1000';
+  this._node = '';
+  this.node_selector_node = 'true';
+  this._display_type = 'active/inactive';
+  this._display_character_length = '10'; 
+  this._text_color = 'black';
+  this.color_selector_text_color = 'true';
+  this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+  this._text_font_size = '12px';
+  this._text_background_color = 'lightgrey';
+  this.color_selector_text_background_color = 'true';
+  this._text_align = 'center';
+  this._text_padding_bottom = '5px';
+  this._text_padding_left = '5px';
+  this._text_padding_right = '5px';
+  this._text_padding_top = '5px';
+  this._button_scale = '100';
+  this._toggle_button_source = '/webapi/images/togglebtnsm.gif';
+  this._toggle_button_width = '50px';
+  this._toggle_button_height = '20px';
+ }
+
+GenericSwitch.prototype = new Widget;
+
+GenericSwitch.prototype.after_config_table = function() {
+  Widget_log('GenericSwitch.after_config_table(), at top');
+  document.getElementById('GenericSwitch_display_type').value = this._display_type;
+  document.getElementById('GenericSwitch_text_align').value = this._text_align;
+}
+
+GenericSwitch.prototype.get_text_align_defaults = function() {
+  var s = document.createElement('select');
+
+  s.setAttribute('id', 'GenericSwitch_text_align');
+
+  var o = document.createElement('option');
+
+  o.value = 'center';
+  o.innerHTML = 'center';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'left';
+  o.innerHTML = 'left';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'right';
+  o.innerHTML = 'right';
+  s.appendChild(o);
+  return s;
+}
+
+GenericSwitch.prototype.get_display_type_defaults = function(){
+ 
+  var s = document.createElement('select');
+   
+  s.setAttribute('id','GenericSwitch_display_type');
+
+  var o =  document.createElement('option');
+
+  o.value = 'active/inactive';
+  o.innerHTML = 'active/inactive';  
+  s.appendChild(o);  
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'binary';
+  o.innerHTML = 'binary';  
+  s.appendChild(o);  
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'boolean';
+  o.innerHTML = 'boolean';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'on/off';
+  o.innerHTML = 'on/off';
+  s.appendChild(o);
+  return s;
+}
+
+GenericSwitch.prototype.init = function(element) {
+  Widget_log('GenericSwitch.init(), at top');
+  this._name = 'GenericSwitch';
+  this._z_index = element.getAttribute('zindex');
+  var innercontainer = this.get_element(element,'div','innercontainer');
+  if(innercontainer.currentStyle) {
+    this._text_background_color = innercontainer.currentStyle['backgroundColor'];
+  }
+  else if(window.getComputedStyle) {
+    var compStyle = window.getComputedStyle(innercontainer,"");
+    this._text_background_color = compStyle.getPropertyValue('background-color');
+  }
+  var nodedisplayspan = this.get_element(element,'div','nodedisplay');
+  this._node = nodedisplayspan.getAttribute('node');
+  if(nodedisplayspan.currentStyle) {
+    this._text_color = nodedisplayspan.currentStyle['color'];
+    this._text_font_family = nodedisplayspan.currentStyle['fontFamily'];
+    this._text_font_size = nodedisplayspan.currentStyle['fontSize'];
+    this._text_padding_bottom = nodedisplayspan.currentStyle['paddingBottom'];
+    this._text_padding_left = nodedisplayspan.currentStyle['paddingLeft'];
+    this._text_padding_right = nodedisplayspan.currentStyle['paddingRight'];
+    this._text_padding_top = nodedisplayspan.currentStyle['paddingTop'];
+  }
+  else if(window.getComputedStyle) {
+    var compStyle = window.getComputedStyle(nodedisplayspan,"");
+    this._text_color = compStyle.getPropertyValue('color');
+    this._text_font_family = compStyle.getPropertyValue('font-family');
+    this._text_font_size = compStyle.getPropertyValue('font-size');
+    this._text_padding_bottom = compStyle.getPropertyValue('padding-bottom');
+    this._text_padding_left = compStyle.getPropertyValue('padding-left');
+    this._text_padding_right = compStyle.getPropertyValue('padding-right');
+    this._text_padding_top = compStyle.getPropertyValue('padding-top');
+  }
+  else {
+    this._text_color = 'black';
+    this._text_background_color = 'lightgrey';
+    this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+    this._text_font_size = '12px';
+    this._text_padding_bottom = '10px';
+    this._text_padding_left = '10px';
+    this._text_padding_right = '10px';
+    this._text_padding_top = '10px';
+  }
+  var infospan = this.get_element(element,'div','info');
+  this._display_type = this.get_span_attr(infospan, 'display_type');
+  this._display_character_length = this.get_span_attr(infospan, 'display_character_length');
+  this._text_align = this.get_span_attr(infospan, 'text_align');
+  this._button_scale = this.get_span_attr(infospan, 'button_scale');
+  this._toggle_button_source = this.get_span_attr(infospan, 'toggle_button_source');
+  this._toggle_button_width = this.get_span_attr(infospan, 'toggle_button_width');
+  this._toggle_button_height = this.get_span_attr(infospan, 'toggle_button_height');
+}
+
+GenericSwitch.prototype.init_element = function (){
+  Widget_log('GenericSwitch.init_element(), at top');
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version', '1_0_dev_2');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  this.element.style.position = 'absolute';
+  this.element.style.zIndex = this._z_index;
+
+  var widgettable = document.createElement('table');
+  widgettable.setAttribute('element','widgettable');
+  widgettable.setAttribute('cols', '2');
+  widgettable.setAttribute('align','center');
+  widgettable.setAttribute('cellpadding','0');
+  widgettable.setAttribute('cellspacing','8');
+  widgettable.insertRow(0);
+
+  //cell[0] contains nodedisplay
+  widgettable.rows[0].insertCell(0);
+  widgettable.rows[0].cells[0].align = 'center';
+  widgettable.rows[0].cells[0].setAttribute('valign','top');
+
+  var innercontainer = document.createElement('div');
+  innercontainer.setAttribute('element','innercontainer');
+  innercontainer.style.position = 'relative';
+  innercontainer.style.verticalAlign = 'middle';
+  innercontainer.style.height = 'auto';
+  innercontainer.style.width = 'auto';
+  if(this._text_background_color != ''){
+    innercontainer.style.backgroundColor = this._text_background_color;
+  }
+  innercontainer.style.textAlign = 'left';
+  innercontainer.style.top = '0';
+  innercontainer.style.left = '0';
+  innercontainer.style.zIndex = '0';
+
+  var placeholderspan = document.createElement('div');
+  placeholderspan.setAttribute('element', 'placeholder');
+  //placeholderspan.style.position = 'absolute';
+  placeholderspan.style.backgroundColor = 'transparent';
+  placeholderspan.style.borderWidth = '2px';
+  placeholderspan.style.borderStyle = 'solid';
+  placeholderspan.style.borderColor = this._text_background_color;
+  if(this._text_background_color != '') {
+    placeholderspan.style.color = this._text_background_color;
+  }
+  if(this._text_font_family != ''){
+    placeholderspan.style.fontFamily = this._text_font_family;
+  }  
+  if(this._text_font_size != ''){
+    placeholderspan.style.fontSize = this._text_font_size;
+  }  
+  if(this._text_padding_bottom != ''){
+    placeholderspan.style.paddingBottom = this._text_padding_bottom;
+  }  
+  if(this._text_padding_left != ''){
+    placeholderspan.style.paddingLeft = this._text_padding_left;
+  }  
+  if(this._text_padding_right != ''){
+    placeholderspan.style.paddingRight = this._text_padding_right;
+  }  
+  if(this._text_padding_top != ''){
+    placeholderspan.style.paddingTop = this._text_padding_top;
+  }  
+  var pstring = '';
+  for(var i = 0; i < parseInt(this._display_character_length); i++)
+	pstring += 'X';
+  placeholderspan.innerHTML = pstring;
+  placeholderspan.style.top = '0';
+  placeholderspan.style.left = '0';
+  placeholderspan.style.zIndex = '1';
+  placeholderspan.style.visibility = 'hidden';
+  innercontainer.appendChild(placeholderspan);
+  
+  var nodedisplayspan = document.createElement('div');
+  nodedisplayspan.setAttribute('element', 'nodedisplay');
+  nodedisplayspan.setAttribute('node', this._node);
+  switch(this._display_type) {
+    case 'active/inactive':
+      nodedisplayspan.setAttribute('display_function', 'GenericSwitchDisplayActiveInactive');
+      break;
+    case 'binary':
+      nodedisplayspan.setAttribute('display_function', 'GenericSwitchDisplayBinary');
+      break;
+    case 'boolean':
+      nodedisplayspan.setAttribute('display_function', 'GenericSwitchDisplayBoolean');
+      break;
+    case 'on/off':
+      nodedisplayspan.setAttribute('display_function', 'GenericSwitchDisplayOnOff');
+      break;
+  }
+  nodedisplayspan.style.position = 'absolute';
+  nodedisplayspan.style.backgroundColor = 'transparent';
+  //nodedisplayspan.style.borderWidth = '2px';
+  //nodedisplayspan.style.borderStyle = 'solid';
+  //nodedisplayspan.style.borderColor = '#000000';
+  if(this._text_color != ''){
+    nodedisplayspan.style.color = this._text_color;
+  }
+  if(this._text_font_family != ''){
+    nodedisplayspan.style.fontFamily = this._text_font_family;
+  }  
+  if(this._text_font_size != ''){
+    nodedisplayspan.style.fontSize = this._text_font_size;
+  }  
+  if(this._text_padding_bottom != ''){
+    nodedisplayspan.style.paddingBottom = this._text_padding_bottom;
+  }  
+  if(this._text_padding_left != ''){
+    nodedisplayspan.style.paddingLeft = this._text_padding_left;
+  }  
+  if(this._text_padding_right != ''){
+    nodedisplayspan.style.paddingRight = this._text_padding_right;
+  }  
+  if(this._text_padding_top != ''){
+    nodedisplayspan.style.paddingTop = this._text_padding_top;
+  }  
+  //FIXTHIS: NN doesn't require offset to style.top
+  nodedisplayspan.style.top = '4'; // offset for placeholder border
+  nodedisplayspan.style.left = '0';
+  nodedisplayspan.style.zIndex = '2';
+
+  innercontainer.appendChild(nodedisplayspan);
+
+  var infospan = document.createElement('div');
+  infospan.setAttribute('element','info');
+  infospan.setAttribute('type','hidden');  
+  infospan.setAttribute('display_type', this._display_type);  
+  infospan.setAttribute('display_character_length', this._display_character_length);  
+  infospan.setAttribute('text_align', this._text_align);
+  infospan.setAttribute('button_scale', this._button_scale);
+  infospan.setAttribute('toggle_button_source', this._toggle_button_source);
+  infospan.setAttribute('toggle_button_width', this._toggle_button_width);
+  infospan.setAttribute('toggle_button_height', this._toggle_button_height);
+  //infospan.style.position = 'relative';
+  infospan.style.backgroundColor = 'transparent';
+  infospan.style.top = '0';
+  infospan.style.left = '0';
+  infospan.style.height = '1';
+  infospan.style.width = '1';
+  infospan.style.zIndex = '0';
+  infospan.style.visibility = 'hidden';
+  infospan.style.display = 'none';
+   
+  innercontainer.appendChild(infospan);
+  widgettable.rows[0].cells[0].appendChild(innercontainer);
+
+  // cell[1] contains toggle button
+  widgettable.rows[0].insertCell(1);
+  widgettable.rows[0].cells[1].align = 'center';
+  widgettable.rows[0].cells[1].setAttribute('valign','middle');
+
+  var togglebtnimg = document.createElement('img');
+  togglebtnimg.setAttribute('src',this._toggle_button_source);
+  togglebtnimg.setAttribute('alt','');
+  var myToggleBtnWidth = Math.round(parseInt(this._toggle_button_width) * (this._button_scale / 100.0));
+  togglebtnimg.setAttribute('width',myToggleBtnWidth);
+  var myToggleBtnHeight = Math.round(parseInt(this._toggle_button_height) * (this._button_scale / 100.0));
+  togglebtnimg.setAttribute('height',myToggleBtnHeight);
+  togglebtnimg.setAttribute('onclick','GenericSwitchToggleBtnHandler(this)');
+
+  widgettable.rows[0].cells[1].appendChild(togglebtnimg);
+
+  this.element.appendChild(widgettable);
+}
+
+
+GenericSwitch.prototype.create = function (){
+  Widget_log('GenericSwitch.create(), at top');
+  //_msglog('GenericSwitch.create(), arguments.length=' + arguments.length);
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function GenericSwitch_factory(){
+  return new GenericSwitch();
+}
+
+function GenericSwitchDisplayNoErrors(v) {
+  try {    
+    var pattern1 = /\?/;      
+    var pattern2 = /error\:/;      
+    if (pattern1.exec(v.toString()) == null && pattern2.exec(v.toString()) == null) {
+      return 1;
+    }
+  }
+  catch(err) {
+    return 0;
+  }
+  return 0;
+}
+
+function GenericSwitchDisplayActiveInactive(e,v){
+  try{    
+    if(GenericSwitchDisplayNoErrors(v)){
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(v == 0) {
+          e.innerHTML = 'inactive';
+	}
+        else {
+          e.innerHTML = 'active';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(v == 0) {
+          e.value = 'inactive';
+	}
+        else {
+          e.value = 'active';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  GenericSwitchTextAlign(e);
+}
+
+function GenericSwitchDisplayBinary(e,v){
+  try{    
+    if(GenericSwitchDisplayNoErrors(v)){
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(v == 0) {
+          e.innerHTML = '0';
+	}
+        else {
+          e.innerHTML = '1';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(v == 0) {
+          e.value = '0';
+	}
+        else {
+          e.value = '1';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  GenericSwitchTextAlign(e);
+}
+
+function GenericSwitchDisplayBoolean(e,v){
+  //first, convert value to string
+  try{    
+    var nn = e.nodeName.toUpperCase();
+    if(GenericSwitchDisplayNoErrors(v)){
+      if(nn == "SPAN" || nn == "TD" || nn == "DIV") {
+        if(v == 0) {
+          e.innerHTML = 'false';
+	}
+        else {
+          e.innerHTML = 'true';
+        }
+      }
+      else if(nn == "INPUT"){ 
+        if(v == 0) {
+          e.value = 'false';
+	}
+        else {
+          e.value = 'true';
+        }
+      }
+    }
+    else{
+      if(nn == "SPAN" || nn == "TD" || nn == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(nn == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  //then align element within parent element
+  GenericSwitchTextAlign(e);
+}
+
+function GenericSwitchDisplayOnOff(e,v){
+  try{    
+    if(GenericSwitchDisplayNoErrors(v)){
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(v == 0) {
+          e.innerHTML = 'off';
+	}
+        else {
+          e.innerHTML = 'on';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(v == 0) {
+          e.value = 'off';
+	}
+        else {
+          e.value = 'on';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  GenericSwitchTextAlign(e);
+}
+
+function GenericSwitchTextAlign(e) {
+  var phelement = GenericSwitchGetElement(e.parentNode,'div','placeholder');
+  var ielement = GenericSwitchGetElement(e.parentNode,'div','info');
+  var myOffsetWidth = parseInt(e.offsetWidth);
+  var myOffsetLeft = parseInt(e.offsetLeft);
+  var myParentOffsetWidth = parseInt(e.offsetParent.offsetWidth);
+  var myParentOffsetLeft = parseInt(e.offsetParent.offsetLeft);
+  var myAlign = ielement.getAttribute('text_align');
+  var myLeftPad = parseInt(e.style.paddingLeft);
+  var myRightPad = parseInt(e.style.paddingRight);
+  var myHorizontalPad = myLeftPad + myRightPad;
+  var placeHolderContentSize = parseInt(phelement.offsetWidth) - myHorizontalPad;
+  //alert('myOffsetWidth=' + myOffsetWidth + ', myOffsetLeft=' + myOffsetLeft + ', myParentOffsetWidth=' + myParentOffsetWidth + ', myParentOffsetLeft=' + myParentOffsetLeft + ', myAlign=' + myAlign + ', myLeftPad = ' + myLeftPad + ', myRightPad=' + myRightPad + ', phelement.offsetWidth=' + phelement.offsetWidth);
+  if(document.compatMode == 'BackCompat') { //IE6 in backward compatibility mode (IE6 default)
+    switch(myAlign) {
+      case 'right':
+        e.style.left = Math.round((placeHolderContentSize - myOffsetWidth) - myLeftPad) + 'px';
+        break;
+      case 'center':
+        e.style.left = Math.round(((myParentOffsetWidth / 2) - myOffsetLeft) - (((myOffsetWidth + myHorizontalPad) / 2) - myOffsetLeft)) + 'px';
+        break;
+      case 'left':
+        e.style.left = myLeftPad + 'px';
+        break;
+      default:
+        break;
+    }
+  }
+  else { // CSS1Compat
+    switch(myAlign) {
+      case 'right':
+        e.style.left = Math.round(myParentOffsetWidth - myOffsetWidth);
+        break;
+      case 'center':
+        e.style.left = Math.round(myParentOffsetWidth / 2 - myOffsetWidth / 2);
+        break;
+      case 'left':
+        e.style.left = myLeftPad + 'px';
+        break;
+      default:
+        break;
+    }
+  }
+  //alert('e.style.left=' + e.style.left);
+}
+
+
+function GenericSwitchGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e
+}
+
+function GenericSwitchToggleBtnHandler(e) {
+  Widget_log("GenericSwitchToggleBtnHandler entered");
+  Widget_log("e.parentNode.parentNode.parentNode.parentNode.getAttribute('element')=" + e.parentNode.parentNode.parentNode.parentNode.getAttribute('element'));
+  var tblelement = e.parentNode.parentNode.parentNode.parentNode;
+  var ndelement = GenericSwitchGetElement(tblelement,'div','nodedisplay');
+  var ielement = GenericSwitchGetElement(tblelement,'div','info');
+
+  //get current value from nodedisplay element
+  var myValue = ndelement.innerHTML;
+  Widget_log("old myValue=" + myValue);
+
+  //calculate new value
+  var myDisplayType = ielement.getAttribute('display_type');
+  switch(myDisplayType) {
+    case 'active/inactive':
+      if(myValue == 'active') {
+        myValue = 0.0;
+      }
+      else {
+        myValue = 1.0;
+      }
+      break;
+    case 'binary':
+      if(myValue.as_magnitude){
+        myValue = myValue.as_magnitude();
+      }
+      else{
+        myValue = parseInt(myValue);
+      }
+      if(myValue == 1) {
+        myValue = 0.0;
+      }
+      else {
+        myValue = 1.0;
+      }
+      break;
+    case 'boolean':
+      if(myValue == 'true') {
+        myValue = 0.0;
+      }
+      else {
+        myValue = 1.0;
+      }
+      break;
+    case 'on/off':
+      if(myValue == 'on') {
+        myValue = 0.0;
+      }
+      else {
+        myValue = 1.0;
+      }
+      break;
+  }
+
+  //do update
+  try {
+    Widget_log("new myValue=" + myValue);
+    Widget_log("node=" + ndelement.getAttribute('node'));
+    var n = MEDIATOR.get_node(ndelement.getAttribute('node'));
+    n.set(myValue.toString());
+    switch(myDisplayType) {
+      case 'active/inactive':
+        GenericSwitchDisplayActiveInactive(ndelement,myValue);
+        break;
+      case 'binary':
+        GenericSwitchDisplayBinary(ndelement,myValue);
+        break;
+      case 'boolean':
+        GenericSwitchDisplayBoolean(ndelement,myValue);
+        break;
+      case 'on/off':
+        GenericSwitchDisplayOnOff(ndelement,myValue);
+        break;
+    }
+  }
+  catch(err) {
+    alert('ERROR: ' + err.message);
+  }
+}
+
+var GenericSwitch_loaded = true;

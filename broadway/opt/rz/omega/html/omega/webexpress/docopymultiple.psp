@@ -1,0 +1,116 @@
+<%    
+# Copyright (c) 2005 Richards-Zeta
+# $Name: mediator_3_1_2_branch $
+# $Id: docopymultiple.psp 20101 2011-03-06 16:02:15Z bhagn $
+import os
+import sys
+import errno
+from mpx.lib.http import MultipartCollector
+from mpx import properties
+
+from mpx.lib import rzutils
+
+if request.get_protocol() == 'http':
+    root = properties.HTTP_ROOT
+else:
+    root = properties.HTTPS_ROOT
+
+m = MultipartCollector(request)
+mkeys = m.keys()
+
+thePage = []
+errorFound = False
+
+def mkdirs(newdir, mode=0777):
+    try:
+        oldmask = os.umask(0)
+        try:
+            os.makedirs(newdir, mode)
+        except OSError, err:
+            if err.errno != errno.EEXIST or not os.path.isdir(newdir):
+                raise
+    finally:
+        os.umask(oldmask)
+
+def procLine(line, substr):
+    theLine = []
+    oldLine = line
+    occurs = oldLine.count('node="')
+    if occurs > 0:
+        #thePage.append('occurs=%d<br>' % occurs)
+        start = 0
+        loopcount = 0
+        while loopcount < occurs:
+            nodeIndex = oldLine.find('node="', start)
+            pathIndex = nodeIndex + len('node="')
+            pathEndIndex = oldLine[pathIndex:].find('"')
+            start = pathIndex + pathEndIndex
+            newPath = oldLine[pathIndex:start].replace('~',substr)
+            newLine = oldLine[:pathIndex] + newPath + oldLine[start:]
+            oldLine = newLine
+            #thePage.append('nodeIndex=%d, pathIndex=%d, start=%d<br>' % (nodeIndex, pathIndex, start))
+            loopcount += 1
+    theLine = oldLine
+    return theLine
+
+if 'theFile' in mkeys:
+    filename = m['theFile'].value
+    fullname = os.path.join(root,filename)        
+    #thePage.append('filename=%s<br>' % filename)
+    #thePage.append('fullname=%s<br>' % fullname)
+else:
+    errorFound = True
+    thePage.append('Incorrect or missing template<br>')
+    
+if 'copies' in mkeys:
+    copies = int(m['copies'].value)
+    #thePage.append('copies=%s<br>' % copies)
+else:
+    errorFound = True
+    thePage.append('Incorrect or missing copies<br>')
+
+if 'filebasename' in mkeys:
+    filebasename = m['filebasename'].value
+    fullbasename = os.path.join(root,filebasename)
+    #thePage.append('filebasename=%s<br>' % filebasename)
+    #thePage.append('fullbasename=%s<br>' % fullbasename)
+else:
+    errorFound = True
+    thePage.append('Incorrect or missing copies<br>')
+
+#for line in thePage:
+    #psp.write(line + '\n')
+#return
+
+if errorFound is False:
+    try:
+        rp = open(fullname,'r')
+        rlines = rp.readlines()
+        rp.close()
+        counter = 1
+        while counter <= copies:
+            if counter < 10:
+                counterstr = '0' + str(counter)
+            else:
+                counterstr = str(counter)
+            newfullname = fullbasename.replace('~',counterstr)
+            newfulldir = os.path.dirname(newfullname)
+            #thePage.append('newfulldir=%s<br>' % newfulldir)
+            mkdirs(newfulldir, 0775)
+            #thePage.append('writing file=%s<br>' % newfullname)
+            wp = open(newfullname, 'w')
+            for line in rlines:
+                wp.write(procLine(line,counterstr))
+            wp.close()
+            rzutils.wefs_cache(newfullname)
+            counter += 1
+    except Exception,e:
+        thePage.append('ERROR: %s<br>' % e)
+    else:
+        thePage.append('%d files copied...<br><br>' % copies)
+        thePage.append('Please click button below to continue.<br><br>')
+        thePage.append('''<a href="javascript: top.location ='/omega/webexpress/index.html';"><img border="0" src="../media/images/btn_next.gif" width="181" height="23" alt="" align="left"></a>''')
+
+for line in thePage:
+    psp.write(line + '\n')
+%>

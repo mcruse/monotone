@@ -1,0 +1,3 @@
+The HTML files in this templates folder are HTML files used 
+by request handling services to generate HTML responses.  These 
+files will not normally be served directly, but opened by services.

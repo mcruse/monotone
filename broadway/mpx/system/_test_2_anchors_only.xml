@@ -1,0 +1,19 @@
+<mpxconfig node_version='None'>
+  <node name='/' node_id='784' module=''  config_builder=''  inherant='false' description='Unknown Host'>
+    <node name='aliases' node_id='480' module='mpx.service.aliases.factory'  config_builder=''  inherant='true' description='Global alias namespace'>
+      <config>
+        <property name='priority' value='2'/>
+      </config>
+    </node>
+    <node name='interfaces' node_id='785' module='mpx.system._test_case_configure.FakeHost'  config_builder=''  inherant='true' description='Fake Host'>
+      <config>
+        <property name='priority' value='1'/>
+      </config>
+    </node>
+    <node name='services' node_id='468' module='mpx.service.factory'  config_builder=''  inherant='true' description='Services'>
+      <config>
+        <property name='priority' value='3'/>
+      </config>
+    </node>
+  </node>
+</mpxconfig>

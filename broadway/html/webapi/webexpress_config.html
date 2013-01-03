@@ -1,0 +1,554 @@
+<!--
+Copyright (C) 2008 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+<!-- 
+
+Purpose: implements configuration window for widget parameters
+$Name: mediator_3_1_2_branch $
+$Id: webexpress_config.html 20101 2011-03-06 16:02:15Z bhagn $ -->
+    <title>WebExpress Configuration</title>
+    <script type="text/javascript" src="/webapi/js/sdk2.js"></script>
+    <script type="text/javascript" src="/webapi/js/ColorPicker2.js"></script>
+    <script type="text/javascript" widget='true' src="/webapi/js/widget.js"></script>
+  <style type="text/css">
+      body{font-size:12px;}
+      td{font-size:12px;}
+      .header{
+        font-size: 18px;
+	    color: #FFFFFF;
+		font-family:arial,veranda,sans-serif;
+		font-weight: bold;
+      }
+  </style>
+<script type="text/javascript">
+    //initialize color picker window
+    function pickColor(color) {
+    	document.getElementById(window.ColorPicker_targetInput.getAttribute("colorbox")).style.backgroundColor = color;
+    	window.ColorPicker_targetInput.value = color;
+    }
+    cp = new ColorPicker("window");
+</script>
+  </head>
+<body topmargin="0" leftmargin="0" marginheight="0" marginwidth="0">
+  <form name="main">
+    <table width="695" height="100%" border="0" cellspacing="0" cellpadding="0" >
+      <tr>
+        <td background="/webapi/images/wc_top2.gif" width="695" height="50" align="center" class="header">Configure Widget</td>
+      </tr>
+      <tr>
+       <td align="center" style="width:100%;height:75%">
+          <div id="config"></div>
+	   </td>
+	  </tr>
+	  <tr>
+	    <td align="middle">
+	      <div style="width:100%"><input type="image" src="/webapi/images/button_cancel2.gif" onclick="window.close()">&nbsp;&nbsp;&nbsp;
+		                          <input type="image"  src="/webapi/images/button_save2.gif"  onclick="configure()" ></div>
+        </td>
+	  </tr>
+      <tr>
+	      <td><img src="/webapi/images/wc_bottom2.gif" width="695" height="20" alt="" border="0"></td>
+      </tr>
+    </table>
+  </form>
+ </body>
+
+<script type="text/javascript">
+//var MEDIATOR = new Mediator();
+//MEDIATOR.login();
+
+var objWin = null;
+function open_node_selector(id){
+ // IE, in IE you can't set onclick events to a string
+ // you have to set it to a reference of a function
+if (arguments.length ==0){
+var id = this.getAttribute('input_id');
+ }
+ var w = '600';
+ var h = '600';
+ var features = "height=1,width=1,resizeable,scrollbars";
+ var url = '';
+if (!objWin || objWin.closed) {
+  url = "/webapi/nodeSelector.html?textid=" + id;
+ }
+objWin = window.open(url,"nodeSelector",features);
+if (url.length == 0) {
+   objWin.set_target(window, id);
+ }
+ var height = window.screen.availHeight;
+ var width = window.screen.availWidth;
+ var left_point = parseInt(width/2) - parseInt(w/2);
+ var top_point =  parseInt(height/2) - parseInt(h/2);
+ objWin.moveTo(left_point,top_point);
+ objWin.resizeTo(w,h);
+ objWin.focus();
+}
+
+var color_selector_elem = null;
+function open_color_selector(id){
+ // IE, in IE you can't set onclick events to a string
+ // you have to set it to a reference of a function
+ if (arguments.length ==0){
+   var id = this.getAttribute('input_id');
+ }
+
+ color_selector_elem = document.getElementById(id);
+ var myName = color_selector_elem.getAttribute("colorbox");
+ cp.select(color_selector_elem, myName);
+}
+
+function updateColorBox(id){
+ // IE, in IE you can't set onclick events to a string
+ // you have to set it to a reference of a function
+ if (arguments.length ==0){
+   var id = this.getAttribute('colorbox');
+ }
+ document.getElementById(id).style.backgroundColor = this.value;
+}
+
+var sound_selector_elem = null;
+function open_sound_selector(id){
+ // IE, in IE you can't set onclick events to a string
+ // you have to set it to a reference of a function
+ if (arguments.length ==0){
+   var id = this.getAttribute('input_id');
+ }
+ var w = '600';
+ var h = '600';
+ var features = "menubar=false;toolbar=false,height=1,width=1;resizeable,scrollbars";
+
+ sound_selector_elem = document.getElementById(id);
+ if(sound_selector_elem.value == '') {
+   var oldFile = 'NEWFILE';
+ }
+ else {
+   var oldFile = sound_selector_elem.value;
+ }
+ if(showallfiles == 'true') {
+   objWin = window.open("/webapi/fileSelector.html?selectfiles=all&savefunction=soundSelectorCloser&filename=" + oldFile,"fileSelector",features);
+ }
+ else {
+   objWin = window.open("/webapi/fileSelector.html?selectfiles=sound&savefunction=soundSelectorCloser&filename=" + oldFile,"fileSelector",features);
+ }
+
+ var height = window.screen.availHeight;
+ var width = window.screen.availWidth;
+ var left_point = parseInt(width/2) - parseInt(w/2);
+ var top_point =  parseInt(height/2) - parseInt(h/2);
+ objWin.moveTo(left_point,top_point);
+
+ objWin.resizeTo(w,h);
+ objWin.focus();
+
+}
+
+function soundSelectorCloser() {
+  var filename =  objWin.document.getElementById('file_name').value;
+  //check for proper file name format before saving
+  var wavAtEnd = (filename.length >= 4 && filename.slice(-4).toLowerCase() == '.wav') ? true : false;
+  if(!wavAtEnd) {
+    alert('Filename must end with .wav!');
+  }
+  else if(wavAtEnd && filename.length == 4){
+    alert('Filename must have at least one character before .wav!');
+  }
+  else {
+    if (objWin.opener){
+      if (filename == ''){
+        alert('You must enter a file name to save the selection.');
+      }
+      else{
+        //valid file name format
+	sound_selector_elem.value = filename;
+        objWin.close();
+        objWin = null;
+      }
+    }
+    else{
+      alert('file name:' + filename);
+    }
+  }
+}
+
+var image_selector_elem = null;
+function open_image_selector(id){
+ // IE, in IE you can't set onclick events to a string
+ // you have to set it to a reference of a function
+ if (arguments.length ==0) {
+   var browse = this;
+   var input = browse.previousSibling;
+ } else {
+   var input = document.getElementById(id);
+   var browse = input.nextSibling;
+ }
+ var id = browse.getAttribute('input_id');
+ var qs = browse.getAttribute('querystring');
+ var w = '600';
+ var h = '600';
+ var features = "menubar=false;toolbar=false,height=1,width=1;resizeable,scrollbars";
+ 
+ image_selector_elem = document.getElementById(id);
+ if(image_selector_elem.value == '') {
+   var oldFile = 'NEWFILE';
+ }
+ else {
+   var oldFile = input.value;
+ }
+ var type = 'all';
+ if (showallfiles != 'true') {
+   type = 'image';
+ }
+ var url = "/webapi/fileSelector.html?selectfiles=" + type;
+ if (qs) {
+   url += '&' + qs;
+ }
+ var mandatory = {'savefunction': 'imageSelectorCloser',
+                  'filename': oldFile};
+ for (var name in mandatory) {
+   if (url.indexOf(name) == -1) {
+     url += '&' + name + '=' + mandatory[name];
+   }
+ }
+ objWin = window.open(url,"fileSelector",features);
+ var height = window.screen.availHeight;
+ var width = window.screen.availWidth;
+ var left_point = parseInt(width/2) - parseInt(w/2);
+ var top_point =  parseInt(height/2) - parseInt(h/2);
+ objWin.moveTo(left_point,top_point);
+ objWin.resizeTo(w,h);
+ objWin.focus();
+}
+
+function imageSelectorCloser() {
+  var filename =  objWin.document.getElementById('file_name').value;
+  //check for proper file name format before saving
+  var gifAtEnd = (filename.length >= 4 && filename.slice(-4).toLowerCase() == '.gif') ? true : false;
+  var jpgAtEnd = (filename.length >= 4 && filename.slice(-4).toLowerCase() == '.jpg') ? true : false;
+  var pngAtEnd = (filename.length >= 4 && filename.slice(-4).toLowerCase() == '.png') ? true : false;
+  if(!(gifAtEnd || jpgAtEnd || pngAtEnd)) {
+    alert('Filename must end with .gif, .jpg or .png!');
+  }
+  else if(gifAtEnd && filename.length == 4){
+    alert('Filename must have at least one character before .gif!');
+  }
+  else if(jpgAtEnd && filename.length == 4) {
+    alert('Filename must have at least one character before .jpg!');
+  }
+  else if(pngAtEnd && filename.length == 4) {
+    alert('Filename must have at least one character before .png!');
+  }
+  else {
+    if (objWin.opener){
+      if (filename == ''){
+        alert('You must enter a file name to save the selection.');
+      }
+      else{
+        //valid file name format
+	image_selector_elem.value = filename;
+        objWin.close();
+        objWin = null;
+      }
+    }
+    else{
+      alert('file name:' + filename);
+    }
+  }
+}
+
+var html_selector_elem = null;
+function open_html_selector(id){
+ // IE, in IE you can't set onclick events to a string
+ // you have to set it to a reference of a function
+ if (arguments.length ==0){
+   var id = this.getAttribute('input_id');
+ }
+ var w = '600';
+ var h = '600';
+ var features = "menubar=false;toolbar=false,height=1,width=1;resizeable,scrollbars";
+
+ html_selector_elem = document.getElementById(id);
+ if(html_selector_elem.value == '') {
+   var oldFile = 'NEWFILE';
+ }
+ else {
+   var oldFile = html_selector_elem.value;
+ }
+ if(showallfiles == 'true') {
+   objWin = window.open("/webapi/fileSelector.html?selectfiles=all&savefunction=htmlSelectorCloser&filename=" + oldFile,"fileSelector",features);
+ }
+ else {
+   objWin = window.open("/webapi/fileSelector.html?selectfiles=html&savefunction=htmlSelectorCloser&filename=" + oldFile,"fileSelector",features);
+ }
+
+ var height = window.screen.availHeight;
+ var width = window.screen.availWidth;
+ var left_point = parseInt(width/2) - parseInt(w/2);
+ var top_point =  parseInt(height/2) - parseInt(h/2);
+ objWin.moveTo(left_point,top_point);
+
+ objWin.resizeTo(w,h);
+ objWin.focus();
+
+}
+
+function htmlSelectorCloser() {
+  var filename =  objWin.document.getElementById('file_name').value;
+  //check for proper file name format before saving
+  var htmAtEnd = (filename.length >= 4 && filename.slice(-4).toLowerCase() == '.htm') ? true : false;
+  var htmlAtEnd = (filename.length >= 5 && filename.slice(-5).toLowerCase() == '.html') ? true : false;
+  if(!(htmAtEnd || htmlAtEnd)) {
+    alert('Filename must end with .htm or .html!');
+  }
+  else if(htmAtEnd && filename.length == 4){
+    alert('Filename must have at least one character before .htm!');
+  }
+  else if(htmlAtEnd && filename.length == 5) {
+    alert('Filename must have at least one character before .html!');
+  }
+  else {
+    if (objWin.opener){
+      if (filename == ''){
+        alert('You must enter a file name to save the selection.');
+      }
+      else{
+        //valid file name format
+	html_selector_elem.value = filename;
+        objWin.close();
+        objWin = null;
+      }
+    }
+    else{
+      alert('file name:' + filename);
+    }
+  }
+}
+
+var all_selector_elem = null;
+function open_all_selector(id){
+ // IE, in IE you can't set onclick events to a string
+ // you have to set it to a reference of a function
+ if (arguments.length ==0){
+   var id = this.getAttribute('input_id');
+ }
+ var w = '600';
+ var h = '600';
+ var features = "menubar=false;toolbar=false,height=1,width=1;resizeable,scrollbars";
+
+ all_selector_elem = document.getElementById(id);
+ if(all_selector_elem.value == '') {
+   var oldFile = 'NEWFILE';
+ }
+ else {
+   var oldFile = all_selector_elem.value;
+ }
+ objWin = window.open("/webapi/fileSelector.html?selectfiles=all&savefunction=allSelectorCloser&filename=" + oldFile,"fileSelector",features);
+
+ var height = window.screen.availHeight;
+ var width = window.screen.availWidth;
+ var left_point = parseInt(width/2) - parseInt(w/2);
+ var top_point =  parseInt(height/2) - parseInt(h/2);
+ objWin.moveTo(left_point,top_point);
+
+ objWin.resizeTo(w,h);
+ objWin.focus();
+
+}
+
+function allSelectorCloser() {
+  var filename =  objWin.document.getElementById('file_name').value;
+  if (objWin.opener){
+    if (filename == ''){
+      alert('You must enter a file name to save the selection.');
+    }
+    else{
+      //valid file name format
+      all_selector_elem.value = filename;
+      objWin.close();
+      objWin = null;
+    }
+  }
+  else{
+    alert('file name:' + filename);
+  }
+}
+
+//@@
+// @function get_query_string_args
+// returns an associative array of the query string arguments if any or  empty object
+// @return associative array
+function get_query_string_args(){
+  var args = new Object();
+  var query_string = window.location.search.substring(1);
+  var pairs = query_string.split("&");
+  var name_value = null;
+  for(x=0;x<pairs.length;x++){
+    if (pairs[x].indexOf('=') != -1){
+      name_value = pairs[x].split('=');
+      args[name_value[0]] = decodeURIComponent(name_value[1]);
+    }
+  }
+  return args;
+}
+
+// This function calls the configure() method on the Widget
+// Then it calls the create()
+// Then the get() method which returns the HTML element
+function configure(){
+  var config = WIDGET.configuration()
+  for (c in config){
+    id = WIDGET._name + '_' + c;
+    var e = document.getElementById(id);
+    if (e != null) {
+      switch (e.type) {
+      case 'checkbox':
+        config[c] = e.checked;
+        break;
+      default:
+        config[c] = e.value;
+        break;
+      }
+    }
+  }
+  var editDoc = window.opener.WebExpress_getEditDocument();
+  WIDGET.configure(config);
+  WIDGET.create()
+  var el = WIDGET.get();
+  var oldel =  editDoc.getElementById(ID);
+  oldel.innerHTML = el.innerHTML;
+
+  // force widget container to resize to contents (overrides wz_dragdrop stuff)
+  if(oldel.getAttribute('auto_resize')) {
+    if(oldel.getAttribute('auto_resize') == 'true') {
+      oldel.style.width = 'auto';
+      oldel.style.height = 'auto';
+    }
+  }
+  else {
+    oldel.style.width = 'auto';
+    oldel.style.height = 'auto';
+  }
+
+  //Set the zindex attribute
+  oldel.setAttribute('zindex',el.getAttribute('zindex'));
+  oldel.style.zIndex = el.getAttribute('zindex');
+  var dd = window.opener.IFRAME.contentWindow.dd;
+  var element = eval('dd.elements.' + window.opener.CURRENT_ID);
+  element.setZ(el.getAttribute('zindex'));
+  window.opener.document.getElementById('zaxis').value = el.getAttribute('zindex');
+
+  //set pagedirty so deleted widget is no longer refreshed
+  var editWin = window.opener.document.getElementById(window.opener.IFRAMENAME).contentWindow;
+  editWin.PAGE_PROPERTIES.setPageDirty(true);
+
+  window.close();
+}
+
+
+var CONFIG = document.getElementById('config');
+var args =  get_query_string_args();
+var src = args['src'];
+var showallfiles = args['showallfiles'];
+
+
+s = document.createElement('script');
+s.setAttribute('type','text/javascript');
+
+s.setAttribute('src',src);
+s.setAttribute('widget','true');
+document.getElementsByTagName('head')[0].appendChild(s);
+
+var WIDGET;
+var ID = args['id']
+
+function get_file_name(f){
+  var splt = f.split('/');
+  var n = splt[splt.length-1]
+  return  n.substring(0,n.length-3)
+}
+
+function _log(m){
+ if (window.opener){
+      if(window.opener.msglog){
+    window.opener.msglog(m);
+    }
+  }
+}
+
+var POLLTIMER = 100; // 100 ms
+var RETRIES = 300;   // 300 * 100 ms => 30 seconds
+var ATTEMPS = 0;
+var IE_ATTEMPS = 1;
+function start() {
+  var scpts = document.getElementsByTagName('script');
+  var i;
+  for (i=0;i<scpts.length;i++) {
+    if (scpts[i].getAttribute('widget')) {
+      f = scpts[i].src;
+      var filename = get_file_name(f);
+      try {
+        eval(filename + '_loaded');
+      } catch(err) {
+        if(ATTEMPS < RETRIES) {
+          setTimeout('start()',POLLTIMER);
+          ATTEMPS++;
+        } else {
+          if(document.all) {
+            if(IE_ATTEMPS==1) {
+              IE_ATTEMPS=2;
+              window.location = window.location;
+            } else {
+              alert('Widget source files failed to load');
+            }
+          } else {
+            alert('Widget source files failed to load');
+          }
+        }
+        return;
+      }
+    }
+  }
+  var editDoc = window.opener.WebExpress_getEditDocument();
+  var editElement = editDoc.getElementById(ID);
+  var w = editElement.getAttribute('widget');
+  WIDGET = eval('new ' + w + '()');
+  if (WIDGET.EDIT_DOC_HACK != undefined) {
+    WIDGET.edit_doc = editDoc;
+  }
+  WIDGET.init(editElement);
+  CONFIG.appendChild(WIDGET.config_table());
+  WIDGET.after_config_table();
+}
+setTimeout('start()',POLLTIMER);
+</script>
+</html>

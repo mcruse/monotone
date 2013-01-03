@@ -1,0 +1,164 @@
+<!--
+Copyright (C) 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>Javascript Example</title>
+ 
+  </head>
+<body bgcolor="#FFFFFF">
+<table width="100%" border="0" bgcolor="#666666" cellpadding="0" cellspacing="0">
+  <tr>
+    <td>
+      <table width="100%" cellspacing="1" cellpadding="3">
+        <tr bgcolor="#003399"> 
+          <td width="20%" bgcolor="#003399"><b><font color="#FFFFFF" size="5">Node</font></b></td>
+          <td width="8%"><b><font color="#FFFFFF" size="5">HTML</font></b></td>
+          <td width="53%"><b><font color="#FFFFFF" size="5">HTML example</font></b></td>
+          <td width="19%"><b><font color="#FFFFFF" size="5">Value</font></b></td>
+        </tr>
+        <tr bgcolor="#FFFFFF"> 
+          <td width="20%"><font color="#000099">/services/time/local/milliseconds</font></td>
+          <td width="8%" align="center"><font color="#006633">&lt;span&gt;</font></td>
+          <td width="53%" align="left"><font color="#006633">&lt;span node=&quot;/services/time/local/milliseconds&quot; 
+            display_function=&quot;precision&quot; args=&quot;4&quot;&gt;</font></td>
+          <td width="19%"><span node="/services/time/local/milliseconds" display_function="precision" args="4,true"></span></td>
+        </tr>
+        <tr bgcolor="#FFFFFF"> 
+          <td width="20%"><font color="#000099">/secvices/time/UTC/second</font></td>
+          <td width="8%" align="center"><font color="#006633">&lt;div&gt;</font></td>
+          <td width="53%" align="left"><font color="#006633">&lt;div node=&quot;/services/time/UTC/second&quot;&gt;&lt;/div&gt;</font></td>
+          <td width="19%"> 
+            <div node="/services/time/UTC/second" style="position:relative"></div>
+          </td>
+        </tr>
+        <tr bgcolor="#FFFFFF"> 
+          <td width="20%"><font color="#000099">/services/time/local/second</font></td>
+          <td width="8%" align="center"><font color="#006633">&lt;td&gt;</font></td>
+          <td width="53%" align="left"><font color="#006633">&lt;td node=&quot;/services/time/local/second&quot; 
+            &gt;&amp;nbsp;&lt;/td&gt;</font></td>
+          <td width="19%" node="/services/time/local/second" >&nbsp;</td>
+        </tr>
+        <tr bgcolor="#FFFFFF"> 
+          <td width="20%"><font color="#000099">/services/time/UTC</font></td>
+          <td width="8%" align="center"><font color="#006633">&lt;input&gt;</font></td>
+          <td width="53%" align="left"><font color="#006633">&lt;input type=&quot;text&quot; 
+            node=&quot;/services/time/UTC&quot; display_function=&quot;precision&quot;&gt;</font></td>
+          <td width="19%""> 
+            <input type="text" display_function="precision" node="/services/time/UTC" name="text">
+          </td>
+        </tr>
+        <tr bgcolor="#FFFFFF"> 
+          <td width="20%"><font color="#000099">/services/time/UTC/hour </font></td>
+          <td width="8%" align="center"><font color="#006633">&lt;input&gt;</font></td>
+          <td width="53%" align="left"> <font color="#006633">&lt;input type=&quot;button&quot; 
+            node=&quot;/services/time/UTC&quot;&gt; </font></td>
+          <td width="19%"> 
+            <input type="button" node="/services/time/UTC" name="button">
+          </td>
+        </tr>
+        <tr bgcolor="#FFFFFF"> 
+          <td width="20%"><font color="#000099">/services/time/UTC/second </font></td>
+          <td width="8%" align="center"><font color="#006633">&lt;img&gt;</font></td>
+          <td width="53%" align="left"><font color="#006633">&lt;img node="/services/time/UTC/second" display_function="display_image" src="on.png"&gt;</font></td>
+          <td width="19%"><img node="/services/time/UTC/second" display_function="display_image" src="on.png"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<p>&nbsp;</p>
+<table width="100%" border="0">
+  <tr> 
+    <td colspan="2" bgcolor="#003399"><font size="5" color="#FFFFFF"><b>Refresh</b></font></td>
+  </tr>
+  <tr> 
+    <td width="14%" align="right" bgcolor="#FFFFFF"><font size="5" color="#0000FF">Start/Stop</font></td>
+    <td width="86%"><select id="ss"><option value=true>On</option><option value=false>Off</option></select></td>
+  </tr>
+  <tr> 
+    <td width="14%" align="right" bgcolor="#FFFFFF"><font size="5" color="#0000FF">Rate</font></td>
+    <td width="86%"><input type="text" value=5000 id="rr"></td>
+  </tr>
+  <tr>
+    <td width="14%" align="right" bgcolor="#FFFFFF">&nbsp;</td>
+    <td width="86%"><input type="button" onclick="update()" value="Update"></td>
+  </tr>
+</table>
+</body>
+
+<script language="javascript" src="/webapi/js/sdk.js"></script>
+<script language="javascript">
+
+
+function onerror(e){
+  //alert(e)
+  return true;
+}
+
+window.onerror = onerror;
+
+function update(){
+   var ss = document.getElementById("ss");
+   var rr = document.getElementById("rr");
+   r.refresh_rate(rr.value);
+   if (ss.value == "true"){
+       r.start();
+   }
+   else{
+       r.stop();
+   }
+}
+
+function display_image(e,v){
+    var r = v%2;
+    if(r == 0){
+       e.src = "off.png";
+    }
+    else{
+       e.src = "on.png";
+    }
+}
+
+
+var m = new Mediator();
+
+//m.login("root","mpx");
+
+var r = new RefreshProperties(m,5000)
+start_refresh_loop(r);
+
+
+</script>
+
+</html>
+ 

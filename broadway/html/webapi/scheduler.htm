@@ -1,0 +1,459 @@
+<!--
+Copyright (C) 2008 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<!-- $Name: mediator_3_1_2_branch $ -->
+<!-- $Id: scheduler.htm 20101 2011-03-06 16:02:15Z bhagn $ -->
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>RZ Schedule Editor</title>
+<!--<script src="/webapi/js/debug.js" type="text/javascript"></script> -->
+<script src="/webapi/js/scheduler.js" type="text/javascript"></script>
+<script language="JavaScript">
+<!--
+function mmLoadMenus() {
+  if (window.mm_menu_1008203647_0) return;
+      window.mm_menu_1008203647_0_1 = new Menu("Copy&nbsp;Day&nbsp;To",96,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+    mm_menu_1008203647_0_1.addMenuItem("Tuesday","copyDayToColumn(0,1)");
+    mm_menu_1008203647_0_1.addMenuItem("Wednesday","copyDayToColumn(0,2)");
+    mm_menu_1008203647_0_1.addMenuItem("Thursday","copyDayToColumn(0,3)");
+    mm_menu_1008203647_0_1.addMenuItem("Friday","copyDayToColumn(0,4)");
+    mm_menu_1008203647_0_1.addMenuItem("Saturday","copyDayToColumn(0,5)");
+    mm_menu_1008203647_0_1.addMenuItem("Sunday","copyDayToColumn(0,6)");
+    mm_menu_1008203647_0_1.addMenuItem("All Days","copyDayToColumn(0,99)");
+     mm_menu_1008203647_0_1.hideOnMouseOut=true;
+     mm_menu_1008203647_0_1.bgColor='#555555';
+     mm_menu_1008203647_0_1.menuBorder=1;
+     mm_menu_1008203647_0_1.menuLiteBgColor='#FFFFFF';
+     mm_menu_1008203647_0_1.menuBorderBgColor='#777777';
+  window.mm_menu_1008203647_0 = new Menu("root",87,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+  mm_menu_1008203647_0.addMenuItem("Add","addDayCell(0)");
+  mm_menu_1008203647_0.addMenuItem("Copy","copyDayCell(0)");
+  mm_menu_1008203647_0.addMenuItem("Cut","cutDayCell(0)");
+  mm_menu_1008203647_0.addMenuItem("Delete","deleteDayCell(0)");
+  mm_menu_1008203647_0.addMenuItem("Paste","pasteDayCell(0)");
+  mm_menu_1008203647_0.addMenuItem("Clear&nbsp;Day","clearDayColumn(0)");
+  mm_menu_1008203647_0.addMenuItem(mm_menu_1008203647_0_1);
+   mm_menu_1008203647_0.hideOnMouseOut=true;
+   mm_menu_1008203647_0.childMenuIcon="/webapi/images/arrows.gif";
+   mm_menu_1008203647_0.bgColor='#555555';
+   mm_menu_1008203647_0.menuBorder=1;
+   mm_menu_1008203647_0.menuLiteBgColor='#FFFFFF';
+   mm_menu_1008203647_0.menuBorderBgColor='#777777';
+
+    window.mm_menu_1014180907_0_1 = new Menu("Copy&nbsp;Day&nbsp;To",96,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+    mm_menu_1014180907_0_1.addMenuItem("Monday","copyDayToColumn(1,0)");
+    mm_menu_1014180907_0_1.addMenuItem("Wednesday","copyDayToColumn(1,2)");
+    mm_menu_1014180907_0_1.addMenuItem("Thursday","copyDayToColumn(1,3)");
+    mm_menu_1014180907_0_1.addMenuItem("Friday","copyDayToColumn(1,4)");
+    mm_menu_1014180907_0_1.addMenuItem("Saturday","copyDayToColumn(1,5)");
+    mm_menu_1014180907_0_1.addMenuItem("Sunday","copyDayToColumn(1,6)");
+    mm_menu_1014180907_0_1.addMenuItem("All Days","copyDayToColumn(1,99)");
+     mm_menu_1014180907_0_1.hideOnMouseOut=true;
+     mm_menu_1014180907_0_1.bgColor='#555555';
+     mm_menu_1014180907_0_1.menuBorder=1;
+     mm_menu_1014180907_0_1.menuLiteBgColor='#FFFFFF';
+     mm_menu_1014180907_0_1.menuBorderBgColor='#777777';
+  window.mm_menu_1014180907_0 = new Menu("root",87,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+  mm_menu_1014180907_0.addMenuItem("Add","addDayCell(1)");
+  mm_menu_1014180907_0.addMenuItem("Copy","copyDayCell(1)");
+  mm_menu_1014180907_0.addMenuItem("Cut","cutDayCell(1)");
+  mm_menu_1014180907_0.addMenuItem("Delete","deleteDayCell(1)");
+  mm_menu_1014180907_0.addMenuItem("Paste","pasteDayCell(1)");
+  mm_menu_1014180907_0.addMenuItem("Clear&nbsp;Day","clearDayColumn(1)");
+  mm_menu_1014180907_0.addMenuItem(mm_menu_1014180907_0_1);
+   mm_menu_1014180907_0.hideOnMouseOut=true;
+   mm_menu_1014180907_0.childMenuIcon="/webapi/images/arrows.gif";
+   mm_menu_1014180907_0.bgColor='#555555';
+   mm_menu_1014180907_0.menuBorder=1;
+   mm_menu_1014180907_0.menuLiteBgColor='#FFFFFF';
+   mm_menu_1014180907_0.menuBorderBgColor='#777777';
+
+    window.mm_menu_1014181138_0_1 = new Menu("Copy&nbsp;Day&nbsp;To",80,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+    mm_menu_1014181138_0_1.addMenuItem("Monday","copyDayToColumn(2,0)");
+    mm_menu_1014181138_0_1.addMenuItem("Tuesday","copyDayToColumn(2,1)");
+    mm_menu_1014181138_0_1.addMenuItem("Thursday","copyDayToColumn(2,3)");
+    mm_menu_1014181138_0_1.addMenuItem("Friday","copyDayToColumn(2,4)");
+    mm_menu_1014181138_0_1.addMenuItem("Saturday","copyDayToColumn(2,5)");
+    mm_menu_1014181138_0_1.addMenuItem("Sunday","copyDayToColumn(2,6)");
+    mm_menu_1014181138_0_1.addMenuItem("All Days","copyDayToColumn(2,99)");
+     mm_menu_1014181138_0_1.hideOnMouseOut=true;
+     mm_menu_1014181138_0_1.bgColor='#555555';
+     mm_menu_1014181138_0_1.menuBorder=1;
+     mm_menu_1014181138_0_1.menuLiteBgColor='#FFFFFF';
+     mm_menu_1014181138_0_1.menuBorderBgColor='#777777';
+  window.mm_menu_1014181138_0 = new Menu("root",87,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+  mm_menu_1014181138_0.addMenuItem("Add","addDayCell(2)");
+  mm_menu_1014181138_0.addMenuItem("Copy","copyDayCell(2)");
+  mm_menu_1014181138_0.addMenuItem("Cut","cutDayCell(2)");
+  mm_menu_1014181138_0.addMenuItem("Delete","deleteDayCell(2)");
+  mm_menu_1014181138_0.addMenuItem("Paste","pasteDayCell(2)");
+  mm_menu_1014181138_0.addMenuItem("Clear&nbsp;Day","clearDayColumn(2)");
+  mm_menu_1014181138_0.addMenuItem(mm_menu_1014181138_0_1);
+   mm_menu_1014181138_0.hideOnMouseOut=true;
+   mm_menu_1014181138_0.childMenuIcon="/webapi/images/arrows.gif";
+   mm_menu_1014181138_0.bgColor='#555555';
+   mm_menu_1014181138_0.menuBorder=1;
+   mm_menu_1014181138_0.menuLiteBgColor='#FFFFFF';
+   mm_menu_1014181138_0.menuBorderBgColor='#777777';
+
+    window.mm_menu_1014181327_0_1 = new Menu("Copy&nbsp;Day&nbsp;To",96,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+    mm_menu_1014181327_0_1.addMenuItem("Monday","copyDayToColumn(3,0)");
+    mm_menu_1014181327_0_1.addMenuItem("Tuesday","copyDayToColumn(3,1)");
+    mm_menu_1014181327_0_1.addMenuItem("Wednesday","copyDayToColumn(3,2)");
+    mm_menu_1014181327_0_1.addMenuItem("Friday","copyDayToColumn(3,4)");
+    mm_menu_1014181327_0_1.addMenuItem("Saturday","copyDayToColumn(3,5)");
+    mm_menu_1014181327_0_1.addMenuItem("Sunday","copyDayToColumn(3,6)");
+    mm_menu_1014181327_0_1.addMenuItem("All Days","copyDayToColumn(3,99)");
+     mm_menu_1014181327_0_1.hideOnMouseOut=true;
+     mm_menu_1014181327_0_1.bgColor='#555555';
+     mm_menu_1014181327_0_1.menuBorder=1;
+     mm_menu_1014181327_0_1.menuLiteBgColor='#FFFFFF';
+     mm_menu_1014181327_0_1.menuBorderBgColor='#777777';
+  window.mm_menu_1014181327_0 = new Menu("root",87,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+  mm_menu_1014181327_0.addMenuItem("Add","addDayCell(3)");
+  mm_menu_1014181327_0.addMenuItem("Copy","copyDayCell(3)");
+  mm_menu_1014181327_0.addMenuItem("Cut","cutDayCell(3)");
+  mm_menu_1014181327_0.addMenuItem("Delete","deleteDayCell(3)");
+  mm_menu_1014181327_0.addMenuItem("Paste","pasteDayCell(3)");
+  mm_menu_1014181327_0.addMenuItem("Clear&nbsp;Day","clearDayColumn(3)");
+  mm_menu_1014181327_0.addMenuItem(mm_menu_1014181327_0_1);
+   mm_menu_1014181327_0.hideOnMouseOut=true;
+   mm_menu_1014181327_0.childMenuIcon="/webapi/images/arrows.gif";
+   mm_menu_1014181327_0.bgColor='#555555';
+   mm_menu_1014181327_0.menuBorder=1;
+   mm_menu_1014181327_0.menuLiteBgColor='#FFFFFF';
+   mm_menu_1014181327_0.menuBorderBgColor='#777777';
+
+    window.mm_menu_1014181623_0_1 = new Menu("Copy&nbsp;Day&nbsp;To",96,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+    mm_menu_1014181623_0_1.addMenuItem("Monday","copyDayToColumn(4,0)");
+    mm_menu_1014181623_0_1.addMenuItem("Tuesday","copyDayToColumn(4,1)");
+    mm_menu_1014181623_0_1.addMenuItem("Wednesday","copyDayToColumn(4,2)");
+    mm_menu_1014181623_0_1.addMenuItem("Thursday","copyDayToColumn(4,3)");
+    mm_menu_1014181623_0_1.addMenuItem("Saturday","copyDayToColumn(4,5)");
+    mm_menu_1014181623_0_1.addMenuItem("Sunday","copyDayToColumn(4,6)");
+    mm_menu_1014181623_0_1.addMenuItem("All Days","copyDayToColumn(4,99)");
+     mm_menu_1014181623_0_1.hideOnMouseOut=true;
+     mm_menu_1014181623_0_1.bgColor='#555555';
+     mm_menu_1014181623_0_1.menuBorder=1;
+     mm_menu_1014181623_0_1.menuLiteBgColor='#FFFFFF';
+     mm_menu_1014181623_0_1.menuBorderBgColor='#777777';
+  window.mm_menu_1014181623_0 = new Menu("root",87,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+  mm_menu_1014181623_0.addMenuItem("Add","addDayCell(4)");
+  mm_menu_1014181623_0.addMenuItem("Copy","copyDayCell(4)");
+  mm_menu_1014181623_0.addMenuItem("Cut","cutDayCell(4)");
+  mm_menu_1014181623_0.addMenuItem("Delete","deleteDayCell(4)");
+  mm_menu_1014181623_0.addMenuItem("Paste","pasteDayCell(4)");
+  mm_menu_1014181623_0.addMenuItem("Clear&nbsp;Day","clearDayColumn(4)");
+  mm_menu_1014181623_0.addMenuItem(mm_menu_1014181623_0_1);
+   mm_menu_1014181623_0.hideOnMouseOut=true;
+   mm_menu_1014181623_0.childMenuIcon="/webapi/images/arrows.gif";
+   mm_menu_1014181623_0.bgColor='#555555';
+   mm_menu_1014181623_0.menuBorder=1;
+   mm_menu_1014181623_0.menuLiteBgColor='#FFFFFF';
+   mm_menu_1014181623_0.menuBorderBgColor='#777777';
+
+    window.mm_menu_1014181738_0_1 = new Menu("Copy&nbsp;Day&nbsp;To",96,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+    mm_menu_1014181738_0_1.addMenuItem("Monday","copyDayToColumn(5,0)");
+    mm_menu_1014181738_0_1.addMenuItem("Tuesday","copyDayToColumn(5,1)");
+    mm_menu_1014181738_0_1.addMenuItem("Wednesday","copyDayToColumn(5,2)");
+    mm_menu_1014181738_0_1.addMenuItem("Thursday","copyDayToColumn(5,3)");
+    mm_menu_1014181738_0_1.addMenuItem("Friday","copyDayToColumn(5,4)");
+    mm_menu_1014181738_0_1.addMenuItem("Sunday","copyDayToColumn(5,6)");
+    mm_menu_1014181738_0_1.addMenuItem("All Days","copyDayToColumn(5,99)");
+     mm_menu_1014181738_0_1.hideOnMouseOut=true;
+     mm_menu_1014181738_0_1.bgColor='#555555';
+     mm_menu_1014181738_0_1.menuBorder=1;
+     mm_menu_1014181738_0_1.menuLiteBgColor='#FFFFFF';
+     mm_menu_1014181738_0_1.menuBorderBgColor='#777777';
+  window.mm_menu_1014181738_0 = new Menu("root",87,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+  mm_menu_1014181738_0.addMenuItem("Add","addDayCell(5)");
+  mm_menu_1014181738_0.addMenuItem("Copy","copyDayCell(5)");
+  mm_menu_1014181738_0.addMenuItem("Cut","cutDayCell(5)");
+  mm_menu_1014181738_0.addMenuItem("Delete","deleteDayCell(5)");
+  mm_menu_1014181738_0.addMenuItem("Paste","pasteDayCell(5)");
+  mm_menu_1014181738_0.addMenuItem("Clear&nbsp;Day","clearDayColumn(5)");
+  mm_menu_1014181738_0.addMenuItem(mm_menu_1014181738_0_1);
+   mm_menu_1014181738_0.hideOnMouseOut=true;
+   mm_menu_1014181738_0.childMenuIcon="/webapi/images/arrows.gif";
+   mm_menu_1014181738_0.bgColor='#555555';
+   mm_menu_1014181738_0.menuBorder=1;
+   mm_menu_1014181738_0.menuLiteBgColor='#FFFFFF';
+   mm_menu_1014181738_0.menuBorderBgColor='#777777';
+
+        window.mm_menu_1014181909_0_1 = new Menu("Copy&nbsp;Day&nbsp;To",96,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+    mm_menu_1014181909_0_1.addMenuItem("Monday","copyDayToColumn(6,0)");
+    mm_menu_1014181909_0_1.addMenuItem("Tuesday","copyDayToColumn(6,1)");
+    mm_menu_1014181909_0_1.addMenuItem("Wednesday","copyDayToColumn(6,2)");
+    mm_menu_1014181909_0_1.addMenuItem("Thursday","copyDayToColumn(6,3)");
+    mm_menu_1014181909_0_1.addMenuItem("Friday","copyDayToColumn(6,4)");
+    mm_menu_1014181909_0_1.addMenuItem("Saturday","copyDayToColumn(6,5)");
+    mm_menu_1014181909_0_1.addMenuItem("All Days","copyDayToColumn(6,99)");
+     mm_menu_1014181909_0_1.hideOnMouseOut=true;
+     mm_menu_1014181909_0_1.bgColor='#555555';
+     mm_menu_1014181909_0_1.menuBorder=1;
+     mm_menu_1014181909_0_1.menuLiteBgColor='#FFFFFF';
+     mm_menu_1014181909_0_1.menuBorderBgColor='#777777';
+  window.mm_menu_1014181909_0 = new Menu("root",87,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+  mm_menu_1014181909_0.addMenuItem("Add","addDayCell(6)");
+  mm_menu_1014181909_0.addMenuItem("Copy","copyDayCell(6)");
+  mm_menu_1014181909_0.addMenuItem("Cut","cutDayCell(6)");
+  mm_menu_1014181909_0.addMenuItem("Delete","deleteDayCell(6)");
+  mm_menu_1014181909_0.addMenuItem("Paste","pasteDayCell(6)");
+  mm_menu_1014181909_0.addMenuItem("Clear&nbsp;Day","clearDayColumn(6)");
+  mm_menu_1014181909_0.addMenuItem(mm_menu_1014181909_0_1);
+   mm_menu_1014181909_0.hideOnMouseOut=true;
+   mm_menu_1014181909_0.childMenuIcon="/webapi/images/arrows.gif";
+   mm_menu_1014181909_0.bgColor='#555555';
+   mm_menu_1014181909_0.menuBorder=1;
+   mm_menu_1014181909_0.menuLiteBgColor='#FFFFFF';
+   mm_menu_1014181909_0.menuBorderBgColor='#777777';
+
+  window.mm_menu_1025122113_0 = new Menu("root",81,18,"",12,"#000000","#FFFFFF","#CCCCCC","#000084","left","middle",3,0,1000,-5,7,true,true,true,0,true,true);
+  mm_menu_1025122113_0.addMenuItem("Add","addExceptCell()");
+  mm_menu_1025122113_0.addMenuItem("Delete","deleteExceptCell()");
+  mm_menu_1025122113_0.addMenuItem("Rename","renameExceptCell()");
+  mm_menu_1025122113_0.addMenuItem("Clear&nbsp;All","clearExceptColumn()");
+   mm_menu_1025122113_0.hideOnMouseOut=true;
+   mm_menu_1025122113_0.bgColor='#555555';
+   mm_menu_1025122113_0.menuBorder=1;
+   mm_menu_1025122113_0.menuLiteBgColor='#FFFFFF';
+   mm_menu_1025122113_0.menuBorderBgColor='#777777';
+
+mm_menu_1025122113_0.writeMenus();
+} // mmLoadMenus()
+//-->
+</script>
+<style type="text/css">
+.orangeText {color:#ff9933; font-size:16px; font-family: verdana, arial, san-serif;}
+.messageText {font-size:10px; font-family: verdana, arial, san-serif; text-align:left; vertical-align:top;}
+.nameText {font-size:14px; font-family: verdana, arial, san-serif;}
+</style>
+<script language="JavaScript" src="/webapi/js/mm_menu.js"></script>
+<script language="JavaScript" type="text/JavaScript">
+<!--
+function get_query_string_args(){
+  var args = new Object();
+  var query_string = window.location.search.substring(1);
+  var pairs = query_string.split("&");
+  var name_value = null;
+  for(x=0;x<pairs.length;x++){
+    if (pairs[x].indexOf('=') != -1){
+      name_value = pairs[x].split('='); 
+      args[name_value[0]] = decodeURIComponent(name_value[1]);
+    } 
+  }
+  return args;
+}
+//set defaults for query string items
+var SCHEDULEHOLDER = '/services/time/local/time_schedules_1'; //node path to top of schedule node subtree
+var SCHEDULEPREFIX = 'RZSched_'; //prefix automatically attached to SCHEDULENAME
+var SCHEDULENAME = 'NEWSCHEDULE'; //this is a reserved schedule name -- it means empty schedule
+var EDITMODE = 'FULL'; // FULL = all edit features, SAVEONLY = no delete or saveas
+//override with values from query string
+var qs = get_query_string_args();
+if (qs['scheduleholder']){
+  SCHEDULEHOLDER = qs['scheduleholder'];
+}
+if (qs['scheduleprefix']){
+  SCHEDULEPREFIX = qs['scheduleprefix'];
+}
+if (qs['schedulename']){
+  SCHEDULENAME = qs['schedulename'];
+}
+if (qs['editmode']){
+  EDITMODE = qs['editmode'];
+}
+
+function MM_showMenu(menu, x, y, child, imgname) {
+	if (!window.mmWroteMenu) return;
+	MM_clearTimeout();
+	if (menu) {
+		var obj = FIND(imgname) || document.images[imgname] || document.links[imgname] || document.anchors[imgname];
+		x = moveXbySlicePos (x, obj);
+		y = moveYbySlicePos (y, obj);
+	}
+	if (document.layers) {
+		if (menu) {
+			var l = menu.menuLayer || menu;
+			l.top = l.left = 1;
+			hideActiveMenus();
+			if (this.visibility) l = this;
+			window.ActiveMenu = l;
+		} else {
+			var l = child;
+		}
+		if (!l) return;
+		for (var i=0; i<l.layers.length; i++) { 			   
+			if (!l.layers[i].isHilite) l.layers[i].visibility = "inherit";
+			if (l.layers[i].document.layers.length > 0) MM_showMenu(null, "relative", "relative", l.layers[i]);
+		}
+		if (l.parentLayer) {
+			if (x != "relative") l.parentLayer.left = x || window.pageX || 0;
+			if (l.parentLayer.left + l.clip.width > window.innerWidth) l.parentLayer.left -= (l.parentLayer.left + l.clip.width - window.innerWidth);
+			if (y != "relative") l.parentLayer.top = y || window.pageY || 0;
+			if (l.parentLayer.isContainer) {
+				l.Menu.xOffset = window.pageXOffset;
+				l.Menu.yOffset = window.pageYOffset;
+				l.parentLayer.clip.width = window.ActiveMenu.clip.width +2;
+				l.parentLayer.clip.height = window.ActiveMenu.clip.height +2;
+				if (l.parentLayer.menuContainerBgColor && l.Menu.menuBgOpaque ) l.parentLayer.document.bgColor = l.parentLayer.menuContainerBgColor;
+			}
+		}
+		l.visibility = "inherit";
+		if (l.Menu) l.Menu.container.visibility = "inherit";
+	} else if (FIND("menuItem0")) {
+		var l = menu.menuLayer || menu;	
+		hideActiveMenus();
+		if (typeof(l) == "string") l = FIND(l);
+		window.ActiveMenu = l;
+		var s = l.style;
+		s.visibility = "inherit";
+		if (x != "relative") {
+			s.pixelLeft = x || (window.pageX + document.body.scrollLeft) || 0;
+			s.left = s.pixelLeft + 'px';
+		}
+		if (y != "relative") {
+			s.pixelTop = y || (window.pageY + document.body.scrollTop) || 0;
+			s.top = s.pixelTop + 'px';
+		}
+		l.Menu.xOffset = document.body.scrollLeft;
+		l.Menu.yOffset = document.body.scrollTop;
+	}
+	if (menu) window.activeMenus[window.activeMenus.length] = l;
+	MM_clearTimeout();
+}
+//-->
+</script>
+</head>
+<body leftmargin="0" topmargin="0" onLoad="Scheduler_start();">
+<script language="JavaScript1.2">mmLoadMenus();</script>
+<table cols="9"align="left" cellspacing="0" cellpadding="0" border="0">
+  <tr height="59">
+    <td colspan="9" background="/webapi/images/bg_top_left2.gif" width="840" height="58">
+		<table cols="3"><tr><td width="346" align="right"><img src="/webapi/images/RZWebExpress.gif" width="328" height="59" alt="" border="0">
+    </td>
+		<td class="orangeText" width="220" height="58" align="right">&nbsp;&nbsp;Schedule Name:</td>
+		<td align="left" valign="middle" width="260" height="58">
+		
+		                    <table cellpadding="2" background="/webapi/images/scheduleback.gif" width="250" height="30">
+                        <tr>
+                          <td class="nameText" id="schedulename">&nbsp;</td>
+                        </tr>
+                    </table>
+</td>
+		</tr>
+		</table>
+		</td>
+  </tr>
+  <tr>
+    <td colspan="9" background="/webapi/images/bg_top_left2.gif" width="840" height="58">
+		  <table cellspacing="0" cellpadding="0" border="0" width="830">
+        <tr>
+          <td colspan="9" valign="bottom"><img src="/webapi/images/spacer.gif" width="10" height="8" alt="" border="0"> 
+        </tr>
+        <tr align="center" valign="bottom">
+          <td width="155"><img src="/webapi/images/spacer.gif" width="155" height="40" alt="" border="0"></td>
+          <td width="80"><img src="/webapi/images/mon.gif" name="mon" width="80" height="40" onClick="MM_showMenu(window.mm_menu_1008203647_0,0,40,null,'mon')" onMouseOut="MM_startTimeout();"></td>
+          <td width="80"><img src="/webapi/images/tue.gif" name="tue" width="80" height="40" onClick="MM_showMenu(window.mm_menu_1014180907_0,0,40,null,'tue')" onMouseOut="MM_startTimeout();"></td>
+          <td width="80"><img src="/webapi/images/wed.gif" name="wed" width="80" height="40" onClick="MM_showMenu(window.mm_menu_1014181138_0,0,40,null,'wed')" onMouseOut="MM_startTimeout();"></td>
+          <td width="80"><img src="/webapi/images/thu.gif" name="thu" width="80" height="40" onClick="MM_showMenu(window.mm_menu_1014181327_0,0,40,null,'thu')" onMouseOut="MM_startTimeout();"></td>
+          <td width="80"><img src="/webapi/images/fri.gif" name="fri" width="80" height="40" onClick="MM_showMenu(window.mm_menu_1014181623_0,0,40,null,'fri')" onMouseOut="MM_startTimeout();"></td>
+          <td width="80"><img src="/webapi/images/sat.gif" name="sat" width="80" height="40" onClick="MM_showMenu(window.mm_menu_1014181738_0,0,40,null,'sat')" onMouseOut="MM_startTimeout();"></td>
+          <td width="80"><img src="/webapi/images/sun.gif" name="sun" width="80" height="40" onClick="MM_showMenu(window.mm_menu_1014181909_0,0,40,null,'sun')" onMouseOut="MM_startTimeout();"></td>
+          <td width="120"><img src="/webapi/images/except.gif" name="except" width="120" height="40" onClick="MM_showMenu(window.mm_menu_1025122113_0,0,40,null,'except')" onMouseOut="MM_startTimeout();"></td>
+        </tr>
+        <tr>
+          <td colspan="9" valign="bottom"><img src="/webapi/images/spacer.gif" width="10" height="8" alt="" border="0"></td>
+        </tr>
+    </table></td>
+  </tr>
+  <tr>
+    <td><table align="left" cellspacing="0" cellpadding="0" border="0">
+        <td background="/webapi/images/bg_left_nav.gif" width="156" height="545" valign="top" align="center"><!-- Left Nav table -->
+                <table  width="150" border="0" cellspacing="0" cellpadding="0">
+                  <tr>
+                    <td><img src="/webapi/images/spacer.gif" width="1" height="20" alt="" border="0"></td>
+                  </tr>
+                  <tr>
+                    <td class="orangeText">&nbsp;&nbsp;Messages:</td>
+                  </tr>
+                  <tr>
+                    <td >&nbsp;</td>
+                  </tr>
+                  <tr>
+                    <td align="center" valign="top"><table cellpadding="2" background="/webapi/images/whitebox.gif" width="125" height="112">
+                        <tr>
+                          <td class="messageText" id="msg">&nbsp;</td>
+                        </tr>
+                    </table></td>
+                  </tr>
+                  <tr>
+                    <td><img src="/webapi/images/spacer.gif" width="1" height="20" alt="" border="0"></td>
+                  </tr>
+                  <tr>
+                    <td align="center"><img src="/webapi/images/reloadsched.gif" onClick="javascript:Scheduler_reload();"></td>
+                  </tr>
+                  <tr>
+                    <td><img src="/webapi/images/spacer.gif" width="1" height="20" alt="" border="0"></td>
+                  </tr>
+                  <tr>
+                    <td align="center"><img src="/webapi/images/save.gif" onClick="javascript:Scheduler_save();"></td>
+                  </tr>
+                  <tr>
+                    <td><img src="/webapi/images/spacer.gif" width="1" height="20" alt="" border="0"></td>
+                  </tr>
+                  <tr>
+                    <td align="center"><div id="saveascontent" style="position:relative; visibility:visible"><img src="/webapi/images/saveas.gif" onClick="javascript:Scheduler_saveScheduleWin();"></div></td>
+                  </tr>
+                  <tr>
+                    <td><img src="/webapi/images/spacer.gif" width="1" height="20" alt="" border="0"></td>
+                  </tr>
+                  <tr>
+                    <td align="center"><div id="deletecontent" style="position:relative; visibility:visible"><img src="/webapi/images/delete.gif" onClick="javascript:Scheduler_delete();"></div></td>
+                  </tr>
+                  <tr>
+                    <td><img src="/webapi/images/spacer.gif" width="1" height="20" alt="" border="0"></td>
+                  </tr>
+                  <tr>
+                    <td align="center"><img src="/webapi/images/close2.gif" onClick="javascript:Scheduler_close();"></td>
+                  </tr>
+              </table></td>
+            <td id="schedFrameHolder" colspan="3" width="800" valign="top" border="0" editFile="scheduletable.htm"></td>
+        </tr>
+    </table></td>
+  </tr>
+</table>
+
+</body>
+</html>

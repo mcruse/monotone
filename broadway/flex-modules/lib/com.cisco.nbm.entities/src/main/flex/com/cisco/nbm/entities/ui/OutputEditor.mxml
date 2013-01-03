@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%"
+	creationComplete="init()">
+<mx:Metadata>
+	[Event(name="error", type="flash.events.ErrorEvent")]
+</mx:Metadata>
+<mx:Script>
+	<![CDATA[
+		import mx.olap.aggregators.CountAggregator;
+		import mx.controls.Alert;
+		import mx.events.CloseEvent;
+		import com.cisco.app.core.async.AsyncMethod;
+		import com.cisco.nbm.entities.Entity;
+		import com.cisco.nbm.entities.EntityProperty;
+		
+		private var entity:Entity;
+		
+		private var property:EntityProperty;
+		
+		private var _model:OutputEditorModel;
+		
+		private var _overrides:Array = [];
+		
+		private var selectedEntry:OutputEditorModelEntry;
+		
+		private var valueEditor:IOverrideValueEditor;
+		
+		private function init():void
+		{
+			_model = new OutputEditorModel();
+			gridValues.dataProvider = _model;
+			
+			if (entity != null && property != null)
+			{
+				loadValues();
+			}
+			
+		}
+		
+		public function get overrides():Object
+		{
+			var values:Object = {};
+			
+			for (var i:int = 0; i < 16; i++)
+			{
+				var entry:OutputEditorModelEntry = _model.getItemAt(i) as OutputEditorModelEntry;
+				
+				values[i+1]= entry.value;
+			}
+			
+			// fake default for now
+			values['default'] = 10;
+			
+			return values;
+		}
+		
+		public function setup(entity:Entity, property:EntityProperty):void
+		{
+			this.entity = entity;
+			this.property = property;
+			
+			_model.property = property;
+			
+			if (initialized)
+			{
+				loadValues();
+				updateEditors();
+			}
+		}
+
+		private function updateEditors():void
+		{
+			labelDeviceName.text = entity.label;
+			labelPropertyName.text = property.name;
+			labelDescription.text = property.description;
+		}
+		
+		private function loadValues():void
+		{
+			var call:AsyncMethod = entity.getPropertyOverride(property);
+			call.addCallback(handleLoadValuesResult, handleLoadValuesError);
+		}
+		
+		private function handleLoadValuesResult(method:AsyncMethod, result:Object):void
+		{
+			//trace("loaded overrides: " + result);
+			
+			_model.updateValues(result as Object);
+		}
+		
+		private function handleLoadValuesError(method:AsyncMethod, error:Object):void
+		{
+			var event:ErrorEvent = new ErrorEvent(ErrorEvent.ERROR);
+			event.text = new String(error);
+			
+			dispatchEvent(event);
+		}
+		
+		private function handleEditSelectedValue():void
+		{
+			//trace("handle selected entry: " + selectedEntry);
+			
+			var panel:CustomValueEditorPanel = CustomValueEditorPanel.show(
+				property, selectedEntry.level ,selectedEntry.value,
+				handleCloseCustomValueEditor);
+		}
+		
+		private function handleCloseCustomValueEditor(event:CloseEvent):void
+		{
+			if (event.detail == Alert.CANCEL)
+			{
+				return;
+			}
+			
+			var panel:CustomValueEditorPanel = event.target as CustomValueEditorPanel;
+			
+			var newValue:Object = panel.value;
+			
+			if (selectedEntry.value != newValue)
+			{
+				selectedEntry.value = newValue;
+			}
+			
+			updateEnablement();
+		}
+		
+		private function updateEnablement():void
+		{
+			buttonClear.enabled = selectedEntry != null && selectedEntry.value != null;
+			buttonEdit.enabled = selectedEntry != null;
+		}
+		
+		private function updateEntryWithValue():void
+		{
+		}
+		
+		private function handleGridChange():void
+		{
+			selectedEntry = gridValues.selectedItem as OutputEditorModelEntry;
+			
+			if (valueEditor != null && valueEditor.initialized)
+			{
+				valueEditor.value = selectedEntry.value;
+			} 
+			
+			updateEnablement();
+		}
+		
+		private function handleClearValue():void
+		{
+			if (selectedEntry != null)
+			{
+				selectedEntry.value = null;
+				updateEnablement();
+			}
+		}
+	
+	]]>
+</mx:Script>
+	<mx:HBox width="100%">
+		<mx:Label text="Device:" />
+		<mx:Label text="" id="labelDeviceName" />
+		<mx:Label text="Property:" />
+		<mx:Label text="" id="labelPropertyName" />
+	</mx:HBox>
+	<mx:Label width="100%" id="labelDescription" text="" />
+	<mx:AdvancedDataGrid width="100%" id="gridValues"
+		rowCount="5" sortableColumns="false" 
+		editable="false"
+		doubleClickEnabled="true"
+		change="handleGridChange()"
+		doubleClick="handleEditSelectedValue()">
+		<mx:columns>
+			<!-- mx:AdvancedDataGridColumn 
+				width="40" dataField="active" 
+				/ -->
+			<mx:AdvancedDataGridColumn headerText="Level" width="40" 
+				dataField="level"  
+				 />
+			<mx:AdvancedDataGridColumn headerText="Value" 
+				dataField="value" 
+				editorDataField="value" />
+		</mx:columns>
+	</mx:AdvancedDataGrid>
+	<mx:HBox width="100%" horizontalAlign="right" paddingLeft="10" paddingRight="10" paddingBottom="10">
+		<mx:Button id="buttonEdit" label="Edit Value" 
+			click="handleEditSelectedValue()" enabled="false" />
+		<mx:Button id="buttonClear" label="Clear Value" 
+			click="handleClearValue()" enabled="false" />
+	</mx:HBox>
+</mx:VBox>

@@ -1,0 +1,10 @@
+This is the root "package" created for two purposes:
+  1. Move towards renaming everything RZ/Richards-Zeta instead of Envenergy.
+  2. To merge in the Omega project into the Broadway source tree.
+
+Things that may be confusing:
+  1. The envenergy.nodedefs.all package.  It has not been renamed because
+     I think the configuration tool hard codes in that package name for
+     all nodedefs.  But I could be wrong...
+  2. The envenergy.nodedefs.all package.  Is not currently built as it is
+     still grabbed from opt/envenergy...

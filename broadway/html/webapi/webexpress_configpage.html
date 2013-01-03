@@ -1,0 +1,341 @@
+<!--
+Copyright (C) 2008 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+<!-- 
+
+Purpose: provides configuration window for WebExpress page properties
+$Name: mediator_3_1_2_branch $
+$Id: webexpress_configpage.html 20251 2011-04-06 07:19:07Z bisarkar $ -->
+    <title>WebExpress Configuration</title>
+    <script type="text/javascript" src="/webapi/js/sdk2.js"></script>
+    <script type="text/javascript" src="/webapi/js/ColorPicker2.js"></script>
+    <script type="text/javascript" widget='true' src="/webapi/js/widget.js"></script>
+  <style type="text/css">
+      body{font-size:12px;}
+      td{font-size:12px;}
+      .header{ 
+        font-size: 18px; 
+	    color: #FFFFFF; 
+		font-family:arial,veranda,sans-serif; 
+		font-weight: bold;
+      }
+  </style>
+<script type="text/javascript">
+    //initialize color picker window
+    function pickColor(color) {
+    	document.getElementById(window.ColorPicker_targetInput.getAttribute("colorbox")).style.backgroundColor = color;
+    	window.ColorPicker_targetInput.value = color;
+    }
+    cp = new ColorPicker("window");
+</script>
+  </head>
+<body topmargin="0" leftmargin="0" marginheight="0" marginwidth="0">  
+  <form name="main">
+    <table width="695" height="100%" border="0" cellspacing="0" cellpadding="0" >
+      <tr>
+        <td background="/webapi/images/wc_top2.gif" width="695" height="50" align="center" class="header">Configure Page</td>
+      </tr>
+      <tr>
+      <tr>
+       <td align="center" style="width:100%;height:75%">  	     
+          <div id="config"></div>
+	   </td>
+	  </tr>
+	  <tr>
+	    <td align="middle">       
+	      <div style="width:100%"><input type="image" src="/webapi/images/button_cancel2.gif" onclick="window.close()">&nbsp;&nbsp;&nbsp;
+		                          <input type="image"  src="/webapi/images/button_save2.gif"  onclick="configure()" ></div>
+        </td>
+	  </tr>
+      <tr>
+	      <td><img src="/webapi/images/wc_bottom2.gif" width="695" height="20" alt="" border="0"></td>
+      </tr>
+    </table>
+  </form>
+ </body>
+  
+<script type="text/javascript">
+
+// This function calls the configure() method on the Widget
+// Then it calls the create()
+// Then the get() method which returns the HTML element
+function configure(){ 
+  var editWin = window.opener.document.getElementById(window.opener.IFRAMENAME).contentWindow;
+  if (document.getElementById('RefreshOptionsList')!= null){
+    editWin.PAGE_PROPERTIES.set_refresh_rate(document.getElementById('RefreshOptionsList').value);
+    window.opener.WebExpress_displayRefreshRate();
+  }
+
+  if (document.getElementById('html_title')!= null){
+    editWin.document.getElementsByTagName('title')[0].text = document.getElementById('html_title').value;
+  }
+  if (document.getElementById('html_body_background_color')!= null){
+    editWin.document.getElementsByTagName('body')[0].setAttribute('bgColor',document.getElementById('html_body_background_color').value);
+  }
+
+  window.close();
+}
+
+
+var CONFIG = document.getElementById('config');
+
+function _log(m){
+ if (window.opener){
+      if(window.opener.msglog){
+    window.opener.msglog(m);
+    }
+  }
+}
+function start(){
+ var scpts = document.getElementsByTagName('script');
+ var i;
+ for(i=0;i<scpts.length;i++){
+    if (scpts[i].getAttribute('widget')){  
+      f = scpts[i].src;
+      var filename = get_file_name(f);
+      try{
+         eval(filename + '_loaded');
+      }
+      catch(err){
+        if(ATTEMPS < RETRIES){   
+          setTimeout('start()',100); 
+          ATTEMPS++;
+        }
+        else{ 
+          if(document.all){            
+            if(IE_ATTEMPS==1){
+              IE_ATTEMPS=2;
+              window.location = window.location;
+            }
+           else{
+              alert('Widget source files failed to load');
+           }
+          }
+          else{
+            alert('Widget source files failed to load');
+          }        
+        }
+        return
+      }
+    }
+ } 
+}
+
+var color_selector_elem = null;
+function open_color_selector(id){
+ // IE, in IE you can't set onclick events to a string
+ // you have to set it to a reference of a function 
+ if (arguments.length ==0){   
+   var id = this.getAttribute('input_id'); 
+ }
+
+ color_selector_elem = document.getElementById(id);
+ var myName = color_selector_elem.getAttribute("colorbox");
+ cp.select(color_selector_elem, myName);
+}
+
+function updateColorBox(id){
+ // IE, in IE you can't set onclick events to a string
+ // you have to set it to a reference of a function 
+ if (arguments.length ==0){   
+   var id = this.getAttribute('colorbox'); 
+ }
+ document.getElementById(id).style.backgroundColor = this.value;
+}
+
+function PageProps_add_row(table,name,value,readonly) {
+  var id;
+  if (arguments.length <3){
+    readonly = false;
+  }
+  var row_index = table.rows.length;
+  table.insertRow(row_index);
+  tr  =  table.rows[row_index];
+  tr.insertCell(0);
+  tr.cells[0].align = 'right';
+  tr.cells[0].style.padding = '5';
+  tr.cells[0].style.color = '#0000FF';
+  tr.cells[0].innerHTML = name.replace(/_/g,' ') + ':';
+  tr.insertCell(1);
+  tr.cells[1].align = 'left';
+  tr.cells[1].style.padding = '5';
+  if (readonly){
+    tr.cells[1].innerHTML = value;
+  }
+  else if (typeof(value) == 'function'){
+    c = value.apply(null,[]);
+    tr.cells[1].appendChild(c);
+   }
+   else if (name == 'html_body_background_color'){
+	   // FIXTHIS: this case is a hack to save time
+      input =  document.createElement('input');
+      input.type = 'text';
+      input.size = '68';
+      input.value =  value;
+      id = name;
+      input.id = id;
+      input.setAttribute('colorbox', name + '_colorbox');
+      var colorbox = document.createElement('input');
+      colorbox.setAttribute('id',name + '_colorbox');
+      colorbox.setAttribute('name',name + '_colorbox');
+      colorbox.style.fontSize = '0px';
+      colorbox.style.width = '35px';
+      colorbox.style.height = '35px';
+      colorbox.style.margin = '0px 0px 0px 10px';
+      colorbox.style.cursor = 'pointer';
+      colorbox.style.backgroundColor = input.value;
+      colorbox.style.border = '1px solid black';
+      colorbox.setAttribute('input_id',id); 
+      // For IE
+      if (document.all){
+        input.setAttribute('onchange',updateColorBox);
+        colorbox.setAttribute('onclick',open_color_selector);
+      }
+      else{    
+        input.setAttribute('onchange','javascript:updateColorBox("' + id + '")');
+        colorbox.setAttribute('onclick','javascript:open_color_selector("' + id + '")');
+      }
+      tr.cells[1].appendChild (input);  
+      tr.cells[1].appendChild (colorbox);      
+  }
+  else{
+ 
+    input =  document.createElement('input');
+    input.type = 'text';
+    input.size = '75';    
+    input.value =  value;
+    id = name;
+    input.id = id;
+
+    tr.cells[1].appendChild (input);
+  }
+  return table
+}
+
+function PageProps_config_table() {
+  var editWin = window.opener.document.getElementById(window.opener.IFRAMENAME).contentWindow;
+  var d =  document.createElement('div');
+  var t = document.createElement('table');
+  t.setAttribute('border', '0');
+  t.style.borderSpacing = '0';
+  t.style.paddingTop = '10';
+  t.style.paddingRight = '10';
+  t.style.paddingBottom = '10';
+  t.style.paddingLeft = '10';
+
+  var username = editWin.PAGE_PROPERTIES.get_user_name();
+  var userpassword = editWin.PAGE_PROPERTIES.get_user_password();
+  var titleElement = editWin.document.getElementsByTagName('title')[0];
+  var titleText;
+  if(titleElement == null) {
+    var editHead = editWin.document.getElementsByTagName('head')[0];
+    var te = editWin.document.createElement('title');
+    editHead.appendChild(te);
+    titleText = '';
+  }
+  else {
+    titleText = titleElement.text;
+  }
+  var bodyElement = editWin.document.getElementsByTagName('body')[0];
+  var bgColor = bodyElement.getAttribute('bgColor');
+  if(bgColor == "") {
+    bgColor = "#ffffff";
+  }
+
+  t =  PageProps_add_row(t,'refresh_rate',PageProps_RefreshOptions,false);
+
+  t =  PageProps_add_row(t,'html_title',titleText,false);
+  t =  PageProps_add_row(t,'html_body_background_color',bgColor,false);
+
+  d.appendChild(t);
+  return d
+}
+
+
+function PageProps_RefreshOptions() {
+  var s = document.createElement('select');
+   
+  s.setAttribute('id','RefreshOptionsList');
+
+  var o =  document.createElement('option');
+
+  o.value = '1000';  
+  o.innerHTML = '1 seconds';
+  s.appendChild(o);  
+  o = null;
+  o =  document.createElement('option');  
+
+  o.value = '2000';  
+  o.innerHTML = '2 seconds';
+  s.appendChild(o);  
+  o = null;
+  o =  document.createElement('option');
+  o.value = '3000';  
+  o.innerHTML = '3 seconds';
+  s.appendChild(o);  
+  o = null;
+  o =  document.createElement('option');
+  o.value = '5000';
+  o.innerHTML = '5 seconds';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = '10000';
+  o.innerHTML = '10 seconds';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = '20000';
+  o.innerHTML = '20 seconds';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = '30000';
+  o.innerHTML = '30 seconds';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = '60000';
+  o.innerHTML = '60 seconds';
+  s.appendChild(o);
+  return s;
+}
+
+var editWin = window.opener.document.getElementById(window.opener.IFRAMENAME).contentWindow;
+ 
+CONFIG.appendChild(PageProps_config_table());
+document.getElementById('RefreshOptionsList').value = editWin.PAGE_PROPERTIES.get_refresh_rate();
+
+</script>
+</html>

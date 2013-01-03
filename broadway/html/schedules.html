@@ -1,0 +1,123 @@
+<!--
+Copyright (C) 2009 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" href="/public/styles/page.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/tabs.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/tables.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/schedules.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/messageBox.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/configuration.css" type="text/css">
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dojo/resources/dojo.css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dijit/themes/dijit.css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dijit/themes/tundra/tundra.css" />
+        <link rel="stylesheet" type="text/css" href="/cues/themes/kubrick/layout.css" />
+        <link rel="stylesheet" type="text/css" href="/cues/themes/kubrick/tabs.css" />
+        <script type="text/javascript">
+            djConfig = {
+                isDebug: false,
+                debugAtAllCosts: false,
+                parseOnLoad: true,
+                baseUrl: "/dojoroot/dojo/",
+                modulePaths: {
+                    mpx: '/mpx',
+                    cues: '/cues',
+                    utils: '/public/utils',
+                    nbmweb: '/public/nbmweb'
+                }
+            };
+        </script>
+        <script type="text/javascript" src="/dojoroot/dojo/dojo.js"></script>
+<!--		<script type="text/javascript" src="/public/utils/debug.js"></script>-->
+<!--        <script type="text/javascript" src="/public/utils/style.js"></script>-->
+        <script type="text/javascript">
+        		dojo.require("utils.style");
+<!--            dojo.require("dojox.dtl._HtmlTemplated");-->
+<!--            dojo.require("dojo.parser");-->
+<!--            dojo.require("dijit.Dialog");-->
+<!--            dojo.require("dijit.form.Button");-->
+<!--            dojo.require("dijit.layout.ContentPane");-->
+        </script>
+
+		<script type="text/javascript" src="/dojoroot/dojoconfig/mediator_layer.js"></script>
+		<script type="text/javascript" src="/public/utils/flash/AC_OETags.js"></script>
+        <script type="text/javascript" src="/public/utils/flash/js/nbm_as.js"></script>
+        <script type="text/javascript" src="/public/utils/flash/js/swfobject.js"></script>
+        <title>Cisco Network Building Mediator</title>
+    </head>
+    <body class="kubrick tundra">
+        <div id="background">
+            <img src="/public/images/pageBackground.jpg" />
+        </div>
+        <div id="header">
+            <h1 class="title">Network Building Mediator</h1>
+            <ul class="actions">
+                <li><a href="">About</a></li>
+                <li>
+                    <a id="logout" href="/logout">
+                        Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div id="primary-tabs"
+            title=""
+            class="primary-tabs"
+            href="/public/templates/primary.html"
+            extractContent="false"
+            preventCache="false"
+            dojoType="dijit.layout.ContentPane"
+            onDownloadEnd="dojo.addClass('schedules-tab-button', 'selected');" >
+        </div>
+        <div id="stage">
+            <div id="contentarea" class="pane">
+                <div id="schedule-configuration"
+                     style="width: 100%; height: 100%;"
+                     dojoType="dijit.layout.ContentPane">
+                    <script type="dojo/method">
+                        console.log("Setting up schedule editor.");
+                        dojo.mixin(this, {
+                            editor: cisco.NBMBridge.createWidget(
+                                "/omega/scheduleEditor/scheduleEditor.swf",
+                                "scheduleEditorWidget",
+                                "scheduleEditor", "100%",
+                                "100%", {embedded: "1"}, {}, {})
+                        });
+                    </script>
+                    <div id="scheduleEditorWidget"></div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

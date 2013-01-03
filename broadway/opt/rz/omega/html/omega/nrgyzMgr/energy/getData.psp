@@ -1,0 +1,30 @@
+<%
+import math
+import dircache
+import cgi
+import urllib
+from mpx.lib.node import as_node 
+from mpx.lib import msglog
+import mpx.lib.log
+from mpx.service.logger import logger 
+
+def get_data(request):
+    request_data = request.get_post_data_as_dictionary()
+    domain = request_data['domain']
+    log_node = as_node("/services/logger/%s" % domain[0]) 
+    info = log_node.get_info()
+    result = log_node.get_slice("_seq",info.first_record["_seq"],
+                                info.last_record["_seq"]+1)
+    graphDataStr = ''
+    for items in result:
+        graphDataStr += str(items['timestamp'])
+        graphDataStr += ':'
+        graphDataStr += str(items['value'])
+        graphDataStr += ','
+    return graphDataStr
+try:
+    graphDataStr = get_data(request)
+except:
+    msglog.exception()
+%>
+<%=graphDataStr%>

@@ -1,0 +1,5 @@
+Run ./INSTALL_STUBS to create a developer's installation of all
+the standards broadway/tools.  The only file actually directly
+copied to ~/bin is the dev_stub script.  All other commands are links
+to ~/bin/dev_stub.  dev_stub uses the link name that invoked it, and
+the current directory to determine which command to actually execute.

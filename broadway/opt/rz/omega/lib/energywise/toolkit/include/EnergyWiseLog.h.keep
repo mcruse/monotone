@@ -1,0 +1,162 @@
+/*
+ ============================================================================
+ Name        : Log.h
+ Author      : Brad Schoening
+ Description : Macro definitions for logging
+ ============================================================================
+
+ Copyright (c) 2009 by Cisco Systems, Inc.
+*/
+
+/**
+ * @file
+ * EnergyWise log functions and information 
+ */
+#ifndef LOG_H_
+#define LOG_H_
+
+#include <stdio.h>
+#include <time.h>
+#include "EnergyWise.h" 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef enum {
+	LOGLEVEL_TRACE,
+	LOGLEVEL_DEBUG,
+	LOGLEVEL_INFO,
+	LOGLEVEL_WARN,
+	LOGLEVEL_ERROR,
+	LOGLEVEL_FATAL
+} log_levels_t;
+
+
+/**
+ * Sets the message level to INFO, DEBUG or TRACE.  The initial level is INFO.
+ * 
+ * @param[in] severity A log_levels_t enum value indicating the log level desired.
+ * 
+ * @return NONE
+ * 
+ * @usage Use this anytime in the application when the log level needs to be changed.
+ *
+ * @codeexample
+ * For example, conditionally turn on debug based on some command line arg to the
+ * application.
+ * @code
+ * // debug = TRUE if user passed the -debug option on command line
+ * if (debug == TRUE) {
+ *      setLogLevel (LOGLEVEL_DEBUG);
+ * }
+ * @endcode  
+ */
+void
+setLogLevel(log_levels_t severity);
+
+/**
+ * Indicates the file descriptor that you want to write log messages to.
+ *
+ * @param[in] *fd File descriptor for writing to.
+ *
+ * @return NONE
+ *
+ * @usage Use this when you'd like to write the log messages to a file instead
+ * just printing to stdout.
+ *
+ * @codeexample
+ * Set the logfile to myfile.log.
+ * @code
+ * FILE* log_fd = fopen("myfile.log", "w");
+ * setLogFile(log_fd);
+ * @endcode
+ */
+void
+setLogFile(FILE *fd);
+
+void
+enableLogCallback(boolean enable);
+
+boolean
+setLogCallback(void (*cb)(log_levels_t, char *));
+
+extern log_levels_t log_level;
+
+/*
+ *  macro definitions here avoid a function call if logging is not active
+ *
+ *  These definitions require C99 variadic macros
+ *
+ *  Note: newline is added to each format string
+ */
+
+
+//void ew_log(log_levels_t level, char *string, const char *format, ...);
+extern FILE* log_fd;
+extern boolean log_cb;
+extern void (*energywise_log_cb) (log_levels_t level, char *msg);
+#define LOG_FD				((log_fd == NULL) ? stdout : log_fd)
+
+#define ew_log(level, string, format, args...) do {                              \
+        if (log_level & level) {                                               \
+            char log[512];                                                     \
+            time_t time;                                                       \
+            if (!log_cb) {                                                     \
+                time(&time);                                                   \
+                sprintf (log, "%s [%s] ", ctime (&time), string);              \
+            }                                                                  \
+            sprintf (log, "%s: " format, __func__, args);            \
+            if (log_cb && energywise_log_cb) {                                 \
+                energywise_log_cb (log_level, log);                            \
+            } else {                                                           \
+                fprintf(LOG_FD, "%s\n", log);                                  \
+            }                                                                  \
+        }                                                                      \
+} while(0)
+              
+
+#ifdef __GNUC__
+#define LOGTRACE(format, args...)  ew_log(LOGLEVEL_TRACE, "TRACE", format, args) 
+#define LOGDEBUG(format, args...)  ew_log(LOGLEVEL_DEBUG, "DEBUG", format, args)
+#define LOGINFO(format, args...)  ew_log(LOGLEVEL_INFO, "INFO", format, args)
+#define LOGWARN(format, args...)  ew_log(LOGLEVEL_WARN, "WARN", format, args)
+#define LOGERROR(format, args...)  ew_log(LOGLEVEL_ERROR, "ERROR", format, args)
+#define LOGFATAL(format, args...)  ew_log(LOGLEVEL_FATAL, "FATAL", format, args)
+#else
+#ifdef _MSC_VER
+#define __func__ __FUNCTION__
+#define args __VA_ARGS__
+#endif
+#define LOGTRACE(format, ...)  ew_log(LOGLEVEL_TRACE, "TRACE", format, args) 
+#define LOGDEBUG(format, ...)  ew_log(LOGLEVEL_DEBUG, "DEBUG", format, args)
+#define LOGINFO(format, ...)  ew_log(LOGLEVEL_INFO, "INFO", format, args)
+#define LOGWARN(format, ...)  ew_log(LOGLEVEL_WARN, "WARN", format, args)
+#define LOGERROR(format, ...)  ew_log(LOGLEVEL_ERROR, "ERROR", format, args)
+#define LOGFATAL(format, ...)  ew_log(LOGLEVEL_FATAL, "FATAL", format, args)
+#endif
+/*
+#define LOGDEBUG(args...)	(log_level <= LOGLEVEL_DEBUG) ? log_message(LOGLEVEL_DEBUG,__func__, args):0
+#define LOGINFO(args...)	(log_level <= LOGLEVEL_INFO)  ? log_message(LOGLEVEL_INFO,__func__, args):0
+#define LOGWARN(args...)	(log_level <= LOGLEVEL_WARN)  ? log_message(LOGLEVEL_WARN,__func__, args):0
+#define LOGERROR(args...)	(log_level <= LOGLEVEL_ERROR) ? log_message(LOGLEVEL_ERROR,__func__, args):0
+#define LOGFATAL(args...)	(log_level <= LOGLEVEL_FATAL) ? log_message(LOGLEVEL_FATAL,__func__, args):0
+#define LOGTRACE(...)	(log_level <= LOGLEVEL_TRACE) ? log_message(LOGLEVEL_TRACE,__func__, __VA_ARGS__):0
+#define LOGDEBUG(...)	(log_level <= LOGLEVEL_DEBUG) ? log_message(LOGLEVEL_DEBUG,__func__, __VA_ARGS__):0
+#define LOGINFO(...)	(log_level <= LOGLEVEL_INFO)  ? log_message(LOGLEVEL_INFO,__func__, __VA_ARGS__):0
+#define LOGWARN(...)	(log_level <= LOGLEVEL_WARN)  ? log_message(LOGLEVEL_WARN,__func__, __VA_ARGS__):0
+#define LOGERROR(...)	(log_level <= LOGLEVEL_ERROR) ? log_message(LOGLEVEL_ERROR,__func__, __VA_ARGS__):0
+#define LOGFATAL(...)	(log_level <= LOGLEVEL_FATAL) ? log_message(LOGLEVEL_FATAL,__func__, __VA_ARGS__):0
+#endif
+*/
+#define ISDEBUG				(log_level <= LOGLEVEL_DEBUG) ? TRUE : FALSE
+#define ISTRACE				(log_level <= LOGLEVEL_TRACE) ? TRUE : FALSE
+
+void
+log_message(int level, const char* func, const char* msg, ...);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* LOG_H_ */

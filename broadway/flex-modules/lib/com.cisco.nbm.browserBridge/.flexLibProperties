@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties version="1">
+  <includeClasses>
+    <classEntry path="com.cisco.nbm.browserbridge.ui.connection.AuthenticationDialog"/>
+    <classEntry path="com.cisco.nbm.browserbridge.BrowserBridgeEvent"/>
+    <classEntry path="com.cisco.nbm.browserbridge.BrowserBridge"/>
+    <classEntry path="com.cisco.nbm.browserbridge.ui.connection.ConnectionInformation"/>
+    <classEntry path="com.cisco.nbm.browserbridge.TopicNotificationEvent"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>

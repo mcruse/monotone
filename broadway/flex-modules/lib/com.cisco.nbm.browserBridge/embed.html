@@ -1,0 +1,50 @@
+<html>
+<head>
+	<title>Dojo Embed Tests</title>
+	<script type="text/javascript"
+		src="js/dojo/dojo.js">
+	</script>
+	<script type="text/javascript" src="js/nbm_as.js">
+		
+	</script>
+	<script type="text/javascript" src="js/swfobject.js"></script>
+	<script type="text/javascript">
+		var widget = null;
+		var topic = "events";
+		
+		dojo.addOnLoad(function()
+		{
+			widget = cisco.NBMBridge.createWidget("dojo_embed_tests.swf",
+				"debugWidgetWrapper", "widget1", "100%", "100%", {}, {}, {});
+			
+			dojo.subscribe("/topic", this, "handleTopicReceived");
+		}
+		);
+
+		function handleTopicReceived(e)
+		{
+			alert("Topic Received: " + e);
+			dojo.log("topic notification received: " + e);
+		}
+		
+		function clicky()
+		{
+			widget.sendToWidget("foo!");
+		}		
+
+		function publish()
+		{
+			dojo.publish('/topic', [{ boo : 1 }]);
+		}
+	</script>
+</head>
+<body>
+<h1>Dojo Embed Tests + 4</h1>
+<div id="debugWidgetWrapper" style="width:400px;height:600px; border: 1px solid red;">
+	<h2>Flash Not Loaded</h2> 
+</div>
+<hr />
+<a href="javascript:clicky()">Click</a>
+<a href="javascript:publish()">Publish</a>
+</body>
+</html>

@@ -1,0 +1,452 @@
+onbody {
+    font: normal 11px auto "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+    color: #4f6b72;
+    background-color: #7AA5B7;
+}
+
+body.manager {
+    background: #7AA5B7 url(images/TrendManager.gif) right top no-repeat;
+}
+
+body.trend {
+    margin: 0px;
+}
+
+div#content {
+    width: 97%;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+div.section {
+  /* margin-bottom: 50px; */
+  float: right;
+  clear: right;
+  width: 97%;
+}
+
+div.section form {
+    display: inline;
+}
+
+input.i2d { 
+  width: 2em;
+}
+
+input.i4d { 
+  width: 4em;
+}
+
+input.color { 
+  width: 7em;
+}
+
+button.color {
+  width: 2em;
+  height: 2em;
+}
+
+frameset input { 
+  margin: 10px;
+}
+
+#trendheader { 
+  width: 100%;
+}
+
+#nodepathheader { 
+  width: 100%;
+}
+
+span#alarmconfig {
+    position: absolute;
+    right: 5px;
+    top: 80px;
+    font-size: 10px;
+}
+
+span#alarmconfig a {
+    color: #7AA5B7;
+}
+
+span#alarmconfig span.link {
+    font-size: 10px;
+}
+
+span#alarmconfig a:visited {
+    color: #7AA5B7;
+}
+
+div#ajaxpanel {
+    float: right;
+    margin-top: 70px;
+    margin-right: 600px;
+    font-weight: bold;
+}
+
+div#liveupdatepanel {
+    visibility: hidden;
+}
+
+
+/* Main Alarm Management table. */
+#alarmmanager {
+    width: 100%;
+    padding: 0;
+    margin: 0 0 25px 0;
+    border-bottom: 3px outset gray;
+    margin-top: 150px;
+}
+
+table.defaultstyle {
+    clear: both;
+    width: 100%;
+    padding: 0;
+    margin: 0 0 25px 0;
+    border-bottom: 3px outset gray;
+}
+
+/* Used by configurators for edit/remove actions. */
+td form {
+    display: inline;
+}
+
+/* Used by configurators to navigate through forms. */
+div.confignavigation {
+    float: right;
+    clear: right;
+}
+
+div.configinstructions {
+    clear: both;
+}
+
+div.confignavigation form {
+    display: inline;
+}
+
+div.confignavigation input {
+    font: bold 11px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+	color: #4f6b72;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	text-align: center;
+	padding: 2px 6px;
+	background: #CAE8EA url(images/bg_header_cropped.jpg) repeat-x;
+	white-space: nowrap;
+	border: 3px outset gray;
+}
+
+div.confignavigation input:hover {
+    cursor: pointer;
+    color: #CAE8EA;
+    background: #4f6b72;
+}
+
+div.confignavigation input:active {
+    border-style: inset;
+}
+
+
+table.defaultstyle td {
+    font-size: 11px;
+}
+
+td.configuration input, td.configuration textarea {
+    width: 100%;
+}
+
+table.alarmconfig td {
+    font-size: 11px;
+}
+
+caption {
+    padding: 0 0 5px 0;
+    font: italic 11px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+    text-align: left;
+    font-size: 1em;
+}
+
+#editorlabel {
+    float: right;
+    margin-top: 70px;
+    margin-right: 600px;
+    margin-bottom: 50px;
+    font: italic 11px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+    font-size: 2em;
+    width: 300px;
+}
+
+th {
+  font: bold 11px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+  color: #4f6b72;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 6px 18px 6px 12px;
+  background: #CAE8EA url(images/bg_header_cropped.jpg) repeat-x;
+  white-space: nowrap;
+  border-right: 1px solid #C1DAD7;
+  border-bottom: 1px solid #C1DAD7;
+  border-top: 3px outset gray;
+}
+
+th.nobg {
+    background: none;
+    color: white;
+    border-top: 3px solid #7AA5B7;
+    border-left: 3px solid #7AA5B7;
+    border-right: 3px inset gray;
+    border-bottom: 3px inset gray;
+}
+
+th.rowselect {
+	background: none;
+    border: none;
+    border-bottom: 3px inset gray;
+}
+
+th.rightheader {
+    border-right: 3px outset gray;
+}
+
+th.sortfield {
+    text-decoration: underline;
+}
+
+th.sortfield:hover {
+    cursor: pointer;
+    color: #CAE8EA;
+    background: #4f6b72;
+}
+
+th.nobg:hover {
+    border-top: 3px outset gray;
+    border-left: 3px outset gray;
+}
+
+/* Applies to 'select' element within Alarm Managemenet table */
+td > select {
+    width: 90px;
+    margin: 0;
+    font-size: 10px;
+}
+
+/* Applies to div inside table-headers for sort-able columns. */
+div.sort {
+    width: 11px;
+    height: 6px;
+    float: right;
+    margin: -10px -12px 0px 0px;
+}
+
+div.up {
+    background: url(images/uparrow.gif) no-repeat;
+}
+
+div.down {
+    background: url(images/downarrow.gif) no-repeat;
+}
+
+/* Table-header and table-cell setting for alternating light and dark rows */
+tr.light th {
+  border-top: 0;
+  background: #fff url(images/bullet1.png) no-repeat;
+  font: bold 10px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+  border-left: 3px outset gray;
+  text-transform: none;
+}
+
+tr.dark th {
+  border-top: 0;
+  background: #f5fafa url(images/bullet2.png) no-repeat;
+  font: bold 10px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+  color: #797268;
+  border-left: 3px outset gray;
+  text-transform: none;
+}
+
+tr.nopoints th {
+  border-top: 0;
+  background: #FFFF00 url(images/bullet2.png) no-repeat;
+  font: bold 10px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+  color: #4f6b72;
+  border-left: 3px outset gray;
+  text-transform: none;
+}
+
+td {
+    border-right: 1px solid #C1DAD7;
+    border-bottom: 1px solid #C1DAD7;
+    /* padding: 6px 6px 6px 12px; */
+}
+
+tr.light td {
+  background: #fff;
+  color: #4f6b72;
+}
+
+tr.dark td {
+  background: #F5FAFA;
+  color: #797268;
+}
+
+tr.nopoints td {
+  background: #FFFF00;
+  color: #4f6b72;
+}
+
+/* Right-most column of table (contains select) */
+td.rowselect {
+    border-right: 3px outset gray;
+}
+
+/* Modifies cell padding for cell containing controls, such as 'select' */
+td.control {
+    padding: 2px 6px;
+}
+
+/* td and th cells within 'selected' rows (rows whose checkbox is checked) */
+tr.selected td, tr.selected th {
+    background-color: rgb(255, 255, 204);
+}
+
+/* Help Link styles */
+/* Turn off help display until moved. */
+a.help {
+    display: none;
+}
+
+a.help:link {
+    font-weight: normal;
+    text-decoration: none;
+    color: #0000EE;
+}
+
+a.help:visited {
+    font-weight: normal;
+    text-decoration: none;
+    color: #0000EE;
+}
+
+a.help:hover {
+    background: yellow;
+}
+
+/* General control-panel settings.  Currently applies to ajax panel. */
+div.controlpanel {
+    float: left;
+}
+
+#ajaxpanel {
+    width: 300px;
+    height: 15px;
+}
+
+div#ajaxpanel label.descriptor {
+    width: auto;
+    float: left;
+    clear: left;
+    text-align: right;
+    margin-left: 0;
+    margin-right: .5em;
+}
+
+div#ajaxpanel .control {
+    float: left;
+    clear: none;
+    margin-right: 0;
+    margin-left: .5em;
+    width: auto;
+}
+
+div#actions {
+    float: right;
+    margin-right: 15px;
+}
+
+/* Format buttons just like sort-able headers */
+/*
+button {
+    font: bold 11px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+	color: #4f6b72;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	text-align: center;
+	padding: 2px 6px;
+	background: #CAE8EA url(images/bg_header_cropped.jpg) repeat-x;
+	white-space: nowrap;
+	border: 3px outset gray;
+}
+
+button:hover {
+    cursor: pointer;
+    color: #CAE8EA;
+    background: #4f6b72;
+}
+
+button:active {
+    border-style: inset;
+}
+*/
+
+/* TablePage navigation style */
+div#tablenav {
+    clear: both;
+    margin-left: 35%;
+}
+
+div#tablenav label {
+    font-weight: bold;
+}
+
+div#tablenav select {
+    font-size: 10px;
+    width: 45px;
+}
+
+div#tablepagelinks {
+    margin-top: 1em;
+}
+
+h2.direction {
+    display: inline;
+    font-size: 1.4em;
+    font-weight: bold;
+}
+
+h2.link {
+    color: blue;
+}
+
+h2.link:hover {
+    background: yellow;
+    text-decoration: underline;
+}
+
+div#tablepagenumbers {
+    display: inline;
+}
+
+span.link {
+    color: blue;
+    font-weight: bold;
+    font-size: 1.2em;
+    margin: 1em .5em 1em .5em;
+}
+
+span.link:hover {
+    background: yellow;
+    text-decoration: underline;
+}
+
+span.displayed {
+    color: black;
+    text-decoration: none;
+}
+
+span.displayed:hover {
+    color: black;
+    background: transparent;
+    text-decoration: none;
+}

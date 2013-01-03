@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+ln -fs pyc_loader ac256plus_terminal
+ln -fs pyc_loader configure
+ln -fs pyc_loader console
+ln -fs pyc_loader exercise
+ln -fs pyc_loader fsize
+ln -fs pyc_loader makecert 
+ln -fs pyc_loader monitor
+ln -fs pyc_loader mpxadmin
+ln -fs pyc_loader msglog_viewer
+ln -fs pyc_loader messages
+ln -fs pyc_loader pi
+ln -fs pyc_loader ppp
+ln -fs pyc_loader version
+$GCC -o superexec superexec.c
+
+ln -fs dev_stub proot

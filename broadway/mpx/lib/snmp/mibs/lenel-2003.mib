@@ -1,0 +1,513 @@
+-- Lenel Systems International, Inc.
+-- Last Updated: 10/17/2003
+
+LENEL-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+	enterprises, OBJECT-TYPE, OBJECT-IDENTITY
+		FROM SNMPv2-SMI
+		
+	TRAP-TYPE
+		FROM RFC-1215;
+		
+lenel OBJECT IDENTIFIER ::= {enterprises 15714}
+
+onGuardHardwareEvent TRAP-TYPE
+	ENTERPRISE lenel
+	DESCRIPTION	"OnGuard Hardware Event"
+	::= 1
+	
+onGuardSoftwareEvent TRAP-TYPE
+	ENTERPRISE lenel
+	DESCRIPTION	"OnGuard Software Event"
+	::= 2
+
+onGuard OBJECT IDENTIFIER ::= {lenel 1}
+
+event OBJECT IDENTIFIER ::= {onGuard 1}     
+
+unknownEvent OBJECT IDENTIFIER ::= {event 1}
+
+previousEventData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Previous data from an unknown OnGuard event. This 
+				variable contains the reported property and value in the
+				following format:	<Property>: <Value>"
+	::= {unknownEvent 1}
+
+currentEventData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from an unknown OnGuard event. This variable
+				contains the reported property and value in the 
+				following format:	<Property>: <Value>"
+	::= {unknownEvent 2}
+
+hardwareEvent OBJECT IDENTIFIER ::= {event 2}
+
+eventDescription OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "A human readable, brief description of this event."
+	::= {hardwareEvent 1}
+
+datetime OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The time when this event occured."
+	::= {hardwareEvent 2}
+
+securityEvent OBJECT IDENTIFIER ::= {hardwareEvent 3}
+
+serialNumber OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "A number that uniquely identifies the instance of the event for a particular panel."
+	::= {securityEvent 1}
+
+panelID OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The ID of the panel where this event originated."
+	::= {securityEvent 2}
+
+deviceID OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The ID of the device where this event originated."
+	::= {securityEvent 3}
+
+secondaryDeviceID OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The ID of the secondary device where this event originated."
+	::= {securityEvent 4}
+
+id OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The ID that uniquely identifies the type of this event."
+	::= {securityEvent 5}
+
+segmentID OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The ID of the segment that the panel is in."
+	::= {securityEvent 6}
+
+accessEvent OBJECT IDENTIFIER ::= {securityEvent 7}
+
+accessResult OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The level of access that was granted that resulted from reading 
+							the card. Possible values include 'Other', 'Unknown', 'Granted',
+							'Denied', and 'Not Applicable'."
+	::= {accessEvent 1}
+
+cardholderEntered OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Boolean value indicating whether entry was made by the 
+							cardholder.	Non-zero value indicates true."
+	::= {accessEvent 2}
+
+cardNumber OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The badge ID for the card that was read, if available."
+	::= {accessEvent 3}
+
+issueCode OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The issue code for the card that was read, if available."
+	::= {accessEvent 4}
+
+facilityCode OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The facility code for the card that was read, if available."
+	::= {accessEvent 5}
+
+duress OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Boolean value indicating whether this card access indicates 
+							an under duress/emergenct state. Non-zero value indicates true."
+	::= {accessEvent 6}
+
+isReadableCard OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Boolean value indicating whether the card could be read. Non-zero
+							value indicates true. If it could not be read (due to an invalid 
+							card format or damage to the card), the other properties of this 
+							class relating to the card information will be null."
+	::= {accessEvent 7}
+
+areaEnteredID OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The ID of the area that was entered, if any."
+	::= {accessEvent 8}
+
+areaExitedID OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The ID of the area that was exited, if any."
+	::= {accessEvent 9}
+
+floor OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The floor at which the card access event was generated, if any."
+	::= {accessEvent 10}
+
+assetID OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The ID of the asset related to this event, if any."
+	::= {accessEvent 11}
+	
+intercomEvent OBJECT IDENTIFIER ::= {securityEvent 8}
+
+intercomData OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Intercom data associated with this event, such as the station 
+							ID for the station that was called."
+	::= {intercomEvent 1}
+
+lineNumber OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Line number associated with this event"
+	::= {intercomEvent 2}
+
+videoEvent OBJECT IDENTIFIER ::= {securityEvent 9}
+
+channel OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The physical channel the camera is connected to that is creating
+							this event."
+	::= {videoEvent 1}
+
+endTime OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The time that the video event ended."
+	::= {videoEvent 2}
+
+startTime OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The time that the video event started."
+	::= {videoEvent 3}
+
+transmitterEvent OBJECT IDENTIFIER ::= {securityEvent 10}
+
+transmitterID OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The ID of the transmitter that generated this event."
+	::= {transmitterEvent 1}
+
+transmitterBaseID OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The base ID of the transmitter that generated this event."
+	::= {transmitterEvent 2}
+
+transmitterInputID OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The ID associated with the transmitter input."
+	::= {transmitterEvent 3}
+
+verifiedAlarm OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Boolean value indicating whether the transmitter message is known
+							to be verified (R signal received by an RF receiver)."
+	::= {transmitterEvent 4}
+
+fireEvent OBJECT IDENTIFIER ::= {securityEvent 11}
+
+troubleCode OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Trouble code for this event. Set to -1 if there is no trouble
+							code associated with this event."
+	::= {fireEvent 1}
+
+statusChangeEvent OBJECT IDENTIFIER ::= {securityEvent 12}
+
+newStatus OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "New status of the device."
+	::= {statusChangeEvent 1}
+
+oldStatus OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Old status of the device."
+	::= {statusChangeEvent 2}
+
+communicationsStatus OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Communication status for device."
+	::= {statusChangeEvent 3}
+
+functionExecEvent OBJECT IDENTIFIER ::= {securityEvent 13}
+
+functionID OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Function ID."
+	::= {functionExecEvent 1}
+
+functionInputArguments OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Input arguments to the function."
+	::= {functionExecEvent 2}
+
+initiatingEventID OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Event identifier that caused the function to be initiated."
+	::= {functionExecEvent 3}
+
+type OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The type identifier for the event."
+	::= {securityEvent 14}
+	
+eventText OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The event text associated with the event."
+	::= {securityEvent 15}
+	
+alarm OBJECT IDENTIFIER ::= {hardwareEvent 4}
+
+alarmDescription OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "A human readable brief description of the alarm associated	with
+							the event."
+	::= {alarm 1}
+
+priority OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The priority configured for the alarm associated with this event."
+	::= {alarm 2}
+
+mustAcknowledge OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Boolean value indicating whether or not this alarm must be 
+							acknowledged. A value of 1 means the alarm must be Acknowledged."
+	::= {alarm 3}
+
+isActive OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Boolean value that indicates if this is an active alarm. A value
+							of 1 indicates that the alarm is active."
+	::= {alarm 4}
+
+eventParameterDescription OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "A human readable brief description of the event parameter."
+	::= {alarm 5}
+
+
+softwareEvent OBJECT IDENTIFIER ::= {event 3}
+
+instanceCreation OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The specified object has just been created."
+	::= {softwareEvent 1}
+
+instanceModification OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The specified object has just been modified."
+	::= {softwareEvent 2}
+
+instanceDeletion OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "The specified object has just been deleted."
+	::= {softwareEvent 3}
+
+element OBJECT IDENTIFIER ::= {softwareEvent 4}
+
+previousElementData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from a previous instance of a element."
+	::= {element 1}
+
+currentElementData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from the current instance of a element."
+	::= {element 2}
+
+person OBJECT IDENTIFIER ::= {element 3}
+
+previousPersonData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from a previous instance of a person."
+	::= {person 1}
+
+currentPersonData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from the current instance of a person."
+	::= {person 2}
+
+cardholder OBJECT IDENTIFIER ::= {person 3}
+
+previousCardholderData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from a previous instance of a cardholder."
+	::= {cardholder 1}
+
+currentCardholderData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from the current instance of a cardholder."
+	::= {cardholder 2}
+
+visitor OBJECT IDENTIFIER ::= {person 4}
+
+previousVisitorData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from a previous instance of a visitor."
+	::= {visitor 1}
+
+currentVisitorData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from the current instance of a visitor."
+	::= {visitor 2}
+
+badge OBJECT IDENTIFIER ::= {element 4}
+
+previousBadgeData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from a previous instance of a badge."
+	::= {badge 1}
+
+currentBadgeData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from the current instance of a badge."
+	::= {badge 2}
+
+account OBJECT IDENTIFIER ::= {element 5}
+
+previousAccountData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from a previous instance of a account."
+	::= {account 1}
+
+currentAccountData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from the current instance of a account."
+	::= {account 2}
+
+multimediaObject OBJECT IDENTIFIER ::= {element 6}
+
+previousMediaObjectData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from a previous instance of a multimedia object."
+	::= {multimediaObject 1}
+
+currentMediaObjectData OBJECT-TYPE
+	SYNTAX OCTET STRING
+	ACCESS read-only
+	STATUS optional
+	DESCRIPTION "Data from the current instance of a multimedia object."
+	::= {multimediaObject 2}
+
+END

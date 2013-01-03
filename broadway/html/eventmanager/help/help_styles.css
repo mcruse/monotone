@@ -1,0 +1,50 @@
+body {
+    font-size: 76%;
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+}
+
+dt {
+	font-weight: bold;
+	margin-bottom: .5em;
+}
+
+dd {
+	margin-bottom: 1em;
+	font-size: .9em;
+}
+
+dd dl {
+	margin-top: 1em;
+}
+
+table {
+	margin-bottom: 1em;
+}
+
+td {
+	text-align: right;
+	padding: 1px;
+	border: solid thin;
+	width: 10em;
+}
+
+table.help_data {
+	width: 90%;
+	padding: 2px;
+	margin: 1em;
+}
+
+table.help_data td, table.help_data th {
+	text-align: left;
+	border: solid thin;
+	padding: .5em;
+	width: 33%;
+}
+table.help_data th {
+	border: none;
+}
+
+table.help_data caption {
+	text-align: left;
+	font-weight: bold;
+}

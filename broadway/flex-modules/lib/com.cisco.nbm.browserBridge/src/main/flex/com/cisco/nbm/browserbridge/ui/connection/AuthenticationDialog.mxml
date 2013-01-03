@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical"
+	minWidth="400"
+	title="Service Authentication and Credentials"
+	creationComplete="init()">
+<mx:Script>
+	<![CDATA[
+		import mx.core.Application;
+		import mx.managers.ISystemManager;
+		import mx.utils.StringUtil;
+		import mx.events.CloseEvent;
+		import mx.controls.Alert;
+		import mx.core.IFlexDisplayObject;
+		import mx.managers.PopUpManager;
+		import mx.events.FlexEvent;
+		import mx.core.UIComponent;
+
+		private var _username:String;
+
+		private var _password:String;
+
+		private var _serverAddress:String;
+
+		private var closeHandler:Function;
+
+		public function init():void
+		{
+			updateControls();
+		}
+
+		public function set username(value:String):void
+		{
+			if (value != _username)
+			{
+				_username = value;
+				updateControls();
+			}
+		}
+
+		public function get username():String
+		{
+			return _username;
+		}
+
+		public function set password(value:String):void
+		{
+			if (value != _password)
+			{
+				_password = value;
+				updateControls();
+			}
+		}
+
+		public function get password():String
+		{
+			return _password;
+		}
+
+		public function set serverAddress(value:String):void
+		{
+			if (value != _serverAddress)
+			{
+				_serverAddress = value;
+				updateControls();
+			}
+		}
+
+		public function get serverAddress():String
+		{
+			return _serverAddress;
+		}
+
+		private function handleCancel():void
+		{
+			closeAndDispatch(Alert.CANCEL);
+		}
+
+		private function handleOK():void
+		{
+			_username = StringUtil.trim(tiUsername.text);
+			_password = tiPassword.text;
+			_serverAddress = StringUtil.trim(tiServerAddress.text);
+
+			closeAndDispatch(Alert.OK);
+		}
+
+		private function closeAndDispatch(reason:int):void
+		{
+
+			var event:CloseEvent = new CloseEvent(CloseEvent.CLOSE);
+			event.detail = reason;
+
+			dispatchEvent(event);
+
+			if (closeHandler != null)
+			{
+				removeEventListener(CloseEvent.CLOSE, closeHandler);
+				closeHandler = null;
+			}
+
+			PopUpManager.removePopUp(this);
+		}
+
+		private function updateControls():void
+		{
+			if (!initialized)
+			{
+				return;
+			}
+
+			if (_username != null)
+			{
+				tiUsername.text = _username;
+			}
+
+			if (_password != null)
+			{
+				tiPassword.text = _password;
+			}
+
+			if (_serverAddress != null)
+			{
+				tiServerAddress.text = _serverAddress;
+			}
+
+			if (!fiServerAddress.visible && _serverAddress != null)
+			{
+				fiServerAddress.visible = true;
+			}
+		}
+
+		public static function show(panelParent:DisplayObject, username:String, password:String, serverAddress:String=null, closeHandler:Function=null):AuthenticationDialog
+		{
+			var panel:AuthenticationDialog = new AuthenticationDialog();
+
+			var sm:ISystemManager = ISystemManager(Application.application.systemManager);
+	            if (sm.useSWFBridge())
+	                panelParent = Sprite(sm.getSandboxRoot());
+	            else
+	                panelParent = Sprite(Application.application);
+
+			 if (panelParent is UIComponent)
+    			panel.moduleFactory = UIComponent(panelParent).moduleFactory;
+
+    		panel.setActualSize(panel.getExplicitOrMeasuredWidth(),
+                        panel.getExplicitOrMeasuredHeight());
+    		panel.addEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+
+    		PopUpManager.addPopUp(panel, panelParent, true);
+
+			panel.username = username;
+			panel.password = password;
+			panel.serverAddress = serverAddress;
+
+			panel.closeHandler = closeHandler;
+			if (closeHandler != null)
+			{
+				panel.addEventListener(CloseEvent.CLOSE, closeHandler);
+			}
+
+
+			return panel;
+		}
+
+		private static function static_creationCompleteHandler(event:FlexEvent):void
+	    {
+	        if (event.target is IFlexDisplayObject && event.eventPhase == EventPhase.AT_TARGET)
+	        {
+	            event.target.removeEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+	            PopUpManager.centerPopUp(IFlexDisplayObject(event.target));
+	        }
+	    }
+	]]>
+</mx:Script>
+<mx:VBox width="100%" height="100%" paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10">
+	<mx:Form>
+		<mx:FormItem label="Username:">
+			<mx:TextInput id="tiUsername" width="100%" />
+		</mx:FormItem>
+		<mx:FormItem label="Password:">
+			<mx:TextInput id="tiPassword" width="100%" />
+		</mx:FormItem>
+		<mx:FormItem id="fiServerAddress" label="Server Address:">
+			<mx:TextInput id="tiServerAddress" width="100%" />
+		</mx:FormItem>
+	</mx:Form>
+	<mx:HBox width="100%" horizontalAlign="right">
+		<mx:Button label="Cancel" click="handleCancel()"  id="cnclBtn"/>
+		<mx:Button label="OK" click="handleOK()" id="okBtn" />
+	</mx:HBox>
+</mx:VBox>
+</mx:Panel>

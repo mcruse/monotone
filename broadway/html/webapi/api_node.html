@@ -1,0 +1,479 @@
+<!--
+Copyright (C) 2008 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+
+<head>
+
+<!-- $Name: mediator_3_1_2_branch $ -->
+<!-- $Id: api_node.html 20101 2011-03-06 16:02:15Z bhagn $ -->
+<title>Node documentation</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+<link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+
+<link rel="stylesheet" href="css/webapi.css" type="text/css">
+
+</head>
+
+<body>
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+
+  <tr> 
+
+    <td class="page_header"> 
+
+      <table width="100%">
+
+        <tr> 
+
+          <td ><img src="images/header.png" width="639px" height="100px"></td>
+
+          <td align="right" valign="top"><a href="/index.html"> Home Page</a>&nbsp;|&nbsp;&nbsp;<a href="api.html">back to api</a></td>
+
+        </tr>
+
+      </table>
+
+    </td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="header_bottom">&nbsp;</td>
+
+  </tr>
+
+  <tr>
+
+    <td width="100%" class="documentation_header">       
+
+         Node object documentation        
+
+    </td> 
+
+  </tr>
+
+  <tr> 
+
+    <td width="100%" >
+
+      <table width="100%" border="0">
+
+        <tr> 
+
+          <td>&nbsp;</td>
+
+        </tr>
+
+        <tr> 
+
+          <td> 
+
+            <table width="100%" border="0">           
+
+             <tr>
+
+                <td colspan="2">
+
+                   <table width="100%" border="0" cellpadding="3">
+
+  <tr> 
+
+    <td colspan="2" class="function_header">
+
+       <a name="Node"></a><span class="function">Node</span>(<span class="param">mediator</span>,<span class="param">path</span>)</td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="inner_color" colspan="2" class="function_def">creates a node to interact with</td>
+
+  </tr>
+
+  <tr><td width="30" class="param">mediator</td>
+
+<td width="91%" class="param_def">the mediator you use for this node
+
+</td>
+
+</tr>
+
+<tr><td width="30" class="param">path</td>
+
+<td width="91%" class="param_def">node path
+
+</td>
+
+</tr>
+
+
+
+  <tr><td class="label" width="30">Return</td>
+
+<td class="return">null</td></tr>
+
+  <tr><td class="label" width="30">NOTE</td>
+
+<td class="note">use the new method Example: var node = new Node(mediator,path)</td>
+
+</tr>
+
+</table>
+
+                 </td>
+
+              </tr>
+
+              <tr> 
+
+                <td class="webapi_header" colspan="2">Properties</td>
+
+              </tr>
+
+              <tr> 
+
+                <td width="100%" colspan="2"> 
+
+                  <table width="100%" border="0" cellpadding="3">
+
+                    <tr> 
+
+                      <td width="10%" class="property_name">path</td>
+
+                      <td width="90%" class="property_desc">node path</td>
+
+                    </tr>  
+
+                     <tr> 
+
+                      <td width="10%" class="property_name">mediator</td>
+
+                      <td width="90%" class="property_desc">current mediator object used to access the node</td>
+
+                    </tr>                   
+
+                  </table>
+
+                </td>
+
+              </tr>
+
+              <tr> 
+
+                <td colspan="2" class="webapi_header">Methods</td>
+
+              </tr>
+
+               <tr> 
+
+                <td colspan="2"" class="outer_color"> 
+
+<table width="100%" border="0" cellpadding="3">
+
+  <tr> 
+
+    <td colspan="2" class="method_header">
+
+       <a name="children_names"></a><span class="method">children_names</span>()</td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="inner_color" colspan="2" class="method_def">returns an array of children names</td>
+
+  </tr>
+
+  
+
+  <tr><td class="label" width="30">Return</td>
+
+<td class="return">array</td></tr>
+
+  
+
+</table>
+
+ </td>
+
+              </tr>
+
+              <tr>
+
+                <td>&nbsp;</td>
+
+              </tr> 
+
+              <tr> 
+
+                <td colspan="2"" class="outer_color"> 
+
+<table width="100%" border="0" cellpadding="3">
+
+  <tr> 
+
+    <td colspan="2" class="method_header">
+
+       <a name="configuration"></a><span class="method">configuration</span>()</td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="inner_color" colspan="2" class="method_def">returns an associative array of the current configuration</td>
+
+  </tr>
+
+  
+
+  <tr><td class="label" width="30">Return</td>
+
+<td class="return">associative array</td></tr>
+
+  
+
+</table>      </td>
+
+              </tr>
+
+              <tr>
+
+                <td>&nbsp;</td>
+
+              </tr> 
+
+              <tr> 
+
+                <td colspan="2"" class="outer_color"> 
+
+<table width="100%" border="0" cellpadding="3">
+
+  <tr> 
+
+    <td colspan="2" class="method_header">
+
+       <a name="get"></a><span class="method">get</span>()</td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="inner_color" colspan="2" class="method_def">preforms a get on the node</td>
+
+  </tr>
+
+  
+
+  <tr><td class="label" width="30">Return</td>
+
+<td class="return">the current value of the node</td></tr> 
+
+</table>
+
+                </td>
+
+              </tr>
+
+              <tr>
+
+                <td>&nbsp;</td>
+
+              </tr> 
+
+              <tr> 
+
+                <td colspan="2"" class="outer_color"> 
+
+
+
+<table width="100%" border="0" cellpadding="3">
+
+  <tr> 
+
+    <td colspan="2" class="method_header">
+
+       <a name="get_child"></a><span class="method">get_child</span>(<span class="param">child</span>)</td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="inner_color" colspan="2" class="method_def">returns a node for the child path passed in</td>
+
+  </tr>
+
+  <tr><td width="30" class="param">child</td>
+
+<td width="91%" class="param_def">path to child
+
+</td>
+
+</tr>
+
+
+
+  <tr><td class="label" width="30">Return</td>
+
+<td class="return">node</td></tr>
+
+  
+
+</table>
+
+               </td>
+
+              </tr>               
+
+              <tr>
+
+               <td>&nbsp;</td>
+
+             </tr>
+
+             <tr>
+
+               <td colspan="2" class="outer_color">
+
+<table width="100%" border="0" cellpadding="3">
+
+  <tr> 
+
+    <td colspan="2" class="method_header">
+
+       <a name="has_child"></a><span class="method">has_child</span>(<span class="param">child</span>)</td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="inner_color" colspan="2" class="method_def">returns true if node has chil</td>
+
+  </tr>
+
+  <tr><td width="30" class="param">child</td>
+
+<td width="91%" class="param_def">path to child
+
+</td>
+
+</tr>
+
+
+
+  <tr><td class="label" width="30">Return</td>
+
+<td class="return">boolean</td></tr>
+
+  
+
+</table>
+
+              </td>
+
+              <tr>
+
+               <td>&nbsp;</td>
+
+             </tr>
+
+             <tr>
+
+               <td colspan="2" class="outer_color">
+
+<table width="100%" border="0" cellpadding="3">
+
+  <tr> 
+
+    <td colspan="2" class="method_header">
+
+       <a name="set"></a><span class="method">set</span>(<span class="param">value</span>)</td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="inner_color" colspan="2" class="method_def">sets the node to the value passed is</td>
+
+  </tr>
+
+  <tr><td width="30" class="param">value</td>
+
+<td width="91%" class="param_def">the new value
+
+</td>
+
+</tr>
+
+
+
+  <tr><td class="label" width="30">Return</td>
+
+<td class="return">null</td></tr>
+
+  
+
+</table> 
+
+               </td>
+
+             </tr>                                                  
+
+            </table>
+
+          </td>
+
+        </tr>
+
+      </table>
+
+    </td>
+
+  </tr>
+
+ <tr> 
+
+    <td class="footer" colspan="2"><span class="footer">&copy;Envenergy</span></td>
+
+  </tr>
+
+</table>         
+
+  </body>
+
+</html>
+

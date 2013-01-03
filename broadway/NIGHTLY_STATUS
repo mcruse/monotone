@@ -1,0 +1,31 @@
+CHECKOUT: Success 
+Time: 21 minutes
+MAKE X86: Success 
+Time: 11 minutes
+
+
+Time: 0 minutes
+
+
+MAKE PPC: FAILED 
+Build type is moe25-megatron-cross-compile, sourcing in appropriate file.
+checking for the presence of ENVENERGY_DT_HOME... /usr
+checking for the presence of JAVA_HOME... /opt/envenergy/devtools/3.0/java/j2sdk1.4.1_02
+checking for the presence of JAVACMD... /opt/envenergy/devtools/3.0/java/j2sdk1.4.1_02/bin/java
+checking for the presence of ANT_HOME... /opt/envenergy/devtools/3.0/ant
+checking whether make sets $(MAKE)... yes
+checking for bash... /usr/bin/env bash
+checking for ppc-gcc... /opt/montavista/pro/devkit/ppc/85xx/powerpc-montavista-linux-gnuspe/bin/gcc
+checking for C compiler default output... configure: error: C compiler cannot create executables
+See `config.log' for more details.
+Time: 0 minutes
+
+
+Create PPC dist: FAILED 
+An Error occurred: could not find prelease.d directoryTime: 0 minutes
+
+
+
+
+Unit Tests: NA
+

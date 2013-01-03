@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resize:ResizablePanel xmlns:mx="http://www.adobe.com/2006/mxml" width="500" height="350" title="Global Setpoints"
+		  xmlns:resize="flex.utils.ui.resize.*">
+
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			
+			[Bindable]
+			public var errorTitle:String;
+			
+			[Bindable]
+			public var errorMessage:String;
+			
+			// Icon overlay
+			[Embed(source="/assets/icons/alert_critical_2000_24.png")]
+			private var criticalAlertIcon:Class;
+			
+			private function close():void{
+				PopUpManager.removePopUp(this);
+			}
+
+
+
+		]]>
+	</mx:Script>
+
+	<mx:VBox height="100%" width="100%" verticalGap="12"  paddingRight="5" paddingLeft="5" paddingBottom="5" paddingTop="5" verticalScrollPolicy="off">
+		<mx:HBox width="100%" verticalAlign="middle">
+			<mx:Image width="24" source="{criticalAlertIcon}"/>
+			<mx:Label text="{errorTitle}" width="100%" fontWeight="bold" fontSize="12"/>
+		</mx:HBox>
+		<mx:TextArea width="100%" height="100%" text="{errorMessage}" fontSize="11"/>
+		
+	</mx:VBox>
+	<mx:ControlBar height="43" verticalAlign="middle" horizontalAlign="right">
+		<mx:Button label="OK" width="80" click="close();"/>
+	</mx:ControlBar>
+	
+</resize:ResizablePanel>

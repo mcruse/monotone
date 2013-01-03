@@ -1,0 +1,68 @@
+/*
+Purpose: Generic Image widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: GenericImage.wjs 20101 2011-03-06 16:02:15Z bhagn $
+
+change notes:
+added title attribute 2010/02/10 13:32:00 sleimbro
+*/
+function GenericImage(){
+  this.base = Widget;
+  this.base();
+  this.config_index = new Object();
+  this.config_index['Image_Source'] = 1
+  this.config_index['z_index'] = 2  
+  this._Image_Source = '/';
+  this.image_selector_Image_Source = true;
+  this._name = 'GenericImage';
+  this._z_index = '1000';
+  this.init_value = 'No image src';
+  this._tooltip ='';
+ }
+
+GenericImage.prototype = new Widget;
+
+GenericImage.prototype.init_element = function(){ 
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('widget',this._name); 
+  this.element.setAttribute('title',this._tooltip); 
+  this.element.style.position = 'absolute';
+
+  var img = document.createElement('img');  
+  img.setAttribute('element','theImage');
+  this.element.appendChild(img);
+}
+
+
+//
+// Gets called with the HTML Element from the page
+// Passed in.  Used to get the currnet config information
+// of the widget
+GenericImage.prototype.init = function(element){
+  var img = Widget_get_element(element,'img','theImage');
+  this._Image_Source = img.getAttribute('src');
+  this._z_index = element.getAttribute('zindex')
+} 
+
+GenericImage.prototype.create = function(){ 
+  this.init_element(); 
+  var img = Widget_get_element(this.element,'img','theImage');
+  img.setAttribute('src',this._Image_Source);
+  if(this._Image_Source == '/'){
+    img.setAttribute('width','100px');
+    img.setAttribute('height','100px');
+	img.setAttribute('title',this._tooltip);
+  }
+  this.element.style.width = 'auto';
+  this.element.style.height = 'auto';
+
+} 
+
+
+function GenericImage_factory(){
+  return new GenericImage();
+}
+
+var GenericImage_loaded = true;

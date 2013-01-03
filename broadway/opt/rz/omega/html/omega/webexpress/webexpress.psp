@@ -1,0 +1,50 @@
+<%
+import os
+import sys
+from mpx import properties
+from opt.rz.omega.lib import genwebexpress
+
+if request.get_protocol() == 'http':
+    root = properties.HTTP_ROOT
+else:
+    root = properties.HTTPS_ROOT
+
+qs = request.get_query_dictionary()
+
+qs_keys = qs.keys()
+for key in qs_keys:
+    if key == 'reload':
+        what = qs[key]
+        del qs[key]
+        if what == 'all':
+            from mpx.lib import rzcache
+            from mpx.lib import rzutils
+            from opt.rz.omega.lib import genwebexpress
+            from opt.rz.omega.lib import genwebscheduler
+            from opt.rz.omega.lib import genwebsitebuilder
+            reload(rzcache)
+            reload(rzutils)
+            reload(genwebexpress)
+            reload(genwebscheduler)
+            reload(genwebsitebuilder)
+        elif what == 'rzcache':
+            from mpx.lib import rzcache
+            reload(rzcache)
+        elif what == 'rzutils':
+            from mpx.lib import rzutils
+            reload(rzutils)
+        elif what == 'genwebexpress':
+            from opt.rz.omega.lib import genwebexpress
+            reload(genwebexpress)
+        elif what == 'genwebscheduler':
+            from opt.rz.omega.lib import genwebscheduler
+            reload(genwebscheduler)
+        elif what == 'genwebsitebuilder':
+            from opt.rz.omega.lib import genwebsitebuilder
+            reload(genwebsitebuilder)
+
+mylist = genwebexpress.makePage(root, qs)
+for item in mylist:
+    psp.write(item + '\n')
+
+%>

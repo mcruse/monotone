@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" verticalGap="1">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]
+			private var _dataProvider:ArrayCollection = new ArrayCollection();
+			
+			public function set dataProvider(cDataProvider:ArrayCollection):void{
+				_dataProvider = cDataProvider;
+			}
+			
+			public function get dataProvider():ArrayCollection{
+				return _dataProvider;
+			}
+			
+			private function addProperty():void{
+				var newObject:Object = new Object();
+				newObject.label = "Label" + _dataProvider.length;
+				newObject.value = "Value" + _dataProvider.length;
+				_dataProvider.addItem(newObject);
+				//
+				propertydg.selectedIndex = _dataProvider.length - 1;
+				propertydg.validateNow()
+				propertydg.scrollToIndex(_dataProvider.length - 1);
+				//
+				var focusedCell: Object = new Object();
+				focusedCell.columnIndex = 0;
+				focusedCell.rowIndex = _dataProvider.length - 1;
+				propertydg.editedItemPosition = focusedCell; 
+				propertydg.validateNow( );
+			}
+			
+			private function removeProperty():void{
+				for(var i:int = 0, e:int = propertydg.selectedIndices.length; i < e; ++i) {
+					propertydg.dataProvider.removeItemAt(propertydg.selectedIndices[0]);
+				}
+			}
+		]]>
+	</mx:Script>
+	<mx:DataGrid id="propertydg" dataProvider="{_dataProvider}" editable="true" width="100%" height="120" allowMultipleSelection="true">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Label" dataField="label"/>
+			<mx:DataGridColumn headerText="Value" dataField="value"/>
+		</mx:columns>
+	</mx:DataGrid>
+	<mx:HBox width="100%" horizontalAlign="right">
+		<mx:Button label="-" width="35" id="removeButton" click="removeProperty()"/>
+		<mx:Button label="+" width="35" id="addButton" click="addProperty()"/>
+	</mx:HBox>
+	
+</mx:VBox>

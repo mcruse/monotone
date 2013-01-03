@@ -1,0 +1,160 @@
+<mpx>
+    <node name='ion' module='1'  description='MPX S1'>
+        <config>
+            <property name='ipaddress' value='192.168.0.1'/>
+            <property name='dsn_server' value='myserver.com'/>
+        </config>
+        <node name='dallas1' module='5'  description='S1 dallas bus'>
+            <config>
+            </config>
+        </node>
+        <node name='dallas2' module='5'  description='S1 dallas bus'>
+            <config>
+            </config>
+        </node>
+        <node name='DI1' module='5'  description='S1 counter input'>
+            <config>
+            </config>
+        </node>
+        <node name='DI2' module='5'  description='S1 counter input'>
+            <config>
+            </config>
+        </node>
+        <node name='eth0' module='5'  description='S1 ethernet port'>
+            <config>
+            </config>
+        </node>
+        <node name='port1' module='5'  description='S1 RS232 port'>
+            <config>
+                <property name='baud' value='9600;50;75;110;134;150;200;300;600;1200;2400;4800;19200;38400;57600;115200'/>
+                <property name='parity' value='none;odd;even'/>
+                <property name='bits' value='8;7;6;5'/>
+                <property name='stop_bits' value='1;2'/>
+            </config>
+        </node>
+        <node name='port2' module='5'  description='S1 RS232 port'>
+            <config>
+                <property name='baud' value='9600;50;75;110;134;150;200;300;600;1200;2400;4800;19200;38400;57600;115200'/>
+                <property name='parity' value='none;odd;even'/>
+                <property name='bits' value='8;7;6;5'/>
+                <property name='stop_bits' value='1;2'/>
+            </config>
+        </node>
+        <node name='port4' module='5'  description='S1 RS232/485 port'>
+            <config>
+                <property name='baud' value='9600;50;75;110;134;150;200;300;600;1200;2400;4800;19200;38400;57600;115200;230400;460800'/>
+                <property name='parity' value='none;odd;even'/>
+                <property name='bits' value='8;7;6;5'/>
+                <property name='stop_bits' value='1;2'/>
+            </config>
+        </node>
+        <node name='port6' module='5'  description='S1 RS232/485 port'>
+            <config>
+                <property name='baud' value='9600;50;75;110;134;150;200;300;600;1200;2400;4800;19200;38400;57600;115200;230400;460800'/>
+                <property name='parity' value='none;odd;even'/>
+                <property name='bits' value='8;7;6;5'/>
+                <property name='stop_bits' value='1;2'/>
+            </config>
+        </node>
+        <node name='port3' module='5'  description='S1 RS232/485 port'>
+            <config>
+                <property name='Speed' value='1200;2400'/>
+            </config>
+            <node name='Meter_1' module='5'  description='Veris 8036'>
+                <config>
+                    <property name='Attrib 2' value='Value 1; Value 2'/>
+                    <property name='Attrib 1' value='Test'/>
+                    <property name='Attrib 0' value='1'/>
+                </config>
+                <node name='counter' module='5'  description='factorred KWh counter'>
+                    <config>
+                    </config>
+                    <node name='KWh_1' module='5'  description='Meterred KWh'>
+                        <config>
+                            <property name='Log Message' value='Counter Log 1'/>
+                            <property name='Interval' value='1;2;3'/>
+                            <property name='Units' value='KWH;KW'/>
+                        </config>
+                    </node>
+                </node>
+            </node>
+        </node>
+        <node name='port5' module='5'  description='S1 RS232/485 port'>
+            <config>
+                <property name='baud' value='9600;50;75;110;134;150;200;300;600;1200;2400;4800;19200;38400;57600;115200;230400;460800'/>
+                <property name='parity' value='none;odd;even'/>
+                <property name='bits' value='8;7;6;5'/>
+                <property name='stop_bits' value='1;2'/>
+            </config>
+            <node name='Meter_1' module='5'  description='Veris 8035'>
+                <config>
+                </config>
+                <node name='counter' module='5'  description='factorred KWh counter'>
+                    <config>
+                        <property name='Interval' value='1;2;3;4;5'/>
+                        <property name='Units' value='KWH;KWS;WKT'/>
+                    </config>
+                </node>
+            </node>
+        </node>
+    </node>
+    <node name='service'>
+        <node name='logger'>
+            <config>
+                <property name='logs'>
+                    <list>
+                        <dictionary>
+                            <property name='name' value='client_data_log'/>
+                            <property name='columns'>
+                                <list>
+                                    <property value='timestamp'/>
+                                    <property value='port3'/>
+                                    <property value='KWh_1'/>
+                                    <property value='counter'/>
+                                </list>
+                            </property>
+                            <property name='collector'>
+                                <dictionary>
+                                    <property name='period' value='900'/>
+                                    <property name='columns'>
+                                        <list>
+                                            <dictionary>
+                                                <property name='name' value='timestamp'/>
+                                                <property name='function' value='self.sched_time'/>
+                                                <property name='args'>
+                                                    <list/>
+                                                </property>
+                                            </dictionary>
+                                            <dictionary>
+                                                <property name='name' value='port3'/>
+                                                <property name='function' value='mpx.lib.node.as_node("/MPX/port3").get'/>
+                                                <property name='args'>
+                                                    <list/>
+                                                </property>
+                                            </dictionary>
+                                            <dictionary>
+                                                <property name='name' value='KWh_1'/>
+                                                <property name='function' value='mpx.lib.node.as_node("/MPX/port3/Meter_1/counter/KWh_1").get'/>
+                                                <property name='args'>
+                                                    <list/>
+                                                </property>
+                                            </dictionary>
+                                            <dictionary>
+                                                <property name='name' value='counter'/>
+                                                <property name='function' value='mpx.lib.node.as_node("/MPX/port5/Meter_1/counter").get'/>
+                                                <property name='args'>
+                                                    <list/>
+                                                </property>
+                                            </dictionary>
+                                        </list>
+                                    </property>
+                                </dictionary>
+                            </property>
+                        </dictionary>
+                    </list>
+                </property>
+            </config>
+        </node>
+    </node>
+</mpx>
+

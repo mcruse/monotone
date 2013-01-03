@@ -1,0 +1,60 @@
+#!/bin/bash
+#
+# Convert MIB text into PySNMP-compilant MIB/managed objects module.
+# See http://pysnmp.sf.net for more information.
+#
+
+libsmi2pysnmp=$(dirname $0)/libsmi2pysnmp  # part of pysnmp distro
+smidump=smidump  # part of libsmi distro
+
+while getopts o: o
+  do case "$o" in
+  o) exec 5>"$OPTARG" 1>&5 || { echo >&2 "Redirection failed"; exit 1; } ;;
+  [?]) echo >&2 "\
+Convert MIB text file into PySNMP-compliant module, see http://pysnmp.sf.net.
+Usage: $0 [-o pysnmp-mib-file ] [ mib-text-file ]\
+"
+  exit 1;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+[ $# -gt 1 ] && { echo >&2 "Extra arguments given"; exit 1; }
+
+[ -z $1 ] && { mibFile="-"; } || { 
+    mibFile=$1;
+    export SMIPATH=":$SMIPATH:$(echo $mibFile | sed -e 's/\(.*\)\/.*/\1/g')";
+}        
+
+egrep -q 'FROM *RFC' $mibFile 2> /dev/null && ! egrep -q 'FROM *SNMPv2-' $mibFile 2> /dev/null && { oldMib='yes'; } || {
+    [ $? -eq 1 ] && { oldMib='no'; } || {
+        echo >&2 "cant open $mibFile";
+        exit 1;
+    }
+}
+
+[ $oldMib = 'yes' ] && { # pysnmp SMI is SMIv2
+    tmpFile=/tmp/buildmibs.$$
+    $smidump -k -f smiv2 $mibFile > $tmpFile 2> /dev/null || {
+        [ -f $tmpFile ] && rm -f $tmpFile;
+        echo >&2 "$smidump -k -f smiv2 $mibFile fails";
+        echo >&2 "make sure you are using libsmi version > 0.4.5 (or svn)";
+        exit ;
+    }
+    $smidump -k -f python $tmpFile 2> /dev/null | $libsmi2pysnmp || {
+        [ -f $tmpFile ] && rm -f $tmpFile;
+        echo >&2 "$smidump -k -f python $mibFile | $libsmi2pysnmp fails";
+        echo >&2 "make sure you are using libsmi version > 0.4.5 (or svn)";
+        exit
+    }
+    rm -f $tmpFile
+} || {
+    $smidump -k -f python $mibFile 2> /dev/null | $libsmi2pysnmp || {
+        echo >&2 "$smidump -k -f python $mibFile | $libsmi2pysnmp fails";
+        echo >&2 "make sure you are using libsmi version > 0.4.5 (or svn)";
+        exit
+    }
+}
+
+exit

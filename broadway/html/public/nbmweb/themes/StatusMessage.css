@@ -1,0 +1,22 @@
+@CHARSET "UTF-8";
+
+div.status-message {
+    margin: 0;
+    height: 32px;
+    padding: 10px;
+}
+
+div.message-icon {
+    float: left;
+    padding: 0;
+    margin: 0;
+}
+
+div.message-content {
+    color:#000000;
+    font-size: 14px;
+    font-family: Arial;
+    line-height: 32px;
+    margin: 0 0 0 42px;
+}
+

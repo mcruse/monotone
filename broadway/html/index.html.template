@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<TITLE>Mediator - Home</TITLE>
+<link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+<BODY>
+<table width="800">
+  <tr>
+    <td align="center"> 
+       <img border=0 src="images/logo_small.png" width="175" height="142">
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <div class="env_header">
+        <BR>Mediator Operating Environment %s
+        <BR>Mediator Framework (tm) %s
+        <BR>Copyright (c) 2008 Richards Zeta Building Intelligence, Inc.
+        <BR>Serial number %s
+        <BR><HR>
+        <P align="center">
+        <B>
+        Visit us at <A HREF="http://www.richards-zeta.com/">http://www.richards-zeta.com</A><BR>
+        Click <A HREF="nodebrowser"> here</A> to use the Node Browser<BR>
+        Click <A HREF="msglog/index.html"> here</A> for the Message Log<BR>
+        Click <A HREF="webapi/psp/WebExpress.psp"> here</A> for WebExpress<BR>
+        To view the Web API documentation, click <A HREF="webapi/index.html">here</A><BR>
+        %s
+        </B>
+        </P>
+      </div>
+    </td>
+  </tr>
+</table>
+
+</BODY>
+</HTML>

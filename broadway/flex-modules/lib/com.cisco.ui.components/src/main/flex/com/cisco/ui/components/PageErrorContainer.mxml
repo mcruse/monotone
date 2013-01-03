@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="0"
+		visible="false"
+		horizontalAlign="center">
+<mx:Script>
+	<![CDATA[
+		import mx.utils.StringUtil;
+		
+		[Bindable]
+		private var _message:String = "";
+		
+		[Bindable]
+		[Embed(source="assets/icons/alert_critical_2000_32.png")]
+		public var errorIconClass:Class; 
+		
+		public function set message(value:String):void {
+			if (_message == value) {
+				return;
+			}
+			
+			_message = value;
+			
+			if (_message == null || StringUtil.trim(_message).length == 0) {
+				errorLabel.text = "";
+				visible = false;
+				height = 0;
+				return;
+			}
+
+			errorLabel.text = _message;
+			
+			height = errorContainer.height; // need to resize height based on children
+			visible = true;
+			//errorIcon.load();
+			invalidateSize();
+			validateNow();		
+		}
+		
+		public function get message():String {
+			return _message;
+		}
+	]]>
+</mx:Script>
+	<mx:HBox id="errorContainer" paddingTop="10" paddingBottom="15" height="100%" verticalAlign="middle">
+		<mx:Image id="errorIcon" source="{errorIconClass}" />
+		<mx:Label id="errorLabel"  
+			styleName="pageLevelError" />
+	</mx:HBox>
+</mx:VBox>

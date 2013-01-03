@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" creationComplete="init()">
+	<mx:Script>
+		<![CDATA[
+			
+			private function init():void
+			{
+				/*
+				var re:RegExp = /\d{2}\:\d{2}\:\d{2}/;
+				
+				var val:String = "11:22:33";
+				
+				var arr:Array = val.match(re);
+				
+				trace("arr: " + arr);
+				*/
+				var val:String = "11:22:33";
+				
+				var values:Array = val.split(":");
+				
+				trace("Vals: "+ values);
+			}
+		]]>
+	</mx:Script>
+</mx:Application>

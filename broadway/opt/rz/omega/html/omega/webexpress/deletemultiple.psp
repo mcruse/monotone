@@ -1,0 +1,20 @@
+<%
+# Copyright (c) 2005 Richards-Zeta
+# $Name: mediator_3_1_2_branch $
+# $Id: deletemultiple.psp 20101 2011-03-06 16:02:15Z bhagn $
+import os
+import sys
+from mpx import properties
+from opt.rz.omega.lib import genwebexpress
+
+if request.get_protocol() == 'http':
+    root = properties.HTTP_ROOT
+else:
+    root = properties.HTTPS_ROOT
+
+qs = request.get_query_dictionary()
+
+mylist = genwebexpress.makeDeleteMultiple(root, qs)
+for item in mylist:
+    psp.write(item + '\n')
+%>

@@ -1,0 +1,16 @@
+@CHARSET "UTF-8";
+
+div.breadcrumbs {
+    color: #000000;
+    font-size: 11px;
+    margin-bottom: 10px;
+}
+
+div.breadcrumbs a {
+    color: #0088C2;
+    text-decoration: none;
+}
+
+div.breadcrumbs a:hover {
+    text-decoration: underline;
+}

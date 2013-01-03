@@ -1,0 +1,113 @@
+#!/bin/bash
+#=---------------------------------------------------------------------------=
+# System init script to start/stop/restart the framework.
+#
+# Stolen from S.T. Mansfield (scott.mansfield@encorp.com) by
+# Mark M. Evans (mark.evans@encorp.com)
+#
+# $Revision: 20101 $
+#=---------------------------------------------------------------------------=
+# start: 99
+# stop: 11
+# runlevels: 3 4 5
+#=---------------------------------------------------------------------------=
+
+prog="watchdog"
+
+start() {
+    pgrep -f "${prog} --respawn" >/dev/null 2>&1 || {
+	touch /var/lock/subsys/${prog}
+	rm -f /var/run/broadway/broadway.pid
+	echo -n "Starting ${prog}..."
+	#
+	# Starting a UNIX daemon process in three easy steps:
+	#
+	# 1. Close any open files that this process may have
+	#    inherited.
+	#
+	nfd=$(ulimit -Hn)
+	for ((i=3; i<nfd; i++))
+	do
+	    eval "exec $i>&-"
+	done
+	#
+	# 2. Exec the program using setsid so the new process
+	#    will be in a new process group (instead of ours).
+	#
+	setsid /bin/bash -c "exec /etc/rc.mfw </dev/null 2>&1 |
+			     exec /usr/bin/logger -t broadway" \
+		</dev/null >/dev/null 2>&1 &
+	#
+	# 3. Redirect stdin, stdout and stderr of the process
+	#    so it is not associated with our (or any)
+	#    terminal.
+	#
+	for ((i=0; i<10; i++))
+	do
+	    pgrep -f "${prog} --respawn" >/var/run/${prog}.pid && {
+		for ((i=0; i<10; i++))
+		do
+		    [ -f /var/run/broadway/broadway.pid ] && {
+			echo "done."
+			return 0
+		    }
+		    sleep 1
+		    echo -n .
+		done
+		break
+	    }
+	    sleep 1
+	    echo -n .
+	done
+	echo "timed out."
+	return 1
+    }
+    return 0
+}
+
+stop() {
+    pgrep -f "${prog} --respawn" >/dev/null 2>&1 && {
+	echo -n "Stopping ${prog}..."
+	pkill -TERM -f "${prog} --respawn"
+	for ((i=0; i<10; i++))
+	do
+	    pkill -0 -f "${prog} --respawn" || {
+		rm -f /var/lock/subsys/${prog}
+		rm -f /var/run/broadway/broadway.pid
+		echo "done."
+		return 0
+	    }
+	    sleep 1
+	    echo -n .
+	done
+	echo "timed out."
+	echo -n "Killing ${prog}"
+	pkill -KILL -f "python2.4 /etc/rc.mfw.pyc"
+	pkill -KILL -f "${prog} --respawn"
+	rm -f /var/lock/subsys/${prog}
+	rm -f /var/run/broadway/broadway.pid
+	return 1
+    }
+    return 0
+}
+
+case $1 in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+esac
+
+exit 0
+
+#=- EOF ---------------------------------------------------------------------=
+# vim: ts=8 noexpandtab

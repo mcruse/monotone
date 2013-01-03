@@ -1,0 +1,92 @@
+<!--
+Copyright (C) 2008 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+<!-- $Name: mediator_3_1_2_branch $ -->
+<!-- $Id: graphtool.html 20101 2011-03-06 16:02:15Z bhagn $ -->
+    <title>WebExpress Graph Tool</title>
+<style type="text/css">
+
+body{
+color:#FFFFFF;
+background:#999999;
+font-size:14px;
+}
+span.bold{
+font-size:16px;
+font-weight:bold;
+}
+</style>
+<script language="javascript" src="/webapi/js/sdk2.js"></script>
+  </head>
+  <body>
+<br>
+<span class="bold">To use graph:</span><br>
+<span class="bold">1.</span> Select a Refresh rate.<br>
+<span class="bold">2.</span> Login when prompted. (This may happen multiple times.)<br>
+<br>
+ 
+
+
+<script language="javascript">
+
+var title= "";
+var points = "";
+var widgetid = "";
+title = get_query_string_args()['title'];
+widgetid = get_query_string_args()['widgetid'];
+var element = window.opener.document.getElementById(widgetid);
+points = window.opener.GraphToolGetElement(element,'div','info').getAttribute('pstring');
+if (title == null){
+   title="";
+}
+if (points == null){
+   points="";
+}
+      document.writeln('<APPLET archive="applets/jfreechart.jar,applets/env_graph.jar" ');
+      document.writeln('  code="envenergy/enterprise/ViewBaseApplet.class" ');;
+      document.writeln('  width="100%" height="85%">');
+      document.writeln('  <PARAM name="title" value="' + title + '"/>');
+      document.writeln('  <PARAM name="subtitle" value="Graph Tool (c) 2004 Richards-Zeta"/>');
+      document.writeln('  <PARAM name="x_title" value="Time"/>');
+      document.writeln('  <PARAM name="y_title" value="Node Values"/>');
+      document.writeln('  <PARAM name="chart_background_color" value="255,244,233"/>');
+if(points.length > 0) {
+      document.writeln('  <PARAM name="points"  value="' + points + '"/>');
+} 
+      document.writeln('  <PARAM name="chart_line_width" value="2"/>');
+      document.writeln('</APPLET>');
+
+</script>
+  </body>
+</html>

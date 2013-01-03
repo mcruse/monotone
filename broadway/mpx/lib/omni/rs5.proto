@@ -1,0 +1,29 @@
+class readmeterreq {
+
+    uint8 wake_up1 = 0xFE;
+    uint8 wake_up2 = 0xFE;
+    uint8 stx1 = 0x68;
+    width=6  fbuffer addr ;
+    uint8 stx2 = 0x68;
+    uint8 opcode = 0x01;
+    uint8 len = 0x02;
+    uint8 di_b1 = 0x52;
+    uint8 di_b2 = 0x14;
+    uint8 cs;
+    uint8 etx = 0x16;
+}
+
+
+class readmeterres {
+
+    width=6 fbuffer addr;
+    uint8 stx2 = 0x68;
+    uint8 opcode = 0x81;
+    uint8 len = 0x1B;
+    uint8 di_b1 = 0x52;
+    uint8 di_b2 = 0x14;
+    width=25 fbuffer data;
+    uint8 cs;
+    uint8 etx = 0x16;
+}
+

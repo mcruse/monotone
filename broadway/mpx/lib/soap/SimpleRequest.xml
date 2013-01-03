@@ -1,0 +1,10 @@
+<DataRequest>
+  <Request>
+    <Name>Differential Pressure 1</Name>
+    <Type>analog</Type>
+  </Request>
+  <Request>
+    <Name>Differential Pressure 3</Name>
+    <Type>analog</Type>
+  </Request>
+</DataRequest>

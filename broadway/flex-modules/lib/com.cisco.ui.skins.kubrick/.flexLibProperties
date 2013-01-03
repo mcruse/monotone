@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties version="1">
+  <includeClasses/>
+  <includeResources>
+    <resourceEntry destPath="kubrick_skins.swf" sourcePath="kubrick_skins.swf"/>
+    <resourceEntry destPath="kubrick.css" sourcePath="kubrick.css"/>
+  </includeResources>
+  <namespaceManifests/>
+</flexLibProperties>

@@ -1,0 +1,32 @@
+@CHARSET "UTF-8";
+
+div.notification-box {
+    width: 300px;
+    height: auto;
+}
+
+div.notification-detail {
+    clear: both;
+    width: 100%;
+    border: none;
+    background: none;
+}
+
+div.notification-box div.empty {
+    display: none;
+}
+
+div.notification-detail div.dijitTitlePaneTitle {
+    background: none;
+    border: none;
+    cursor: default;
+    font-size: 10px;
+    padding-top: 0px;
+    text-decoration: none;
+}
+
+div.user-actions {
+    float: right;
+    clear: left;
+    margin: 5px;
+}

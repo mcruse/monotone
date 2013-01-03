@@ -1,0 +1,20 @@
+@CHARSET "UTF-8";
+
+@import url("breadcrumb.css");
+
+div#nodes {
+    padding-bottom: 10px;
+}
+
+div#nodes form input#override {
+    width: 15em;
+    margin-right: 8px;
+}
+
+h2.section-name {
+    margin-bottom: 4px;
+}
+
+div.node-section ul {
+    margin: 0;
+}

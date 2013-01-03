@@ -1,0 +1,40 @@
+#!/usr/bin/env python-mpx
+
+import sys
+import re
+import os
+
+
+line = sys.stdin.readline()
+while line:
+    a = line[0:-1]
+    b = a+".tmp"
+    f = open(a)
+    out = open(b,"w")
+
+    sys.stdout.write("Processing %s ..."%a)
+    sys.stdout.flush()
+    line = f.readline()
+    while line:
+        if re.match('^log$',line):
+            n = 0
+            out.write(line)
+            out.write(f.readline())
+            line = f.readline()
+            while not re.match('^@',line):
+                if re.match('^$',line):
+                    n += 1
+                    if n < 2:
+                        out.write(line)
+                else:
+                    n = 0
+                    out.write(line)
+                line = f.readline()
+            else:
+                out.write(line)
+        else:
+            out.write(line)
+        line = f.readline()
+    os.rename(b,a)
+    sys.stdout.write("done.\n")
+    line = sys.stdin.readline()

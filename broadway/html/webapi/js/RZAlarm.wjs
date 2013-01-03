@@ -1,0 +1,475 @@
+/*
+Purpose: RZAlarm widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: RZAlarm.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+function RZAlarm(){
+  this.base = Widget;
+  this.base();
+  this._name = 'RZAlarm';
+  this._z_index = '1000';
+  this._node = '';
+  this.node_selector_node = 'true';
+  this._level_trigger = 'rising';
+  this._alarm_threshold = '';
+  this._sound_file = '';
+  this.sound_selector_sound_file = 'true';
+  this._sound_duration = '1';
+  this._animation_type = 'static';
+  this._animation_scale = '100';
+  this._animation_directory = '';
+  this._animation_images = '';
+  this._animation_width = '10px';
+  this._animation_height = '10px';
+  this._animation_interval = '250';
+ }
+
+RZAlarm.prototype = new Widget;
+
+var RZAlarmImages = new Object(); //pre-cache animation images
+var RZAlarmTimers = new Object(); //dynamic animation timers
+
+RZAlarm.prototype.after_config_table = function() {
+  Widget_log('RZAlarm.after_config_table(), at top');
+  document.getElementById('RZAlarm_level_trigger').value = this._level_trigger;
+  document.getElementById('RZAlarm_sound_duration').value = this._sound_duration;
+  document.getElementById('RZAlarm_animation_type').value = this._animation_type;
+}
+
+RZAlarm.prototype.get_level_trigger_defaults = function() {
+  var s = document.createElement('select');
+
+  s.setAttribute('id', 'RZAlarm_level_trigger');
+
+  var o = document.createElement('option');
+
+  o.value = 'rising';
+  o.innerHTML = 'rising';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'falling';
+  o.innerHTML = 'falling';
+  s.appendChild(o);
+  return s;
+}
+
+RZAlarm.prototype.get_sound_duration_defaults= function() {
+  var s = document.createElement('select');
+
+  s.setAttribute('id', 'RZAlarm_sound_duration');
+
+  var o = document.createElement('option');
+
+  o.value = '1';
+  o.innerHTML = 'One Time';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = '2';
+  o.innerHTML = 'Two Times';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = '4';
+  o.innerHTML = 'Four Times';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'true';
+  o.innerHTML = 'Continuous';
+  s.appendChild(o);
+  return s;
+}
+
+RZAlarm.prototype.get_animation_type_defaults = function() {
+  var s = document.createElement('select');
+
+  s.setAttribute('id', 'RZAlarm_animation_type');
+
+  var o = document.createElement('option');
+
+  o.value = 'static';
+  o.innerHTML = 'static';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'dynamic';
+  o.innerHTML = 'dynamic';
+  s.appendChild(o);
+  return s;
+}
+
+RZAlarm.prototype.init = function(element) {
+  Widget_log('RZAlarm.init(), at top');
+  this._name = 'RZAlarm';
+  this._z_index = element.getAttribute('zindex');
+  var imgholder = this.get_element(element,'div','imgholder');
+  this._node = imgholder.getAttribute('node');
+  var infospan = this.get_element(element,'div','info');
+  this._level_trigger = this.get_span_attr(infospan, 'level_trigger');
+  this._alarm_threshold = this.get_span_attr(infospan, 'alarm_threshold');
+  this._sound_file = this.get_span_attr(infospan, 'sound_file');
+  this._sound_duration = this.get_span_attr(infospan, 'sound_duration');
+  this._animation_type = this.get_span_attr(infospan, 'animation_type');
+  this._animation_directory = this.get_span_attr(infospan, 'animation_directory');
+  this._animation_scale = this.get_span_attr(infospan, 'animation_scale');
+  this._animation_images = this.get_span_attr(infospan, 'animation_images');
+  this._animation_width = this.get_span_attr(infospan, 'animation_width');
+  this._animation_height = this.get_span_attr(infospan, 'animation_height');
+  this._animation_interval = this.get_span_attr(infospan, 'animation_interval');
+}
+
+RZAlarm.prototype.init_element = function (){
+  Widget_log('RZAlarm.init_element(), at top');
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version', '1_0_dev_2');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  this.element.style.position = 'absolute';
+  this.element.style.zIndex = this._z_index;
+
+  var container = document.createElement('div');
+  container.setAttribute('element','container');
+  container.style.position = 'relative';
+  container.style.verticalAlign = 'middle';
+  container.style.height = 'auto';
+  container.style.width = 'auto';
+  container.style.backgroundColor = 'transparent';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.zIndex = '0';
+
+  var imgholder = document.createElement('div');
+  imgholder.setAttribute('element','imgholder');
+  imgholder.setAttribute('node', this._node);
+  switch(this._animation_type) {
+    case 'static':
+      imgholder.setAttribute('display_function', 'RZAlarmDisplayStatic');
+      break;
+    case 'dynamic':
+      imgholder.setAttribute('display_function', 'RZAlarmDisplayDynamic');
+      break;
+  }
+  imgholder.style.backgroundColor = 'transparent';
+  imgholder.style.top = '0';
+  imgholder.style.left = '0';
+  imgholder.style.zIndex = '1';
+
+  var animationimg = document.createElement('img');
+  animationimg.setAttribute('element','img');
+  animationimg.setAttribute('recache','true');
+  if(this._animation_images.length > 0) {
+    var myImages = this._animation_images.split(",");
+    var myImagesLength = myImages.length;
+    animationimg.setAttribute('src', this._animation_directory + myImages[0]);
+  }
+  else {
+    var myImagesLength = 0;
+    animationimg.setAttribute('src','');
+  }
+  animationimg.setAttribute('alt','');
+  var myAnimationWidth = Math.round(parseInt(this._animation_width) * (this._animation_scale / 100.0));
+  animationimg.setAttribute('width',myAnimationWidth);
+  var myAnimationHeight = Math.round(parseInt(this._animation_height) * (this._animation_scale / 100.0));
+  animationimg.setAttribute('height',myAnimationHeight);
+  animationimg.setAttribute('onload','RZAlarmCacheImages(event)');
+
+  var alarmsnd = document.createElement('embed');
+  alarmsnd.setAttribute('element','snd');
+  alarmsnd.setAttribute('src', this._sound_file);
+  alarmsnd.setAttribute('loop', this._sound_duration);
+  alarmsnd.setAttribute('playcount', this._sound_duration);
+  alarmsnd.setAttribute('autostart','false');
+  alarmsnd.setAttribute('mastersound','');
+  alarmsnd.setAttribute('hidden','true');
+  alarmsnd.setAttribute('volume',100);
+  alarmsnd.setAttribute('width',0);
+  alarmsnd.setAttribute('height',0);
+  alarmsnd.style.visibility = 'hidden';
+  alarmsnd.style.display = 'none';
+
+  imgholder.appendChild(animationimg);
+  imgholder.appendChild(alarmsnd);
+  container.appendChild(imgholder);
+
+  var infospan = document.createElement('div');
+  infospan.setAttribute('element','info');
+  infospan.setAttribute('type','hidden');  
+  infospan.setAttribute('level_trigger', this._level_trigger);
+  infospan.setAttribute('alarm_threshold', this._alarm_threshold);
+  infospan.setAttribute('sound_file', this._sound_file);
+  infospan.setAttribute('sound_duration', this._sound_duration);
+  infospan.setAttribute('sound_active','false');
+  infospan.setAttribute('animation_type', this._animation_type);
+  infospan.setAttribute('animation_scale', this._animation_scale);
+  infospan.setAttribute('animation_directory', this._animation_directory);
+  infospan.setAttribute('animation_images', this._animation_images);
+  infospan.setAttribute('animation_width', this._animation_width);
+  infospan.setAttribute('animation_height', this._animation_height);
+  infospan.setAttribute('animation_interval', this._animation_interval);
+  infospan.setAttribute('animation_index', '0');
+  infospan.setAttribute('animation_count', myImagesLength);
+  infospan.setAttribute('animation_active','false');
+  //infospan.style.position = 'relative';
+  infospan.style.backgroundColor = 'transparent';
+  infospan.style.top = '0';
+  infospan.style.left = '0';
+  infospan.style.height = '1';
+  infospan.style.width = '1';
+  infospan.style.zIndex = '0';
+  infospan.style.visibility = 'hidden';
+  infospan.style.display = 'none';
+   
+  container.appendChild(infospan);
+
+  this.element.appendChild(container);
+}
+
+
+RZAlarm.prototype.create = function (){
+  Widget_log('RZAlarm.create(), at top');
+  //_msglog('RZAlarm.create(), arguments.length=' + arguments.length);
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function RZAlarm_factory(){
+  return new RZAlarm();
+}
+
+function RZAlarmGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e
+}
+
+function RZAlarmDisplayNoErrors(v) {
+  try {    
+    var pattern1 = /\?/;      
+    var pattern2 = /error\:/;      
+    if (pattern1.exec(v.toString()) == null && pattern2.exec(v.toString()) == null) {
+      return 1;
+    }
+  }
+  catch(err) {
+    return 0;
+  }
+  return 0;
+}
+
+function RZAlarmDisplayStatic(e,v){
+  try{    
+    var myWidget = e.parentNode.parentNode;
+    var myWidgetID = myWidget.getAttribute('id');
+    Widget_log("RZAlarmDisplayStatic, myWidgetID=" + myWidgetID);
+    var ielement = RZAlarmGetElement(myWidget,'div','info');
+    var imgelement = RZAlarmGetElement(myWidget,'img','img');
+    var sndelement = RZAlarmGetElement(myWidget,'embed','snd');
+    if(RZAlarmDisplayNoErrors(v)){
+      var myAlarmThreshold = ielement.getAttribute('alarm_threshold');
+      var myValue = parseInt(v);
+      if(ielement.getAttribute('level_trigger') == 'rising') {
+        if(myAlarmThreshold != '' && isNaN(myAlarmThreshold) == false && myValue > parseInt(myAlarmThreshold)) {
+          //alarm
+          //start sound if necessary
+          if((ielement.getAttribute('sound_file') != '') && ielement.getAttribute('sound_active') == 'false') {
+            sndelement.play();
+            ielement.setAttribute('sound_active', 'true');
+          }
+          //show second image
+          imgelement.src = RZAlarmImages[myWidgetID][1].src;
+          ielement.setAttribute('animation_index','1');
+        }
+        else {
+          //not alarm
+          //stop sound
+          if(ielement.getAttribute('sound_file') != '') {
+            ielement.setAttribute('sound_active', 'false');
+            sndelement.stop();
+          }
+          //show first image
+          imgelement.src = RZAlarmImages[myWidgetID][0].src;
+          ielement.setAttribute('animation_index','0');
+        }
+      }
+      else { //falling
+        if(myAlarmThreshold != '' && isNaN(myAlarmThreshold) == false && myValue <= parseInt(myAlarmThreshold)) {
+          //alarm
+          //start sound if necessary
+          if((ielement.getAttribute('sound_file') != '') && ielement.getAttribute('sound_active') == 'false') {
+            sndelement.play();
+            ielement.setAttribute('sound_active', 'true');
+          }
+          //show second image
+          imgelement.src = RZAlarmImages[myWidgetID][1].src;
+          ielement.setAttribute('animation_index','1');
+        }
+        else {
+          //not alarm
+          //stop sound
+          if(ielement.getAttribute('sound_file') != '') {
+            ielement.setAttribute('sound_active', 'false');
+            sndelement.stop();
+          }
+          //show first image
+          imgelement.src = RZAlarmImages[myWidgetID][0].src;
+          ielement.setAttribute('animation_index','0');
+        }
+      }
+    }
+    else{ // if error, display first image
+      imgelement.src = RZAlarmImages[myWidgetID][0].src;
+      ielement.setAttribute('animation_index','0');
+    }
+  }
+  catch(err){   
+    Widget_log("RZAlarmDisplayStatic, err=" + err.description);
+  }
+}
+
+function RZAlarmDisplayDynamic(e,v){
+  try{    
+    var myWidget = e.parentNode.parentNode;
+    var myWidgetID = myWidget.getAttribute('id');
+    Widget_log("RZAlarmDisplayDynamic, myWidgetID=" + myWidgetID);
+    var ielement = RZAlarmGetElement(myWidget,'div','info');
+    var sndelement = RZAlarmGetElement(myWidget,'embed','snd');
+    if(RZAlarmDisplayNoErrors(v)){
+      var myAlarmThreshold = ielement.getAttribute('alarm_threshold');
+      var myValue = parseInt(v);
+      if(ielement.getAttribute('level_trigger') == 'rising') {
+        if(myAlarmThreshold != '' && isNaN(myAlarmThreshold) == false && myValue > parseInt(myAlarmThreshold)) {
+          //alarm
+          //start sound if necessary
+          if((ielement.getAttribute('sound_file') != '') && ielement.getAttribute('sound_active') == 'false') {
+            sndelement.play();
+            ielement.setAttribute('sound_active', 'true');
+          }
+          //start animation (starts at 2nd image)
+          if(RZAlarmTimers[myWidgetID] == null || ielement.getAttribute('animation_active') == 'false') {
+            ielement.setAttribute('animation_active','true');
+            RZAlarmRunDynamic(myWidgetID);
+          }
+        }
+        else {
+          //not alarm
+          //stop sound
+          if(ielement.getAttribute('sound_file') != '') {
+            ielement.setAttribute('sound_active', 'false');
+            sndelement.stop();
+          }
+          //stop animation
+          ielement.setAttribute('animation_active','false');
+        }
+      }
+      else { //falling
+        if(myAlarmThreshold != '' && isNaN(myAlarmThreshold) == false && myValue <= parseInt(myAlarmThreshold)) {
+          //alarm
+          //start sound if necessary
+          if((ielement.getAttribute('sound_file') != '') && ielement.getAttribute('sound_active') == 'false') {
+            sndelement.play();
+            ielement.setAttribute('sound_active', 'true');
+          }
+          //start animation (starts at 2nd image)
+          if(RZAlarmTimers[myWidgetID] == null || ielement.getAttribute('animation_active') == 'false') {
+            ielement.setAttribute('animation_active','true');
+            RZAlarmRunDynamic(myWidgetID);
+          }
+        }
+        else {
+          //not alarm
+          //stop sound
+          if(ielement.getAttribute('sound_file') != '') {
+            ielement.setAttribute('sound_active', 'false');
+            sndelement.stop();
+          }
+          //stop animation
+          ielement.setAttribute('animation_active','false');
+        }
+      }
+    }
+    else{ //stop animation if error
+      ielement.setAttribute('animation_active','false');
+     
+    }
+  }
+  catch(err){   
+    Widget_log("RZAlarmDisplayDynamic, err=" + err.description);
+  }
+}
+
+function RZAlarmRunDynamic(id, index) {
+  index = (index) ? index : 1;
+  myWidget = document.getElementById(id);
+  var ielement = RZAlarmGetElement(myWidget,'div','info');
+  var imgelement = RZAlarmGetElement(myWidget,'img','img');
+  //alert('index=' + index);
+  if(ielement.getAttribute('animation_active') == 'true') { //start or continue animation
+    //Widget_log("RZAlarmRunDynamic(), " + id + ", new image=" + RZAlarmImages[id][index].src);
+    imgelement.src = RZAlarmImages[id][index].src;
+    ielement.setAttribute('animation_index',index);
+    index = (index + 1) % ielement.getAttribute('animation_count');
+    if(index == 0)
+      index = 1;
+    RZAlarmTimers[id] = setTimeout("RZAlarmRunDynamic('" + id + "'," + index + ")", ielement.getAttribute('animation_interval'));
+  }
+  else { //stop animation
+    //Widget_log("RZAlarmRunDynamic(), stoping animation for " + id);
+    var myTimer = RZAlarmTimers[id];
+    if(myTimer != null) {
+      clearTimeout(myTimer);
+      delete RZAlarmTimers[id];
+    }
+    imgelement.src = RZAlarmImages[id][0].src;
+    ielement.setAttribute('animation_index','0');
+  }
+}
+
+function RZAlarmGetImageNames(element){
+  var myWidget = element.parentNode.parentNode.parentNode;
+  var ielement = RZAlarmGetElement(myWidget,'div','info');
+  var animationImages = ielement.getAttribute('animation_images');
+  var imageNames = animationImages.split(",");
+  return imageNames;
+}
+
+function RZAlarmCacheImages(evt) {
+  evt = (evt) ? evt : ((event) ? event : null);
+  var elem = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null);
+  if(elem.nodeType == 9) { //if NN, use currentTarget
+    elem = evt.currentTarget;
+  }
+  var myWidgetID = elem.parentNode.parentNode.parentNode.getAttribute('id');
+  var myRecache = elem.getAttribute('recache');
+  var imgRef = RZAlarmImages[myWidgetID];
+  if(imgRef == null || myRecache == 'true') {
+    Widget_log('RZAlarmCacheImages(), myWidgetID=' + myWidgetID);
+    Widget_log('RZAlarmCacheImages(), typeof imgRef=' + typeof imgRef + ', recache=' + myRecache);
+    var ielement = RZAlarmGetElement(elem.parentNode.parentNode.parentNode,'div','info');
+    var myDir = ielement.getAttribute('animation_directory');
+    RZAlarmImages[myWidgetID] = new Array();
+    var myImages = RZAlarmGetImageNames(elem);
+    for(var i = 0; i < myImages.length; i++) {
+      Widget_log("RZAlarmCacheImages(), cacheing " + myDir + myImages[i]);
+      RZAlarmImages[myWidgetID][i] = new Image();
+      RZAlarmImages[myWidgetID][i].src = myDir + myImages[i];
+    }
+    elem.setAttribute('recache','false');
+  }
+}
+
+var RZAlarm_loaded = true;

@@ -1,0 +1,21 @@
+#!/bin/bash
+set -xv
+# @fixme I THINK THE IS AN EXTRA FILE.  DELETE IT IF SO.
+# @fixme Set properties? (Remove hardcoding in crontab).
+# @fixme Create test specifig msglog and email to me?
+# @fixme Make into a much more useful command.
+export
+TMPDIR=/tmp/$$
+mkdir ${TMPDIR} || exit 1
+BAILSCRIPT="(cd /tmp ; rm -rf ${TMPDIR} ; exit 1) || exit 1"
+export
+cvs co mediator || eval ${BAILSCRIPT}
+cd mediator/configtool/build || eval ${BAILSCRIPT}
+./build || eval ${BAILSCRIPT}
+cd ../../broadway || eval ${BAILSCRIPT}
+export PYTHONPATH=${TMPDIR}/mediator/broadway || eval ${BAILSCRIPT}
+./compileall || eval ${BAILSCRIPT}
+./testing/test_manager.py -m dev@envenergy.com || eval ${BAILSCRIPT}
+cd /tmp
+rm -rf ${TMPDIR}
+exit 0

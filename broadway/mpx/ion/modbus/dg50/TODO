@@ -1,0 +1,2 @@
+1. Implement a modbus writer that only uses preset single register.
+2. Update the register_map to use the writer.

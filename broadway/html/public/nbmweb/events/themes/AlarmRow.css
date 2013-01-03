@@ -1,0 +1,32 @@
+@CHARSET "UTF-8";
+
+.alarmRow .selectActionCell {
+    text-align: center;
+}
+
+.alarmRow .selectActionCell .acknowledgeAlarmButton {
+    font-size: 10px;
+}
+
+.alarmRow .eventStatusPane .dijitTitlePaneTitle {
+    border-style: none;
+    background-image: none;
+    background-color: transparent;
+}
+
+.alarmRow .eventStatusPane .dijitTitlePaneContentOuter {
+    border-style: none;
+    background-image: none;
+    background-color: transparent;
+}
+
+.alarmRow .eventStatusPane .dijitTitlePaneContentInner {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.alarmRow .eventStatusPane .eventStatusMessages {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 1px;
+}

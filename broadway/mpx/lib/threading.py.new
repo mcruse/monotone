@@ -1,0 +1,189 @@
+from mpx._python import python_threading as _threading
+
+from mpx.lib import msglog
+from mpx.lib import exceptions
+
+#
+# Import all the public names from Python's threading module.
+#
+from mpx._python.threading import *
+
+##
+# @note More imports done below to avoid conflicts.
+
+##
+# @note Mediator threads default to daemonic mode.
+class Thread(_threading.Thread):
+    def __init__(self, *args, **keywords):
+        _threading.Thread.__init__(self, *args, **keywords)
+        self.setDaemon(1)
+
+    def start(self):
+        self._run = self.run
+        self.run = self._run_wrapper
+        _threading.Thread.start(self)
+
+    def _run_wrapper(self):
+        try:
+            self._run()
+        except:
+            msglog.exception()
+
+class EKillThread(exceptions.MpxException):
+    pass
+
+class ImmortalThread(Thread):
+    def __init__(self, *args, **keywords):
+        if keywords.has_key('reincarnate'):
+            self.reincarnate = keywords['reincarnate']
+            del(keywords['reincarnate'])
+        self._continue_running = 1
+        Thread.__init__(self, *args, **keywords)
+    
+    def _run_wrapper(self):
+        first_run = 1
+        while self._continue_running:
+            try:
+                if not first_run:
+                    self.reincarnate()
+                    if not self._continue_running:
+                        return
+                self._run()
+            except EKillThread:
+                msglog.exception()
+                self._continue_running = 0
+            except:
+                msglog.exception()
+            first_run = 0
+    
+    def reincarnate(self):
+        pass
+    def set_immortal(self, immortal):
+        self._continue_running = immortal
+    def should_die(self):
+        self.set_immortal(0)
+
+##
+# Provide a platform specific Condition variable with improved performance.
+#
+from _condition import Condition
+
+##
+# Provide a platform specific Semaphore with improved performance.
+#
+from _semaphore import Semaphore
+
+##
+# Provide a platform specific BoundedSemaphore with improved performance.
+#
+from _bounded_semaphore import BoundedSemaphore
+
+##
+# Provide a platform specific Event with improved performance.
+#
+from _event import Event
+
+class _Unique:
+    pass
+
+NOTHING = _Unique()
+
+##
+# @todo Consider making the exception a compatible extension of a Python
+#       Queue.Full and also adding an MPX equivilant of Queue.Empty.
+class QueueFull(exceptions.MpxException):
+    pass
+
+##
+# @todo Consider making the methods a compatible extension of a Python
+#       Queue.Queue() instance.  This would require changing the signature
+#       of get and put, as well as implementing qsize(), empty(), full(),
+#       put_nowait(item), and get_nowait().
+class Queue:
+    def __init__(self, threshold=0):
+        self._threshold = threshold
+        self._listeners = []
+        self._q = []
+        self._underflow = Condition(Lock())
+        self._overflow = Condition(Lock())
+    def get_threshold(self):
+        return self._threshold
+    def set_threshold(self, threshold):
+        self._threshold = threshold
+    def put(self, object, timeout=None):
+        self._underflow.acquire()
+        if self._threshold and len(self._q) >= self._threshold:
+            self._overflow.acquire()
+            self._overflow.wait(timeout)
+            self._overflow.release()
+            if len(self._q) >= self._threshold:
+                self._underflow.release()
+                raise QueueFull()
+        self._q.append(object)
+        self._underflow.notify()
+        self._underflow.release()
+        for listner in self._listeners:
+            listner.notify()
+    
+    def get(self, timeout=None):
+        result = NOTHING
+        self._underflow.acquire()
+        if len(self._q):
+            result = self._q.pop(0)
+        else:
+            self._underflow.wait(timeout)
+            if len(self._q):
+                result = self._q.pop(0)
+        self._overflow.acquire()
+        self._overflow.notify()
+        self._overflow.release()
+        self._underflow.release()
+        return result
+    def add_listener(self, listener):
+        self._listeners.append(listener)
+
+class _CallbackQueue(ImmortalThread):
+    def __init__(self):
+        self._callbacks = []
+        self._condition = Condition()
+        self._running = 0
+        self._pending = 0
+        ImmortalThread.__init__(self)
+    def add_callback(self, callback, queue):
+        self._callbacks.append((callback, queue))
+        if not self._running:
+            self._running = 1
+            self.start()
+        queue.add_listener(self)
+        self.notify()
+    def notify(self):
+        print 'notified'
+        self._condition.acquire()
+        try:
+            self._condition.notify()
+            self._notified = 1
+        finally:
+            self._condition.release()
+    def run(self):
+        while self._running:
+            print 'running'
+            self._condition.acquire()
+            if not self._pending:
+                print 'waiting'
+                self._condition.wait()
+            self._pending = 0
+            self._condition.release()
+            print 'calling'
+            for callback,queue in self._callbacks:
+                while len(queue._q):
+                    callback(queue.get())
+
+callback_queue = _CallbackQueue()
+
+from mpx import _boolean_property
+########################################################################
+#                        LOCK DEBUGGING HOOKS.
+########################################################################
+if _boolean_property('DEBUG_LOCKS', 0):
+    # @fixme Support RLock, Cond, and our Queue.
+    from debugging_locks import Lock

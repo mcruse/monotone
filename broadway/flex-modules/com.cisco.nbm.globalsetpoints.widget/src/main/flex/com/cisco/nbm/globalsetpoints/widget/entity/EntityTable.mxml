@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:AdvancedDataGrid xmlns:mx="http://www.adobe.com/2006/mxml" height="100%" width="100%"
+	defaultLeafIcon="{null}"
+	displayItemsExpanded="true" sortableColumns="false" allowMultipleSelection="false"
+	xmlns:uicomponents="com.cisco.ui.components.*"
+	creationComplete="init();" >
+	
+	<mx:Metadata>
+	   [ Event( name="onLoadEntityMap", type="flash.events.Event") ]
+	   [ Event( name="onUpdateEntityTable", type="flash.events.Event") ]
+	</mx:Metadata>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.cisco.nbm.entities.EntityManager;
+			import com.cisco.nbm.entities.ui.EntityNavigator;
+			import com.cisco.nbm.entities.ui.EntityPropertySelectionEntry;
+			import com.cisco.nbm.globalsetpoints.entity.EntityMapManager;
+			import com.cisco.nbm.globalsetpoints.ui.ProgressPopup;
+			import com.cisco.nbm.globalsetpoints.widget.components.EntityAutoDiscovery;
+			import com.cisco.nbm.globalsetpoints.widget.renderers.EntityValueRenderer;
+			import com.cisco.nbm.xmlrpc.v2.MediatorNode;
+			import com.cisco.nbm.xmlrpc.v2.MediatorNodeCall;
+			import com.cisco.ui.components.DialogCloseReason;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridColumn;
+			import mx.core.Application;
+			import mx.events.FlexEvent;
+			import mx.managers.ISystemManager;
+			import mx.managers.PopUpManager;
+			
+			public var entityManager:EntityManager;
+			public var entitypath:String;
+			public var point_type:String;
+			public var selectedGroup:String;
+			public var node:MediatorNode;
+			public var subscriptionNode:MediatorNode;
+			
+			[Bindable]
+			public var configData:ArrayCollection;
+			
+			[Bindable]
+			public var busy:Boolean;
+			
+			private var entityPropertySelectionPanel:AddEntity;
+			private var progressPanel:ProgressPopup;
+			private var selectedSetpointID:String;
+			private var entityMapManager:EntityMapManager;
+			private var entityAutoDiscovery:EntityAutoDiscovery
+			private var entityValueRenderer:ClassFactory;
+			private var lastSetpointList:Array = [];
+			
+			private function init():void
+			{
+				entityValueRenderer = new ClassFactory(EntityValueRenderer);
+			}
+			
+			override public function set columns(value:Array):void
+			{
+				super.columns = value;
+				itemRendererToFactoryMap = new Dictionary(false);
+			}
+			
+			public function getEntityMapping():void{
+				//em = gsp.get_entity_mapping(roofa_url, 'testgroup')
+				
+				// Show progress bar
+				var progress:ProgressPopup = getProgressPopup();
+				progress.text ="Retrieving entity map for '" + selectedGroup + "'";
+				progress.canCancel = false;
+				
+				// get entity mapping
+				var call:MediatorNodeCall = node.execute("get_entity_mapping", [entitypath, selectedGroup]);
+				call.addCallback(handleGetEntityResult, handleCreatePolledError);
+			}
+			
+			// On emap GET is complete
+			private function handleGetEntityResult(method:MediatorNodeCall, result:Object):void{
+				var progress:ProgressPopup = getProgressPopup();
+				destroyProgressPopup(progress); 
+				
+				// Create EntityMapManager
+				entityMapManager = new EntityMapManager(result);
+				entityMapManager.configData = configData;
+				entityMapManager.addEventListener("onPollResult", onPollResult);
+				entityMapManager.loadSubscription(subscriptionNode);
+				updateEntityTable();
+			}
+			
+			public function cleanup():void {
+				entityMapManager.stop();
+			}
+			
+			public function cancel():void{
+				entityMapManager.reset();
+				updateEntityTable();
+			}
+			
+			private function onPollResult(event:Event):void{
+				updateEntityTable();
+			}
+			// Call for updating emap
+			public function updateEnityMap():void{
+				/* var emap:Object = {}
+				var emap1_1 = {'setpoint_id':'gspitem0', 'property':['AO', 'satsp'], 'config':{}, 'entity_path':'/Building A/Roof/ahu-1'}
+				var emap1_2 = {'setpoint_id':'gspitem0', 'property':['AO', 'satsp'], 'config':{}, 'entity_path':'/Building A/Roof/ahu-2'}
+				var emap1_3 = {'setpoint_id':'gspitem0', 'property':['AO', 'satsp'], 'config':{}, 'entity_path':'/Building A/Roof/ahu-3'}
+				emap['gspitem0'] = [emap1_1, emap1_2, emap1_3];
+				var emap2_1 = {'setpoint_id':'gspitem1', 'property':['BO', 'occ_command'], 'config':{}, 'entity_path':'/Building A/Roof/ahu-1'}
+				var emap2_2 = {'setpoint_id':'gspitem1', 'property':['BO', 'occ_command'], 'config':{}, 'entity_path':'/Building A/Roof/ahu-2'}
+				var emap2_3 = {'setpoint_id':'gspitem1', 'property':['BO', 'occ_command'], 'config':{}, 'entity_path':'/Building A/Roof/ahu-3'}
+				emap['gspitem1'] = [emap2_1, emap2_2, emap2_3]; */
+
+
+				// Show progress bar
+				var progress:ProgressPopup = getProgressPopup();
+				progress.text = "Updating configuration for '" + selectedGroup + "'";
+				progress.canCancel = false;
+
+				// Update entity mapping
+				var call:MediatorNodeCall = node.execute("update_entity_mapping", [entitypath, selectedGroup, entityMapManager.entityMap]);
+				//var call:MediatorNodeCall = node.execute("update_entity_mapping", [entitypath, selectedGroup, emap]);
+				
+				call.addCallback(handleUpdateEntityResult, handleCreatePolledError);
+			}
+			
+			// Check if any setpoint has zero entitiy dfined
+			public function isEntityPresent(_setpoinId:String):Boolean{
+				return entityMapManager.isEntityPresent(_setpoinId);
+			}
+			
+			// On group UPDATE is completed
+			private function handleUpdateEntityResult(method:MediatorNodeCall, result:Object):void
+			{
+				// get the saved values back
+				getEntityMapping();
+				
+				var progress:ProgressPopup = getProgressPopup();
+				destroyProgressPopup(progress);
+			}
+			
+			// Error in polling
+			private function handleCreatePolledError(method:MediatorNodeCall, result:Object):void
+			{
+				Alert.show("Failed = "+result.toString());
+				
+				// Destroy progress bar if error
+				var progress:ProgressPopup = getProgressPopup();
+				destroyProgressPopup(progress); 
+			}
+			
+			// On Change in selected setpoint in setpointtable
+			public function set selectedSetpoint(_selectedSetpoint:String):void{
+				if(_selectedSetpoint == selectedSetpointID) return;
+
+				// Update view
+				selectedSetpointID = _selectedSetpoint;
+				updateEntityTable();
+			}
+			
+			// Get the setpoint type from/on selction
+			public function set selectedPointType(_point_type:String):void{
+				point_type = _point_type;
+			}
+
+			/* Update Table Data */
+			private function updateEntityTable():void{
+				busy =true;
+				var storeItemForUpdate:Object = this.selectedData;;
+				var vScroll:int = this.verticalScrollPosition;
+				
+				gc.source = entityMapManager.getEntityMapFor(selectedSetpointID);
+				var setpointList:Array = getSetpointIdList();//entityMapManager.setpoints;
+				
+				var currentSelectedIndex:int = this.selectedIndex;
+				
+				// Add entity grouping column
+				this.columns = new Array();
+				var cols:Array = new Array();
+				
+				
+				var dgc:AdvancedDataGridColumn = new AdvancedDataGridColumn();
+				dgc.dataField = "GroupLabel";
+				dgc.headerText = "Entity";
+				dgc.minWidth = 170;
+            	cols.push(dgc);
+
+				dgc = new AdvancedDataGridColumn(selectedSetpointID);
+				dgc.dataField = 'property';
+				dgc.itemRenderer = entityValueRenderer;
+				dgc.dataTipField = selectedSetpointID;
+				dgc.headerText = getSetpointName(selectedSetpointID);
+				dgc.setStyle("color",0x8E8E8E);
+				cols.push(dgc);
+				
+				this.columns = cols;
+				
+				gc.refresh();
+				try{
+					this.selectedIndex = currentSelectedIndex;
+				} catch (e:Error){}
+				
+				// Dispatch onUpdateEntityTable event
+				var onUpdateEntityTableEvent:Event = new Event( "onUpdateEntityTable" );
+				dispatchEvent( onUpdateEntityTableEvent );
+				
+				this.validateNow();
+				//this.verticalScrollPosition = vScroll;
+				this.selectedData = storeItemForUpdate;
+				busy = false;
+			}
+			
+			private function getSetpointIdList():Array{
+				var idList:Array = new Array();
+				for(var i:int=0; i<configData.length; i++){
+					idList.push(configData.getItemAt(i).setpoint_id );
+				}
+				return idList;
+			}
+			
+			public function getSetpointName(_setpointId:String):String{
+				for(var i:int=0; i<configData.length; i++){
+					if(configData.getItemAt(i).setpoint_id == _setpointId){
+						return configData.getItemAt(i).name;
+					}
+				}
+				return _setpointId;
+			}
+			
+			// Remove an Enity from list
+			public function removeEntity():void{
+				if(this.selectedItem.children != null){
+					for(var i:String in this.selectedItem.children){
+						entityMapManager.removeObject(selectedSetpointID, this.selectedItem.children[i]);
+					}
+				} else {
+					entityMapManager.removeObject(selectedSetpointID, this.selectedItem);
+				}
+				updateEntityTable();
+			}
+			
+			public function handleAddProperty():void
+			{
+				var panelParent:DisplayObject = null;
+				
+				var sm:ISystemManager = ISystemManager(Application.application.systemManager);
+	            if (sm.useSWFBridge())
+	                panelParent = Sprite(sm.getSandboxRoot());
+	            else
+	                panelParent = Sprite(Application.application);
+				
+				
+				
+				entityPropertySelectionPanel = PopUpManager.createPopUp(panelParent, AddEntity, true) as AddEntity;
+				PopUpManager.centerPopUp(entityPropertySelectionPanel);
+				
+				entityPropertySelectionPanel.entityManager = entityManager;
+				entityPropertySelectionPanel.initialSelection = createInitialSelection();
+				entityPropertySelectionPanel.disabled = createDisabled();
+				
+				entityPropertySelectionPanel.addEventListener(Event.CLOSE, handleClosePanel);
+				
+				/* var call:MediatorNodeCall = _schedule.getEntityRoot();
+				call.addCallback(handleGotRootResult, handleGotRootFail); */
+				doNextThing();
+			}
+			
+			private function handleGotRootResult(call:MediatorNodeCall, result:Object):void
+			{
+				//entityRoot = result as String;
+				doNextThing();
+			}
+			
+			private function handleGotRootFail(call:MediatorNodeCall, error:Object):void
+			{
+				throw new Error("Unable to get entity root: " + error);
+			}
+			
+			// 
+			private function doNextThing():void
+			{
+				entityPropertySelectionPanel.entityRoot = entitypath;
+			}
+			
+			private function createInitialSelection():Array
+			{
+				var arr:Array = [];
+				
+				if(gc.source != null) {
+
+					var entArr:ArrayCollection = entityMapManager.getAllPropertiesForSetpoint(selectedSetpointID);
+					for (var i:int = 0; i<entArr.length; i++)
+					{
+						var selEntry:EntityPropertySelectionEntry = 
+							new EntityPropertySelectionEntry(entArr.getItemAt(i).entity,
+								entArr.getItemAt(i).property,entArr.getItemAt(i).type);
+						arr.push(selEntry);
+					} 
+				}
+				return arr;
+			}
+			
+			private function createDisabled():Array
+			{
+				var arr:Array = [];
+				
+				if(gc.source != null) {
+					var entArr:ArrayCollection = entityMapManager.getAllPropertiesForSetpointExcept(selectedSetpointID);
+					for (var i:int = 0; i<entArr.length; i++)
+					{
+						var selEntry:EntityPropertySelectionEntry = 
+							new EntityPropertySelectionEntry(entArr.getItemAt(i).entity,
+								entArr.getItemAt(i).property,entArr.getItemAt(i).type);
+						arr.push(selEntry);
+					} 
+				}
+				return arr;
+			}
+			
+			private function handleClosePanel(event:Event):void
+			{
+				PopUpManager.removePopUp(entityPropertySelectionPanel);
+				entityPropertySelectionPanel.removeEventListener(Event.CLOSE, handleClosePanel);
+				
+				var reason:String = entityPropertySelectionPanel.reason;
+				
+				if (reason == DialogCloseReason.OK)
+				{
+					var selectedPaths:Array = entityPropertySelectionPanel.propertyPaths;
+					var newProperties:Array = [];
+					
+					for each (var selEntry:EntityPropertySelectionEntry in selectedPaths)//(var wrapper:PropertyWrapper in selectedPaths)
+					{
+						var nobj:Object = new Object();
+						nobj.entity = selEntry.entityCanonicalPath;
+						nobj.property = selEntry.propertyName;
+						nobj.type = selEntry.type;
+						newProperties.push(nobj);
+					}
+					entityMapManager.updateEntityMap(selectedSetpointID, newProperties);
+					updateEntityTable();
+				}
+				
+				entityPropertySelectionPanel.destroy();
+				entityPropertySelectionPanel = null;
+			}
+			
+			// Open DISCOVER Window
+			public function discoverDevice():void{
+				// Get parent
+				var panelParent:DisplayObject;
+				var sm:ISystemManager = ISystemManager(Application.application.systemManager);
+				
+	            if (sm.useSWFBridge())
+	                panelParent = Sprite(sm.getSandboxRoot());
+	            else
+	                panelParent = Sprite(Application.application);
+	                
+	            // Show popup
+				entityAutoDiscovery = new EntityAutoDiscovery();
+				entityAutoDiscovery.entitypath = entitypath;
+				entityAutoDiscovery.node = node;
+				entityAutoDiscovery.point_type = point_type;
+				entityAutoDiscovery.selectedEntities = entityMapManager.getAllPropertiesForSetpoint(selectedSetpointID);
+				entityAutoDiscovery.disabledEntities = entityMapManager.getAllPropertiesForSetpointExcept(selectedSetpointID);
+				//entityMapManager.getAllProperties(); //gc.source as ArrayCollection;
+				entityAutoDiscovery.entityManager = entityManager;
+				entityAutoDiscovery.addEventListener("onClose", handleOnCloseDiscovery);
+				PopUpManager.addPopUp(entityAutoDiscovery, panelParent, true);
+                PopUpManager.centerPopUp(entityAutoDiscovery);
+			}
+			
+			// Update subscription
+			public function updateSubscription():void {
+				entityMapManager.updateSubscription();
+			}
+			// Update values from discovery
+			private function handleOnCloseDiscovery( event:Event ):void {
+				entityMapManager.updateEntityMap(selectedSetpointID, entityAutoDiscovery.entityList.source);
+				updateEntityTable();
+				PopUpManager.removePopUp(entityAutoDiscovery);
+			}
+			
+			public function removeSetpointMap(_setpointId:String):void{
+				entityMapManager.removeSetpointMap(_setpointId);
+				updateEntityTable();
+			}
+			
+			public function closeAllPopUps():void{
+				if(progressPanel != null){
+					var progress:ProgressPopup = getProgressPopup();
+					destroyProgressPopup(progress); 
+				}
+				if(entityAutoDiscovery != null) PopUpManager.removePopUp(entityAutoDiscovery);
+				if(entityPropertySelectionPanel != null) PopUpManager.removePopUp(entityPropertySelectionPanel);
+            }
+            
+			private function getProgressPopup():ProgressPopup
+			{
+				if (progressPanel == null)
+				{
+					progressPanel = ProgressPopup.show();		
+				}
+				
+				return progressPanel;
+			}
+			private function destroyProgressPopup(popup:ProgressPopup):void
+			{
+				PopUpManager.removePopUp(popup);
+				popup.destroy();
+				
+				this.progressPanel = null;
+			}
+			
+			public function get numOfValueMismatchEntries():Number{
+				return entityMapManager.numOfValueMismatchEntries;
+			}
+			
+			public function refreshSubscription():void
+			{
+				entityMapManager.refreshSubscription();
+			}
+
+			protected function advanceddatagrid1_validHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+			}
+
+		]]>
+	</mx:Script>
+	
+	<mx:dataProvider>
+		<mx:GroupingCollection id="gc">
+			<mx:grouping>
+				<mx:Grouping>
+					<mx:GroupingField name="entity" />
+				</mx:Grouping>
+			</mx:grouping>
+		</mx:GroupingCollection>
+	</mx:dataProvider>
+	<!--<mx:columns>
+		<mx:AdvancedDataGridColumn headerText="Entity" dataField="GroupLabel" />
+		<mx:AdvancedDataGridColumn headerText="Property" dataField="property" itemRenderer="com.cisco.nbm.globalsetpoints.widget.renderers.EntityValueRenderer"/>
+	</mx:columns>-->
+
+		
+</mx:AdvancedDataGrid>
+

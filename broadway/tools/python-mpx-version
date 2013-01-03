@@ -1,0 +1,5 @@
+#!/usr/bin/env python-mpx
+#-*-Python-*- Hint to [X]Emacs on colorization, etc...
+
+import sys
+print sys.version

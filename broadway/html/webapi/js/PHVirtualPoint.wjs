@@ -1,0 +1,860 @@
+/*
+Purpose: perfectHOST Virtual Point widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: PHVirtualPoint.wjs 20878 2011-08-25 20:06:36Z dleimbro $
+*/
+function PHVirtualPoint(){
+  this.base = Widget;
+  this.base();
+  this._name = 'PHVirtualPoint';
+  this._z_index = '1000';
+  this._node = '';
+  this.node_selector_node = 'true';
+  this._units = '';
+  this._precision = '2';
+  this._display_character_length = '10'; 
+  this._text_color = 'black';
+  this.color_selector_text_color = 'true';
+  this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+  this._text_font_size = '12px';
+  this._text_font_style = 'normal';
+  this._text_font_weight = 'normal';
+  this._upper_alarm_threshold = '100';
+  this._upper_warning_threshold = '100';
+  this._lower_warning_threshold = '0';
+  this._lower_alarm_threshold = '0';
+  this._offline_color = 'lightgrey';
+  this.color_selector_offline_color = 'true';
+  this._normal_color = 'green';
+  this.color_selector_normal_color = 'true';
+  this._warning_color = 'yellow';
+  this.color_selector_warning_color = 'true';
+  this._alarm_color = 'red';
+  this.color_selector_alarm_color = 'true';
+  this._override_color = 'blue';
+  this.color_selector_override_color = 'true';
+  this._pulse_length = '1000';
+  this._override_enabled = 'true';
+  this.override_active = false;
+  this._tooltip ='';
+ }
+
+PHVirtualPoint.prototype = new Widget;
+
+PHVirtualPoint.prototype.after_config_table = function() {
+  Widget_log('PHVirtualPoint.after_config_table(), at top');
+  document.getElementById('PHVirtualPoint_override_enabled').value = this._override_enabled;
+}
+
+PHVirtualPoint.prototype.get_override_enabled_defaults = function() {
+  var s = document.createElement('select');
+
+  s.setAttribute('id', 'PHVirtualPoint_override_enabled');
+
+  var o = document.createElement('option');
+
+  o.value = 'true';
+  o.innerHTML = 'true';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'false';
+  o.innerHTML = 'false';
+  s.appendChild(o);
+  return s;
+}
+
+PHVirtualPoint.prototype.init = function(element) {
+  this._name = 'PHVirtualPoint';
+  this._z_index = element.getAttribute('zindex');
+  var outercontainer = this.get_element(element,'div','outercontainer');
+  if(outercontainer.currentStyle) { //IE5 and later
+    this._text_color = outercontainer.currentStyle['color'];
+    this._text_font_family = outercontainer.currentStyle['fontFamily'];
+    this._text_font_size = outercontainer.currentStyle['fontSize'];
+    this._text_font_style = outercontainer.currentStyle['fontStyle'];
+    //this._text_font_weight = outercontainer.currentStyle['fontWeight'];
+    this._text_font_weight = outercontainer.style.fontWeight; // bug in IE?
+    //this._text_font_weight = 'normal';
+  }
+  else if(window.getComputedStyle) { //NN6
+    var compStyle = window.getComputedStyle(outercontainer,"");
+    this._text_color = compStyle.getPropertyValue('color');
+    this._text_font_family = compStyle.getPropertyValue('font-family');
+    this._text_font_size = compStyle.getPropertyValue('font-size');
+    this._text_font_style = compStyle.getPropertyValue('font-style');
+    this._text_font_weight = compStyle.getPropertyValue('font-weight');
+    this._text_font_weight = 'normal';
+  }
+  else {
+    this._text_color = 'black';
+    this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+    this._text_font_size = '12px';
+    this._text_font_style = 'normal';
+    this._text_font_weight = 'normal';
+  }
+  var nodedisplaydiv = this.get_element(element,'div','nodedisplay');
+  this._node = nodedisplaydiv.getAttribute('node');
+  var infospan = this.get_element(element,'div','info');
+  this._display_character_length = this.get_span_attr(infospan, 'display_character_length');
+  this._units = this.get_span_attr(infospan, 'units');
+  this._precision = this.get_span_attr(infospan, 'precision');
+  this._upper_alarm_threshold = this.get_span_attr(infospan, 'upper_alarm_threshold');
+  this._upper_warning_threshold = this.get_span_attr(infospan, 'upper_warning_threshold');
+  this._lower_warning_threshold = this.get_span_attr(infospan, 'lower_warning_threshold');
+  this._lower_alarm_threshold = this.get_span_attr(infospan, 'lower_alarm_threshold');
+  this._offline_color = this.get_span_attr(infospan, 'offline_color');
+  this._normal_color = this.get_span_attr(infospan, 'normal_color');
+  this._warning_color = this.get_span_attr(infospan, 'warning_color');
+  this._alarm_color = this.get_span_attr(infospan, 'alarm_color');
+  this._override_color = this.get_span_attr(infospan, 'override_color');
+  this._pulse_length = this.get_span_attr(infospan, 'pulse_length');
+  this._override_enabled = this.get_span_attr(infospan, 'override_enabled');
+  this.override_active = infospan.getAttribute('override_active');
+  this._tooltip = this.get_span_attr(infospan, 'tooltip');
+}
+
+
+PHVirtualPoint.prototype.init_element = function (){
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version','1_0_dev_2');
+  //this.element.setAttribute('auto_resize','false');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  this.element.style.position = 'absolute';
+  this.element.style.zIndex = this._z_index;
+
+  var outercontainer = document.createElement('div');
+  outercontainer.setAttribute('element','outercontainer');
+  outercontainer.style.position = 'relative';
+  outercontainer.style.verticalAlign = 'middle';
+  outercontainer.style.height = 'auto';
+  outercontainer.style.width = 'auto';
+  if(this._text_color != ''){
+    outercontainer.style.color = this._text_color; //inherited by children
+  }
+  if(this._text_font_family != ''){
+    outercontainer.style.fontFamily = this._text_font_family; //inherited by children
+  }  
+  if(this._text_font_size != ''){
+    outercontainer.style.fontSize = this._text_font_size; //inherited by children
+  }  
+  if(this._text_font_style != ''){
+    outercontainer.style.fontStyle = this._text_font_style; //inherited by children
+  }
+  if(this._text_font_weight != ''){
+    outercontainer.style.fontWeight = this._text_font_weight; //inherited by children
+  }
+  if(this._normal_color != '') {
+    outercontainer.style.backgroundColor = this._normal_color;
+  }
+  outercontainer.style.textAlign = 'center'; //inherited by children
+  outercontainer.style.top = '0';
+  outercontainer.style.left = '0';
+  outercontainer.style.zIndex = '0';
+
+  var textcontainer = document.createElement('div');
+  textcontainer.setAttribute('element','textcontainer');
+  textcontainer.style.position = 'relative';
+  textcontainer.style.verticalAlign = 'middle';
+  textcontainer.style.height = 'auto';
+  textcontainer.style.width = 'auto';
+  textcontainer.style.backgroundColor = 'transparent';
+  textcontainer.style.top = '0';
+  textcontainer.style.left = '0';
+  textcontainer.style.zIndex = '1';
+  textcontainer.setAttribute('title',this._tooltip);
+
+  var placeholderdiv = document.createElement('div');
+  placeholderdiv.setAttribute('element', 'placeholder');
+  //placeholderdiv.style.position = 'absolute';
+  placeholderdiv.style.verticalAlign = 'middle';
+  placeholderdiv.style.backgroundColor = 'transparent';
+  var pstring = '';
+  for(var i = 0; i < parseInt(this._display_character_length); i++)
+	pstring += 'X';
+  placeholderdiv.innerHTML = pstring;
+  placeholderdiv.style.top = '0';
+  placeholderdiv.style.left = '0';
+  placeholderdiv.style.zIndex = '1';
+  placeholderdiv.style.visibility = 'hidden';
+  textcontainer.appendChild(placeholderdiv);
+  
+  var nodedisplaydiv = document.createElement('div');
+  nodedisplaydiv.setAttribute('element', 'nodedisplay');
+  nodedisplaydiv.setAttribute('node', this._node);
+  nodedisplaydiv.setAttribute('display_function', 'PHVirtualPointDisplayReal');
+  nodedisplaydiv.style.position = 'absolute';
+  nodedisplaydiv.style.verticalAlign = 'middle';
+  nodedisplaydiv.style.backgroundColor = 'transparent';
+  nodedisplaydiv.style.top = '0';
+  nodedisplaydiv.style.left = '0';
+  nodedisplaydiv.style.zIndex = '2';
+
+  textcontainer.appendChild(nodedisplaydiv);
+
+  var infospan = document.createElement('div');
+  infospan.setAttribute('element','info');
+  infospan.setAttribute('type','hidden');  
+  infospan.setAttribute('display_character_length', this._display_character_length);  
+  infospan.setAttribute('units', this._units);
+  infospan.setAttribute('precision', this._precision);
+  infospan.setAttribute('upper_alarm_threshold', this._upper_alarm_threshold);
+  infospan.setAttribute('upper_warning_threshold', this._upper_warning_threshold);
+  infospan.setAttribute('lower_warning_threshold', this._lower_warning_threshold);
+  infospan.setAttribute('lower_alarm_threshold', this._lower_alarm_threshold);
+  infospan.setAttribute('offline_color', this._offline_color);
+  infospan.setAttribute('normal_color', this._normal_color);
+  infospan.setAttribute('warning_color', this._warning_color);
+  infospan.setAttribute('alarm_color', this._alarm_color);
+  infospan.setAttribute('override_color', this._override_color);
+  infospan.setAttribute('pulse_length', this._pulse_length); 
+  infospan.setAttribute('override_enabled', this._override_enabled); 
+  infospan.setAttribute('override_active', this.override_active); 
+  infospan.setAttribute('tooltip', this._tooltip);
+  //infospan.style.position = 'relative';
+  infospan.style.backgroundColor = 'transparent';
+  infospan.style.top = '0';
+  infospan.style.left = '0';
+  infospan.style.height = '1';
+  infospan.style.width = '1';
+  infospan.style.zIndex = '0';
+  infospan.style.visibility = 'hidden';
+  infospan.style.display = 'none';
+   
+  outercontainer.appendChild(infospan);
+
+  var hitareacontainer = document.createElement('div');
+  hitareacontainer.setAttribute('element','hitareacontainer');
+  var browserIE = new RegExp('internet explorer','gi');
+  if(browserIE.test(navigator.appName)) {
+    hitareacontainer.setAttribute('ondblclick','PHVirtualPointOpenOverrideDialog(event)');
+  }
+  else {
+    //hitareacontainer.setAttribute('onclick','PHVirtualPointOpenOverrideDialog(event)');
+    hitareacontainer.setAttribute('ondblclick','PHVirtualPointOpenOverrideDialog(event)');
+    //hitareacontainer.addEventListener('click',PHVirtualPointOpenOverrideDialog,true);
+  }
+  hitareacontainer.style.position = 'absolute';
+  hitareacontainer.style.verticalAlign = 'middle';
+  hitareacontainer.style.height = 'auto';
+  hitareacontainer.style.width = 'auto';
+  hitareacontainer.style.height = 'auto';
+  hitareacontainer.style.width = 'auto';
+  hitareacontainer.style.margin = '0px';
+  hitareacontainer.style.padding = '0px';
+  hitareacontainer.style.border = '0px';
+  if(window.parent && window.parent.WebExpressEditor) {  
+  	var mystring = "'url(" + window.parent.WebExpressProtocol + "//" + window.parent.WebExpressHostname + "/webapi/images/cleardot.gif)'";
+  }
+  else {
+  	var mystring = "'url(" + window.location.protocol + "//" + window.location.hostname + "/webapi/images/cleardot.gif)'";
+  }
+  hitareacontainer.style.backgroundImage = eval(mystring);
+  hitareacontainer.style.backgroundRepeat = 'repeat';
+  hitareacontainer.style.backgroundColor = 'transparent';
+  hitareacontainer.style.top = '0';
+  hitareacontainer.style.left = '0';
+  hitareacontainer.style.zIndex = '3';
+
+  var hitareadiv = document.createElement('div');
+  hitareadiv.setAttribute('element', 'hitarea');
+  //hitareadiv.style.position = 'absolute';
+  hitareadiv.style.verticalAlign = 'middle';
+  hitareadiv.style.backgroundColor = 'transparent';
+  var pstring = '';
+  for(var i = 0; i < parseInt(this._display_character_length); i++)
+	pstring += 'X';
+  hitareadiv.innerHTML = pstring;
+  hitareadiv.style.top = '0';
+  hitareadiv.style.left = '0';
+  hitareadiv.style.zIndex = '0';
+  hitareadiv.style.visibility = 'hidden';
+  hitareacontainer.appendChild(hitareadiv);
+
+  textcontainer.appendChild(hitareacontainer);
+  outercontainer.appendChild(textcontainer);
+  this.element.appendChild(outercontainer);
+}
+
+
+PHVirtualPoint.prototype.create = function (){
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function PHVirtualPoint_factory(){
+  return new PHVirtualPoint();
+}
+
+function PHVirtualPointDisplayNoErrors(v) {
+  try {    
+    var pattern1 = /\?/;      
+    var pattern2 = /error\:/;      
+    if (pattern1.exec(v.toString()) == null && pattern2.exec(v.toString()) == null) {
+      return 1;
+    }
+  }
+  catch(err) {
+    return 0;
+  }
+  return 0;
+}
+function PHVirtualPointDisplayStruct(e,v){
+  Widget_log("PHVirtualPointDisplayStruct(), at top");
+  var result = '';
+  for(var i in v) {
+    Widget_log("PHVirtualPointDisplayStruct(), v." + i + "=" + v[i]);
+  }
+  try{    
+    var myVal = v['value'];
+    var myStatus = v['status'];
+    if(PHVirtualPointDisplayNoErrors(myVal)) {
+      var celement = e.parentNode.parentNode;
+      var ielement = PHVirtualPointGetElement(celement,'div','info');
+      var places = parseInt(ielement.getAttribute('precision'));
+      if(isNaN(places)){
+        places = 2;
+      }
+      if(myVal.as_magnitude){
+        myVal = myVal.as_magnitude();
+      }
+      if(myStatus != 0) {
+        ielement.setAttribute('override_active',true);
+        e.style.backgroundColor = ielement.getAttribute('override_color');
+      }
+      else {
+        ielement.setAttribute('override_active',false);
+        e.style.backgroundColor = 'transparent';
+      }
+      var myUnitsArray;
+      var myIndex;
+      var myUnits = ielement.getAttribute('units');
+      if(myUnits.length > 0) {
+        if(myUnits.indexOf(',') == -1) { //exactly one token
+  	  myDisplayType = 'single';
+        }
+        else { //multiple tokens
+          myUnitsArray = myUnits.split(',');
+  	  myDisplayType = 'multiple';
+        }
+      }
+      else { //no tokens
+        myDisplayType = 'none';
+      }
+      switch(myDisplayType) {
+        case 'multiple':
+          Widget_log("PHVirtualPointDisplayReal(), multiple case, myUnitsArray.length=" + myUnitsArray.length + ", myVal=" + myVal);
+          if(isNaN(myVal) == false) {
+            myIndex = Math.round(myVal);
+            if(myIndex < 0) {
+              myIndex = 0;
+            }
+            else if(myIndex > myUnitsArray.length - 1) {
+              myIndex = myUnitsArray.length - 1;
+            }
+            Widget_log("PHVirtualPointDisplayReal(), myIndex=" + myIndex + ", myUnitsArray[myIndex]=" + myUnitsArray[myIndex]);
+            if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+              e.innerHTML = myUnitsArray[myIndex];
+            }
+            else if(e.nodeName == "INPUT"){ 
+              e.value = myUnitsArray[myIndex];
+            }
+          }
+  	  break;
+        case 'single':
+          Widget_log("PHVirtualPointDisplayReal(), single case");
+          precision(e,myVal,places);
+          if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+            e.innerHTML = e.innerHTML + myUnits;
+          }
+          else if(e.nodeName == "INPUT"){ 
+            e.value = e.value + myUnits;
+          }
+  	  break;
+        case 'none':
+	  Widget_log("PHVirtualPointDisplayReal(), single case");
+          precision(e,myVal,places);
+  	  break;
+      }//end switch
+    }//end if no ???
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  Widget_log("PHVirtualPointDisplayReal(), e.parentNode element=" + e.parentNode.getAttribute('element'));
+  Widget_log("PHVirtualPointDisplayReal(), e.parentNode.parentNode element=" + e.parentNode.parentNode.getAttribute('element'));
+  try {
+    PHVirtualPointTextAlign(e);
+  }
+  catch(ex1) {
+    Widget_log('Exception calling PHVirtualPointTextAlign: <b><i>' + ex1.name +
+        ', ' + ex1.description + '</i></b>');
+  }
+  try {
+    PHVirtualPointDisplayBackground(e,myVal);
+  }
+  catch(ex2) {
+    Widget_log('Exception calling PHVirtualPointDisplayBackground: <b><i>' + ex2.name +
+        ', ' + ex2.description + '</i></b>');
+  }
+}
+
+function PHVirtualPointDisplayReal(e,v){
+  Widget_log("PHVirtualPointDisplayReal(), at top");
+  var myNodeStr = e.getAttribute('node');
+  var myStatusIndex = myNodeStr.lastIndexOf('/_status');
+  //if(/_status/.test(myNodeStr.slice(myStatusIndex + 1))) {
+  if(myStatusIndex != -1) {
+    if(myStatusIndex == myNodeStr.lastIndexOf('/')) {
+      PHVirtualPointDisplayStruct(e,v);
+      return;
+    }
+  }
+  try{    
+    if(PHVirtualPointDisplayNoErrors(v)) {
+      var celement = e.parentNode.parentNode;
+      var ielement = PHVirtualPointGetElement(celement,'div','info');
+      var myUnitsArray;
+      var myIndex;
+      var myUnits = ielement.getAttribute('units');
+      var places = parseInt(ielement.getAttribute('precision'));
+      if(isNaN(places)){
+        places = 2;
+      }
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      if(myUnits.length > 0) {
+        if(myUnits.indexOf(',') == -1) { //exactly one token
+  	  myDisplayType = 'single';
+        }
+        else { //multiple tokens
+          myUnitsArray = myUnits.split(',');
+  	  myDisplayType = 'multiple';
+        }
+      }
+      else { //no tokens
+        myDisplayType = 'none';
+      }
+      switch(myDisplayType) {
+        case 'multiple':
+          Widget_log("PHVirtualPointDisplayReal(), multiple case, myUnitsArray.length=" + myUnitsArray.length + ", v=" + v);
+          if(isNaN(v) == false) {
+            myIndex = Math.round(v);
+            if(myIndex < 0) {
+              myIndex = 0;
+            }
+            else if(myIndex > myUnitsArray.length - 1) {
+              myIndex = myUnitsArray.length - 1;
+            }
+            Widget_log("PHVirtualPointDisplayReal(), myIndex=" + myIndex + ", myUnitsArray[myIndex]=" + myUnitsArray[myIndex]);
+            if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+              e.innerHTML = myUnitsArray[myIndex];
+            }
+            else if(e.nodeName == "INPUT"){ 
+              e.value = myUnitsArray[myIndex];
+            }
+          }
+  	  break;
+        case 'single':
+          Widget_log("PHVirtualPointDisplayReal(), single case");
+          precision(e,v,places);
+          if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+            e.innerHTML = e.innerHTML + myUnits;
+          }
+          else if(e.nodeName == "INPUT"){ 
+            e.value = e.value + myUnits;
+          }
+  	  break;
+        case 'none':
+	  Widget_log("PHVirtualPointDisplayReal(), single case");
+          precision(e,v,places);
+  	  break;
+      }//end switch
+    }//end if no ???
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  Widget_log("PHVirtualPointDisplayReal(), e.parentNode element=" + e.parentNode.getAttribute('element'));
+  Widget_log("PHVirtualPointDisplayReal(), e.parentNode.parentNode element=" + e.parentNode.parentNode.getAttribute('element'));
+  try {
+    PHVirtualPointTextAlign(e);
+  }
+  catch(ex1) {
+    Widget_log('Exception calling PHVirtualPointTextAlign: <b><i>' + ex1.name +
+        ', ' + ex1.description + '</i></b>');
+  }
+  try {
+    PHVirtualPointDisplayBackground(e,v);
+  }
+  catch(ex2) {
+    Widget_log('Exception calling PHVirtualPointDisplayBackground: <b><i>' + ex2.name +
+        ', ' + ex2.description + '</i></b>');
+  }
+}
+
+function PHVirtualPointTextAlign(e) {
+  Widget_log("PHVirtualPointTextAlign(), at top");
+  var phelement = PHVirtualPointGetElement(e.parentNode.parentNode,'div','placeholder');
+  var ielement = PHVirtualPointGetElement(e.parentNode.parentNode,'div','info');
+  var myOffsetWidth = parseInt(e.offsetWidth);
+  var myOffsetLeft = parseInt(e.offsetLeft);
+  var myParentOffsetWidth = parseInt(e.offsetParent.offsetWidth);
+  var myParentOffsetLeft = parseInt(e.offsetParent.offsetLeft);
+  //var myAlign = ielement.getAttribute('text_align');
+  //var myAlign = 'center';
+  var myAlign = 'left';//Fred change
+  //var myLeftPad = parseInt(e.style.paddingLeft);
+  var myLeftPad = 0;
+  //var myRightPad = parseInt(e.style.paddingRight);
+  var myRightPad = 0;
+  var myHorizontalPad = myLeftPad + myRightPad;
+  var placeHolderContentSize = parseInt(phelement.offsetWidth) - myHorizontalPad;
+  //alert('myOffsetWidth=' + myOffsetWidth + ', myOffsetLeft=' + myOffsetLeft + ', myParentOffsetWidth=' + myParentOffsetWidth + ', myParentOffsetLeft=' + myParentOffsetLeft + ', myAlign=' + myAlign + ', myLeftPad = ' + myLeftPad + ', myRightPad=' + myRightPad + ', phelement.offsetWidth=' + phelement.offsetWidth);
+  if(document.compatMode == 'BackCompat') { //IE6 in backward compatibility mode (IE6 default)
+    e.style.left = Math.round(((myParentOffsetWidth / 2) - myOffsetLeft) - (((myOffsetWidth + myHorizontalPad) / 2) - myOffsetLeft)) + 'px';
+  }
+  else { // CSS1Compat
+    e.style.left = Math.round(myParentOffsetWidth / 2 - myOffsetWidth / 2);
+  }
+  e.style.left = 0;//Fred change
+  //alert('e.style.left=' + e.style.left);
+}
+
+function PHVirtualPointDisplayBackground(e,v){
+  Widget_log("PHVirtualPointDisplayBackground(), at top");
+  Widget_log('PHVirtualPointDisplayBackground(), e.element=' + e.getAttribute('element') + ', v=' + v);
+  var celement = e.parentNode.parentNode;
+  var ielement = PHVirtualPointGetElement(celement,'div','info');
+  if(PHVirtualPointDisplayNoErrors(v)) {
+    //Widget_log('PHVirtualPointDisplayBackground(), e.parentNode.parentNode.nodeType=' + e.parentNode.nodeType);
+    //Widget_log('PHVirtualPointDisplayBackground(), e.parentNode.parentNode.element=' + e.parentNode.getAttribute('element'));
+
+    var myColor = ielement.getAttribute('normal_color');
+    var myValue = parseInt(v);
+    for(var i = 0; i < 4; i++) {
+      switch(i) {
+        case 0:
+          myWarningThreshold = ielement.getAttribute('upper_alarm_threshold');
+          break;
+        case 1:
+          myWarningThreshold = ielement.getAttribute('upper_warning_threshold');
+          break;
+        case 2:
+          myWarningThreshold = ielement.getAttribute('lower_alarm_threshold');
+          break;
+        case 3:
+          myWarningThreshold = ielement.getAttribute('lower_warning_threshold');
+          break;
+      } // end switch
+      if(i < 2) {
+        if(myWarningThreshold != '' && isNaN(myWarningThreshold) == false && myValue >= parseInt(myWarningThreshold)) {
+          switch(i) {
+            case 0:
+              myColor = ielement.getAttribute('alarm_color');
+              break;
+            case 1:
+              myColor = ielement.getAttribute('warning_color');
+              break;
+          } // end switch
+          break; // break for loop
+        }
+      }
+      else {
+        if(myWarningThreshold != '' && isNaN(myWarningThreshold) == false && myValue <= parseInt(myWarningThreshold)) {
+          switch(i) {
+            case 2:
+              myColor = ielement.getAttribute('alarm_color');
+              break;
+            case 3:
+              myColor = ielement.getAttribute('warning_color');
+              break;
+          } // end switch
+          break; // break for loop
+        }
+      }
+    } // end for
+    Widget_log("PHVirtualPointDisplayBackground(), new color = " + myColor);
+    celement.style.backgroundColor = myColor;
+  }
+  else{ //offline
+    Widget_log("PHVirtualPointDisplayBackground(), using offline color");
+    celement.style.backgroundColor = ielement.getAttribute('offline_color');
+  }
+}
+
+function PHVirtualPointGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e
+}
+
+/* override window support stuff */
+
+var PHVirtualPointNav4 = ((navigator.appName == "Netscape") && (parseInt(navigator.appVersion) == 4));
+
+var PHVirtualPointDialogWin = new Object();
+
+function PHVirtualPointDeadEnd () {
+  if(PHVirtualPointDialogWin.win && !PHVirtualPointDialogWin.win.closed) {
+    PHVirtualPointDialogWin.win.focus();
+    return false;
+  }
+}
+
+var PHVirtualPointLinkClicks;
+
+function PHVirtualPointDisableForms() {
+  Widget_log("PHVirtualPointDisableForms() entered");
+  PHVirtualPointLinkClicks = new Array();
+  for(var i = 0; i < document.forms.length; i++) {
+    for(var j = 0; j < document.forms[i].elements.length; j++) {
+      document.forms[i].elements[j].disabled = true;
+    }
+  }
+  for(i = 0; i < document.links.length; i++) {
+    PHVirtualPointLinkClicks[i] = {click:document.links[i].onclick, up:null};
+    PHVirtualPointLinkClicks[i].up = document.links[i].onmouseup;
+    document.links[i].onclick = PHVirtualPointDeadEnd;
+    document.links[i].onmouseup = PHVirtualPointDeadEnd;
+    document.links[i].disabled = true;
+  }
+  window.onfocus = PHVirtualPointCheckModal;
+  document.onclick = PHVirtualPointCheckModal;
+}
+
+function PHVirtualPointEnableForms() {
+  Widget_log("PHVirtualPointEnableForms() entered");
+  for(var i = 0; i < document.forms.length; i++) {
+    for(var j = 0; j < document.forms[i].elements.length; j++) {
+      document.forms[i].elements[j].disabled = false;
+    }
+  }
+  for(i = 0; i < document.links.length; i++) {
+    document.links[i].onclick = PHVirtualPointLinkClicks[i].click;
+    document.links[i].onmouseup = PHVirtualPointLinkClicks[i].up;
+    document.links[i].disabled = false;
+  }
+}
+
+function PHVirtualPointBlockEvents() {
+  Widget_log("PHVirtualPointBlockEvents() entered");
+  if(PHVirtualPointNav4) {
+    window.captureEvents(Event.CLICK | Event.MOUSEDOWN | Event.MOUSEUP | Event.FOCUS);
+    window.onclick = PHVirtualPointDeadEnd;
+  }
+  else {
+    PHVirtualPointDisableForms();
+  }
+  window.onfocus = PHVirtualPointCheckModal;
+}
+
+function PHVirtualPointUnblockEvents() {
+  Widget_log("PHVirtualPointUnblockEvents() entered");
+  if(PHVirtualPointNav4) {
+    window.releaseEvents(Event.CLICK | Event.MOUSEDOWN | Event.MOUSEUP | Event.FOCUS);
+    window.onclick = null;
+    window.onfocus = null;
+  }
+  else {
+    PHVirtualPointEnableForms();
+  }
+}
+
+function PHVirtualPointDoOverride() {
+  Widget_log("PHVirtualPointDoOverride() entered");
+  try {
+      var ielement = PHVirtualPointGetElement(PHVirtualPointDialogWin.elem,'div','info');
+      var ndelement = PHVirtualPointGetElement(PHVirtualPointDialogWin.elem,'div','nodedisplay');
+      var nodepath = ndelement.getAttribute('node');
+      var statusIndex = nodepath.lastIndexOf('/_status');
+      if(statusIndex != -1 && statusIndex == nodepath.lastIndexOf('/')) {
+        nodepath = nodepath.slice(0,statusIndex);
+      }
+      var n = MEDIATOR.get_node(nodepath);
+      n.set(PHVirtualPointDialogWin.newValue);
+      ielement.setAttribute('override_active',true);
+      ndelement.style.backgroundColor = ielement.getAttribute('override_color');
+  }
+  catch(err) {
+      Widget_log('ERROR: ' + err.message + '\nPlease check node path for this widget.');
+  }
+}
+
+function PHVirtualPointDoPulse() {
+  Widget_log("PHVirtualPointDoPulse() entered");
+  try {
+      var ielement = PHVirtualPointGetElement(PHVirtualPointDialogWin.elem,'div','info');
+      var ndelement = PHVirtualPointGetElement(PHVirtualPointDialogWin.elem,'div','nodedisplay');
+      var nodepath = ndelement.getAttribute('node');
+      var statusIndex = nodepath.lastIndexOf('/_status');
+      if(statusIndex != -1 && statusIndex == nodepath.lastIndexOf('/')) {
+        nodepath = nodepath.slice(0,statusIndex);
+      }
+      var n = MEDIATOR.get_node(nodepath);
+      n.set(PHVirtualPointDialogWin.newValue);
+      ielement.setAttribute('override_active',true);
+      ndelement.style.backgroundColor = ielement.getAttribute('override_color');
+      setTimeout("PHVirtualPointDoClear()",ielement.getAttribute('pulse_length'));
+  }
+  catch(err) {
+    Widget_log('ERROR: ' + err.message + '\nPlease check node path for this widget.');
+  }
+}
+
+function PHVirtualPointDoClear() {
+  Widget_log("PHVirtualPointDoClear() entered");
+  try {
+    var ielement = PHVirtualPointGetElement(PHVirtualPointDialogWin.elem,'div','info');
+    var ndelement = PHVirtualPointGetElement(PHVirtualPointDialogWin.elem,'div','nodedisplay');
+    var nodepath = ndelement.getAttribute('node');
+    var statusIndex = nodepath.lastIndexOf('/_status');
+    if(statusIndex != -1 && statusIndex == nodepath.lastIndexOf('/')) {
+      nodepath = nodepath.slice(0,statusIndex);
+    }
+    var n = MEDIATOR.get_node(nodepath);
+    n.set('None');
+    ielement.setAttribute('override_active',false);
+    ndelement.style.backgroundColor = 'transparent';
+  }
+  catch(err) {
+    Widget_log('ERROR: ' + err.message + '\nPlease check node path for this widget.');
+  }
+}
+
+function PHVirtualPointOpenOverrideDialog(evt) {
+  Widget_log("PHVirtualPointOpenOverrideDialog() entered");
+  evt = (evt) ? evt : ((event) ? event : null);
+  if(evt.detail) {
+    Widget_log("PHVirtualPointOpenOverrideDialog(), evt.detail=" + evt.detail);
+  }
+  var elem = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null);
+  var myWidget = elem.parentNode.parentNode.parentNode; //topmost div of PHVirtualPoint widget
+  Widget_log("PHVirtualPointOpenOverrideDialog(), myWidget id = " + myWidget.getAttribute('id'));
+  var ielement = PHVirtualPointGetElement(myWidget,'div','info');
+  if(ielement.getAttribute('override_enabled') == 'false') {
+    Widget_log("PHVirtualPointOpenOverrideDialog(), early return");
+    return; //return if override disabled
+  }
+  if(!PHVirtualPointDialogWin.win || (PHVirtualPointDialogWin.win && PHVirtualPointDialogWin.win.closed)) {
+    Widget_log("PHVirtualPointOpenOverrideDialog(), window doesn't exist or is closed");
+    PHVirtualPointDialogWin.url = '/webapi/override.html';
+    PHVirtualPointDialogWin.width = 200;
+    PHVirtualPointDialogWin.height = 70;
+    PHVirtualPointDialogWin.elem = myWidget;
+    PHVirtualPointDialogWin.ovrFunc = PHVirtualPointDoOverride;
+    PHVirtualPointDialogWin.pulseFunc = PHVirtualPointDoPulse;
+    PHVirtualPointDialogWin.clrFunc = PHVirtualPointDoClear;
+    PHVirtualPointDialogWin.args = '';
+    PHVirtualPointDialogWin.newValue = '';
+    PHVirtualPointDialogWin.name = (new Date()).getSeconds().toString();
+    if(window.screenX) { //Navigator 4+
+      Widget_log("PHVirtualPointOpenOverrideDialog(), window.screenX defined, Navigator branch taken");
+      PHVirtualPointDialogWin.left = window.screenX +
+        ((window.outerWidth - PHVirtualPointDialogWin.width) / 2);
+      PHVirtualPointDialogWin.top = window.screenY +
+        ((window.outerHeight - PHVirtualPointDialogWin.height) / 2);
+      var attr = "screenX=" + PHVirtualPointDialogWin.left +
+        ",screenY=" + PHVirtualPointDialogWin.top + ",resizable=no,width=" +
+        PHVirtualPointDialogWin.width + ",height=" + PHVirtualPointDialogWin.height;
+    }
+    else if(window.screenLeft) { //Windows IE5+
+      Widget_log("PHVirtualPointOpenOverrideDialog(), window.screenLeft defined, Windows IE branch taken");
+      var CSSCompat = (document.compatMode && document.compatMode != "BackCompat");
+      Widget_log("PHVirtualPointOpenOverrideDialog(), CSSCompat=" + CSSCompat);
+      window.outerWidth = (CSSCompat) ? document.body.parentElement.clientWidth :
+        document.body.clientWidth;
+      window.outerHeight = (CSSCompat) ? document.body.parentElement.clientHeight :
+        document.body.clientHeight;
+      window.outerHeight -= 80;
+      PHVirtualPointDialogWin.left = parseInt(window.screenLeft +
+        ((window.outerWidth - PHVirtualPointDialogWin.width) / 2));
+      PHVirtualPointDialogWin.top = parseInt(window.screenTop +
+        ((window.outerHeight - PHVirtualPointDialogWin.height) / 2));
+      var attr = "left=" + PHVirtualPointDialogWin.left +
+        ",top=" + PHVirtualPointDialogWin.top + ",resizable=no,width=" +
+        PHVirtualPointDialogWin.width + ",height=" + PHVirtualPointDialogWin.height;
+    }
+    else {
+      Widget_log("PHVirtualPointOpenOverrideDialog(), generic branch taken");
+      PHVirtualPointDialogWin.left = (screen.width - PHVirtualPointDialogWin.width) / 2;
+      PHVirtualPointDialogWin.top = (screen.height - PHVirtualPointDialogWin.height) / 2;
+      var attr = "left=" + PHVirtualPointDialogWin.left + ",top=" +
+        PHVirtualPointDialogWin.top + ",resizable=no,width=" + PHVirtualPointDialogWin.width +
+        ",height=" + PHVirtualPointDialogWin.height;
+    }
+    Widget_log("PHVirtualPointOpenOverrideDialog(), after attr calc");
+    if(!PHVirtualPointDialogWin.win){
+      Widget_log("PHVirtualPointOpenOverrideDialog(), win not defined");
+    }
+    else {
+      Widget_log("PHVirtualPointOpenOverrideDialog(), win defined");
+    }
+    Widget_log("PHVirtualPointOpenOverrideDialog(), before window.open(), url=" + PHVirtualPointDialogWin.url +
+      ", name=" + PHVirtualPointDialogWin.name + ", attr=" + attr);
+    PHVirtualPointDialogWin.win = window.open(PHVirtualPointDialogWin.url, PHVirtualPointDialogWin.name, attr);
+    Widget_log("PHVirtualPointOpenOverrideDialog(), after window.open(), PHVirtualPointDialogWin.win.name=" + PHVirtualPointDialogWin.win.name);
+    setTimeout("PHVirtualPointDialogWin.win.focus()", 250);
+  }
+  else {
+    setTimeout("PHVirtualPointDialogWin.win.focus()", 250);
+  }
+}
+
+function PHVirtualPointCheckModal() {
+  Widget_log("PHVirtualPointCheckModal() entered");
+  setTimeout("PHVirtualPointFinishCheckModal()", 250);
+  return true;
+}
+
+function PHVirtualPointFinishCheckModal() {
+  Widget_log("PHVirtualPointFinishCheckModal() entered");
+  if(PHVirtualPointDialogWin.win && !PHVirtualPointDialogWin.win.closed) {
+    Widget_log("PHVirtualPointFinishCheckModal(), before focus");
+    PHVirtualPointDialogWin.win.focus();
+    Widget_log("PHVirtualPointFinishCheckModal(), after focus");
+  }
+}
+
+var PHVirtualPoint_loaded = true;

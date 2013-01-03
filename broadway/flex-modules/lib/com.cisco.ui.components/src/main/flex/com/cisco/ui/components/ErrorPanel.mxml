@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="vertical" width="400" minHeight="300"
+	backgroundAlpha="1.0"
+	paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10"
+	creationComplete="init()"
+	xmlns:text="flash.text.*">
+	<mx:Metadata>
+		[Event(name="close", type="mx.events.CloseEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import mx.core.Application;
+			import mx.managers.ISystemManager;
+			import mx.events.FlexEvent;
+			import mx.core.IFlexDisplayObject;
+			import mx.core.UIComponent;
+			import mx.core.UIComponentGlobals;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			
+			private var _message:String;
+			
+			private var _detail:String;
+			
+			private var _closeHandler:Function;
+			
+			private function init():void
+			{
+				updateControls();
+			}	
+			
+			private function handleClose():void
+			{
+				var event:CloseEvent = new CloseEvent(CloseEvent.CLOSE, false, false, Alert.OK);
+				
+				if (_closeHandler != null)
+				{
+					_closeHandler(event);
+				}
+				
+				dispatchEvent(event);
+				
+				cleanup();
+			}
+			
+			public function cleanup():void
+			{
+				_closeHandler = null;
+				
+				PopUpManager.removePopUp(this);
+			}
+			
+			public function set message(value:String):void
+			{
+				if (value != _message)
+				{
+					_message = value;
+					updateControls();
+				}
+			}
+			
+			public function set detail(value:String):void
+			{
+				if (value != _detail)
+				{
+					_detail = value;
+					updateControls();
+				}
+			}
+			
+			public function set closeHandler(value:Function):void
+			{
+				if (value != _closeHandler)
+				{
+					_closeHandler = value;
+					updateControls();
+				}
+			}
+			
+			private function updateControls():void
+			{
+				if (!initialized)
+				{
+					return;
+				}
+				
+				if (_message != null)
+				{
+					taMessage.text = _message;
+					taMessage.validateNow();
+					taMessage.height = taMessage.textHeight + 10;
+					
+				}
+				
+				if (_detail != null)
+				{
+					//taMessage.percentHeight = 30;
+					taDetail.visible = true;
+					taDetail.text = _detail;
+				}
+				else
+				{
+					taDetail.visible = false;
+				}
+				
+				this.invalidateSize();
+			}
+			
+			public static function show(panelParent:DisplayObject, message:String, title:String, detail:String=null, closeHandler:Function=null):ErrorPanel
+			{
+				var panel:ErrorPanel = new ErrorPanel();//PopUpManager.createPopUp(parent, ErrorPanel, true) as ErrorPanel;
+			
+				if (panelParent == null)
+				{
+					var sm:ISystemManager = ISystemManager(Application.application.systemManager);
+		            if (sm.useSWFBridge())
+		                panelParent = Sprite(sm.getSandboxRoot());
+		            else
+		                panelParent = Sprite(Application.application);
+				}
+				
+				 if (panelParent is UIComponent)
+        			panel.moduleFactory = UIComponent(panelParent).moduleFactory;
+        	
+        		panel.setActualSize(panel.getExplicitOrMeasuredWidth(),
+                            panel.getExplicitOrMeasuredHeight());
+        		panel.addEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+        	
+        		PopUpManager.addPopUp(panel, panelParent, true);
+				
+				panel.message = message;
+				panel.title = title;
+				panel.detail = detail;
+				panel.closeHandler = closeHandler;
+				
+				return panel;
+			}	
+			
+			private function handleCopyToClipboard():void
+			{
+				System.setClipboard(_detail);
+				
+				taDetail.selectionBeginIndex = 0;
+				taDetail.selectionEndIndex = _detail.length;
+			}
+			
+			private static function static_creationCompleteHandler(event:FlexEvent):void
+		    {
+		        if (event.target is IFlexDisplayObject && event.eventPhase == EventPhase.AT_TARGET)
+		        {
+		            event.target.removeEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+		            PopUpManager.centerPopUp(IFlexDisplayObject(event.target));
+		        }
+		    }
+		]]>
+	</mx:Script>
+	<mx:HBox width="100%">
+		<mx:Image source="assets/icons/alert_critical_2000_48.png"/>
+		<mx:TextArea id="taMessage" wordWrap="true" editable="false" selectable="false" width="100%" height="100%" 
+			borderStyle="none" fontWeight="bold"
+			/>
+		
+	</mx:HBox>
+	<mx:HRule width="100%" />
+	<mx:Label color="#999999" text="Detail" fontWeight="bold" />
+	<mx:TextArea id="taDetail" editable="false" width="100%" minHeight="250" visible="false" />
+	<mx:HBox width="100%" horizontalAlign="right">
+		<mx:Button label="Copy to Clipboard" click="handleCopyToClipboard()" />
+		<mx:Button label="Close" click="handleClose()" />
+	</mx:HBox>
+</mx:Panel>

@@ -1,0 +1,40 @@
+# vim: ts=8 noexpandtab syntax=spec
+#
+# Provide RPM infrastructure for the framework build environment.  This file
+# is included in the rpm build SPEC files used for said build.
+#
+# $Revision: 20101 $
+#=---------------------------------------------------------------------------=#
+# This file generated from:
+#  @SPECINC_SOURCE@
+# Any changes made here will probably be lost.
+#=---------------------------------------------------------------------------=#
+
+# RPM's build root, not ours...
+%define _fw_buildroot		@FW_BUILDROOT@
+
+# The Broadway version, taken from builddir/BROADWAY.
+%define	_fw_version		@FW_VERSION@
+%define _fw_rpm_release		@FW_RPM_RELEASE@
+
+# The source and build directories.
+%define	_fw_source		@FW_SOURCEDIR@
+%define _fw_build		@FW_BUILDDIR@
+
+# Framework installation directories, used for staging files for RPM assembly.
+%define _prelease_d		%{_fw_build}/prelease.d
+%define _penvironment_d		%{_fw_build}/penvironment.d
+%define _penvironment_rc	%{_fw_build}/tools/penvironment.rc
+
+# This is the output of 'make tarball'
+%define _release_tarball	%{_prelease_d}/release-%{version}.%{release}-@BUILD_RC@.tar
+
+# Core distribution tarball and file list.
+%define _fw_core_distfile	%{_fw_build}/fw_core-%{version}.%{release}-@BUILD_RC@.tgz
+%define _fw_core_listfile	%{_fw_build}/fw_core-%{version}.%{release}-@BUILD_RC@.lst
+
+# Python things (not used yet but could come in handy later).
+%define _fw_python		@FW_PYTHON@
+%define _fw_pygcc		@FW_PYGCC@
+
+#=- EOF ---------------------------------------------------------------------=#

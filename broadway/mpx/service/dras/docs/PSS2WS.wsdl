@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<definitions name="PSS2WS" targetNamespace="http://pss2.lbl.gov"
+	xmlns:tns="http://pss2.lbl.gov"
+	xmlns="http://schemas.xmlsoap.org/wsdl/"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+	<types>
+		<schema targetNamespace="http://pss2.lbl.gov"
+			xmlns:tns="http://pss2.lbl.gov"
+			xmlns:soap11-enc="http://schemas.xmlsoap.org/soap/encoding/"
+			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+			xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+			xmlns="http://www.w3.org/2001/XMLSchema">
+			<import
+				namespace="http://schemas.xmlsoap.org/soap/encoding/" />
+			<complexType name="PriceSchedule">
+				<sequence>
+					<element name="currentPriceDPKWH" type="double" />
+					<element name="entries"
+						type="tns:ArrayOfPriceScheduleEntry" />
+				</sequence>
+			</complexType>
+			<complexType name="ArrayOfPriceScheduleEntry">
+				<complexContent>
+					<restriction base="soap11-enc:Array">
+						<attribute ref="soap11-enc:arrayType"
+							wsdl:arrayType="tns:PriceScheduleEntry[]" />
+					</restriction>
+				</complexContent>
+			</complexType>
+			<complexType name="PriceScheduleEntry">
+				<sequence>
+					<element name="date" type="dateTime" />
+					<element name="priceDPKWH" type="double" />
+				</sequence>
+			</complexType>
+		</schema>
+	</types>
+	<message name="PSS2WSSEI_getPrice">
+		<part name="double_1" type="xsd:double" />
+	</message>
+	<message name="PSS2WSSEI_getPriceResponse">
+		<part name="result" type="xsd:double" />
+	</message>
+	<message name="PSS2WSSEI_getPriceSchedule">
+		<part name="PriceSchedule_1" type="tns:PriceSchedule" />
+	</message>
+	<message name="PSS2WSSEI_getPriceScheduleResponse">
+		<part name="result" type="tns:PriceSchedule" />
+	</message>
+	<message name="PSS2WSSEI_isAPEEventPending" />
+	<message name="PSS2WSSEI_isAPEEventPendingResponse">
+		<part name="result" type="xsd:boolean" />
+	</message>
+	<portType name="PSS2WSSEI">
+		<operation name="getPrice" parameterOrder="double_1">
+			<input message="tns:PSS2WSSEI_getPrice" />
+			<output message="tns:PSS2WSSEI_getPriceResponse" />
+		</operation>
+		<operation name="getPriceSchedule"
+			parameterOrder="PriceSchedule_1">
+			<input message="tns:PSS2WSSEI_getPriceSchedule" />
+			<output message="tns:PSS2WSSEI_getPriceScheduleResponse" />
+		</operation>
+		<operation name="isAPEEventPending">
+			<input message="tns:PSS2WSSEI_isAPEEventPending" />
+			<output message="tns:PSS2WSSEI_isAPEEventPendingResponse" />
+		</operation>
+	</portType>
+	<binding name="PSS2WSSEIBinding" type="tns:PSS2WSSEI">
+		<soap:binding transport="http://schemas.xmlsoap.org/soap/http"
+			style="rpc" />
+		<operation name="getPrice">
+			<soap:operation soapAction="" />
+			<input>
+				<soap:body
+					encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+					use="encoded" namespace="http://pss2.lbl.gov" />
+			</input>
+			<output>
+				<soap:body
+					encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+					use="encoded" namespace="http://pss2.lbl.gov" />
+			</output>
+		</operation>
+		<operation name="getPriceSchedule">
+			<soap:operation soapAction="" />
+			<input>
+				<soap:body
+					encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+					use="encoded" namespace="http://pss2.lbl.gov" />
+			</input>
+			<output>
+				<soap:body
+					encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+					use="encoded" namespace="http://pss2.lbl.gov" />
+			</output>
+		</operation>
+		<operation name="isAPEEventPending">
+			<soap:operation soapAction="" />
+			<input>
+				<soap:body
+					encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+					use="encoded" namespace="http://pss2.lbl.gov" />
+			</input>
+			<output>
+				<soap:body
+					encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+					use="encoded" namespace="http://pss2.lbl.gov" />
+			</output>
+		</operation>
+	</binding>
+	<service name="PSS2WS">
+		<port name="PSS2WSSEIPort" binding="tns:PSS2WSSEIBinding">
+			<soap:address location="https://ATT_San_Ramon:dsAT%26TSR1@pge.openadr.com/PSS2WS/PSS2WS" />
+		</port>
+	</service>
+</definitions>

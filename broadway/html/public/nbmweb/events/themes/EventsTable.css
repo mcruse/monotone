@@ -1,0 +1,113 @@
+@CHARSET "UTF-8";
+
+@import url("TablePager.css");
+@import url("EventRow.css");
+@import url("AlarmRow.css");
+
+.eventsTable {
+    width: 100%;
+    padding: 0;
+    outline: none;
+    font-size: 12px; 
+    margin: 0 0 auto 0;
+    border-spacing: 0;
+    table-layout: fixed;
+    background: transparent;
+    background-color: #E9E9E9;
+    border-right: 1px solid #A2B9C9;
+    border-left: 1px solid #A2B9C9;
+    border-bottom: 1px solid #A2B9C9;
+}
+
+.eventsTableHead .tableHeaderRow {
+    height: 19px;
+    background-color: #D9E3E9;
+}
+
+.eventsTableHead .tableHeaderRow .columnHeaderCell {
+    padding: 3px 3px 2px 3px;
+    text-align: left;
+    vertical-align: top;
+    overflow: hidden;
+    background: #D9E3E9;
+    color: #000000 !important;
+    border: 1px solid #A2B9C9 !important;
+    border-color: white #ACA899 #919191 white;
+}
+
+.eventsTableHead .tableHeaderRow .selectAllRowsHeader {
+    width: 25px;
+    text-align: center;
+}
+
+.eventsTableHead .tableHeaderRow .priorityHeader {
+    width: 40px;
+}
+
+.eventsTableHead .tableHeaderRow .nameHeader {
+    width: 25em;
+}
+
+.eventsTableHead .tableHeaderRow .originHeader {
+    width: 7em;
+}
+
+.eventsTableHead .tableHeaderRow .stateHeader {
+    width: 7em;
+}
+
+.eventsTableHead .tableHeaderRow .timestampHeader {
+    width: 180px;
+}
+
+.eventsTableHead .tableHeaderRow .descriptionHeader {
+    width: auto;
+}
+
+.eventsTableHead .tableHeaderRow .actionHeader {
+    width: 80px;
+}
+
+.eventsTableHead .tableHeaderRow .sortHeader .sortIcon {
+    width: 8px;
+    height: 7px;
+    float: right;
+    margin: 3px 0;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    background-position: top right;
+}
+
+.eventsTableHead .tableHeaderRow .sortHeader .sortNone {
+    background-image: none;
+}
+
+.eventsTableHead .tableHeaderRow .sortHeader .sortAscending {
+    background-image: url(/public/images/events/sort_arrow_up.png);
+}
+
+.eventsTableHead .tableHeaderRow th.sortHeader .sortDescending {
+    background-image: url(/public/images/events/sort_arrow_down.png);
+}
+
+.eventsTableBody .even {
+    background-color: #FFFFFF; 
+}
+
+.eventsTableBody .odd {
+    background-color: #EBEBEB; 
+}
+
+.eventsTableBody .selected {
+    color: #FFFFFF;
+    background-color: #ADD050; 
+    background-repeat: repeat-x;
+    background-position: bottom left; 
+    background-image: url(/public/images/events/accordionGreen.png); 
+}
+
+.eventsTableFooter .tableFooterRow {
+    height: 29px;
+    padding: 4px;
+    background-color: #D9E3E9;
+}

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE XServeConfig SYSTEM "./xserve_config.dtd">
+<XServeConfig>
+	<XFieldExtractor name="XCommand Config XML" order="1">
+		<XFields>
+			<XField name="amtype" byteoffset="2" length="1" type="uint8"/>
+			<XField name="sourceaddr" byteoffset="5" length="2" type="uint16"/>
+			<XField name="originaddr" byteoffset="7" length="2" type="uint16"/>
+			<XField name="socketid" byteoffset="11" length="1" type="uint8"/>
+			<XField name="boardid" byteoffset="12" length="1" type="uint8"/>
+			<XField name="packetid" byteoffset="13" length="1" type="uint8"/>
+			<XField name="nodeid" byteoffset="14" length="2" type="uint16"/>
+			<XField name="responsecode" byteoffset="16" length="1" type="uint8"/>
+			<XField name="cmdkey" byteoffset="17" length="1" type="uint8"/>						
+		</XFields>
+		<XFilter>
+			<XCondAnd>				
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="socketid"/>
+					<XFilterParam name="fieldvalue" value="0x30"/>
+				</XCond>			
+				<XCondOr>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="boardid"/>
+						<XFilterParam name="fieldvalue" value="0x60"/>
+					</XCond>			
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="boardid"/>
+						<XFilterParam name="fieldvalue" value="0x61"/>
+					</XCond>			
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="boardid"/>
+						<XFilterParam name="fieldvalue" value="0x62"/>
+					</XCond>			
+					
+				</XCondOr>
+			</XCondAnd>
+		</XFilter>
+		<XDataSinks/>
+	</XFieldExtractor>
+</XServeConfig>

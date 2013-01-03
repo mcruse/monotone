@@ -1,0 +1,43 @@
+@CHARSET "UTF-8";
+
+body#challenge div#header {
+	float: left;
+	margin: 200px auto auto 100px;
+}
+
+body#challenge div#stage {
+	float: left;
+	position: absolute;
+	top: 220px;
+	right: 100px;
+	bottom: auto;
+	left: auto;
+	width: auto;
+	height: auto;
+}
+
+.label {
+    color:#FFFFFF;
+    font-size: 12px;
+    font-family: Arial;
+    width:100px;
+    display:block;
+    float:left;
+}
+
+.input {
+    padding:2px;
+}
+
+.loginform {
+    float:right;
+    display:block;
+}
+
+.loginButton {
+    padding-left:102px;
+}
+/* Use div.dijitTextBox to specify non-standard text-boxes. */
+#login div.dijitTextBox .dijitInputField input {
+    background-image: url("/dojoroot/dojo/resources/blank.gif") !important;
+}

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE XServeConfig SYSTEM "./xserve_config.dtd">
+<XServeConfig>
+	<XFieldExtractor name="LightPoint Config - Version, Load, Voltage" order="3">
+		<XFields>
+			<XField name="amtype" byteoffset="2" length="1" type="uint8"/>
+			<XField name="firmware_id" byteoffset="7" length="2" type="uint16" specialtype="nodeid"/>
+			<XField name="parent" byteoffset="14" length="2" type="uint16" specialtype="parentid"/>
+			<XField name="group" byteoffset="3" length="1" type="uint8"/>
+			<XField name="socketid" byteoffset="11" length="1" type="uint8"/>
+			<XField name="board_id" byteoffset="12" length="1" type="uint8" specialtype="boardid"/>
+			<XField name="packet_id" byteoffset="13" length="1" type="uint8"/>
+			<XField name="major" byteoffset="18" length="1" type="uint8"/>
+			<XField name="minor" byteoffset="19" length="1" type="uint8"/>
+			<XField name="build" byteoffset="20" length="2" type="uint16"/>
+			<XField name="initialState" byteoffset="22" length="2" type="uint16"/>
+			<XField name="connectedLoad1" byteoffset="24" length="2" type="uint16"/>
+			<XField name="connectedLoad2" byteoffset="26" length="2" type="uint16"/>
+			<XField name="voltage" byteoffset="28" length="2" type="uint16"/>
+			<XField name="nDevices" byteoffset="30" length="1" type="uint8"/>
+			<XField name="unused1" byteoffset="31" length="1" type="uint8"/>
+			<XField name="unused2" byteoffset="32" length="2" type="uint16"/>
+		</XFields>
+		<XFilter>
+			<XCondAnd>
+			
+				<!--
+					Check if this is a sensor type packet...AMTYPE_MULTIHOP or AMTYPE_XDEBUG
+					The Byte offsets defined above assume that there is a multihop header
+				-->
+				<XCondOr>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="amtype"/>
+						<XFilterParam name="fieldvalue" value="0x31"/>
+					</XCond>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="amtype"/>
+						<XFilterParam name="fieldvalue" value="0x33"/>
+					</XCond>
+					<XCondAnd>
+						<XCondOr>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="socketid"/>
+								<XFilterParam name="fieldvalue" value="0x31"/>
+							</XCond>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="socketid"/>
+								<XFilterParam name="fieldvalue" value="0x33"/>
+							</XCond>
+						</XCondOr>
+						<XCondOr>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="amtype"/>
+								<XFilterParam name="fieldvalue" value="0x0B"/>
+							</XCond>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="amtype"/>
+								<XFilterParam name="fieldvalue" value="0x0D"/>
+							</XCond>
+						</XCondOr>										
+					</XCondAnd>
+				</XCondOr>
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="board_id"/>
+					<XFilterParam name="fieldvalue" value="0x84"/>
+				</XCond>				
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="packet_id"/>
+					<XFilterParam name="fieldvalue" value="0x5"/>
+				</XCond>				
+			</XCondAnd>
+		</XFilter>
+		<XDataSinks>
+			<XDataSink name="Generic Print Datasink">
+				<XDSParam name="printstring" value="LightPoint Info for LightPoint %s:\n   Version: %s.%s (build %s)\n   InitialState: %s \n   Connected load 1: %s mA \n   Connected load 2: %s mA \n   Voltage: %sVAC \n   N devices: %s \n   unused: %s \n   unused: %s"/>
+				<XDSParam name="printfields" value="firmware_id,major,minor,build,initialState,connectedLoad1,connectedLoad2,voltage,nDevices,unused1,unused2"/>
+			</XDataSink>
+			
+			<XDataSink name="Open Log Datasink">
+				<XDSParam name="tablename_1" value="fieldstate_info"/>
+				<XDSParam name="createsql_1" value="CREATE TABLE fieldstate_info ( id serial primary key, firmware_id integer, major integer,minor integer,build integer,initialState integer,connectedLoad1 integer,connectedLoad2 integer,voltage integer,nDevices integer )"/>
+				
+				<XDSParam name="deletesql_1" value="DELETE FROM fieldstate_info WHERE firmware_id = %i"/>
+				<XDSParam name="deletefields_1" value="firmware_id"/>
+				
+				<XDSParam name="insertsql_1" value="INSERT INTO fieldstate_info ( firmware_id,major,minor,build,initialState,connectedLoad1,connectedLoad2,voltage,nDevices ) VALUES ( %i, %i, %i, %i, %i, %i, %i, %i, %i)"/>
+				<XDSParam name="insertfields_1" value="firmware_id,major,minor,build,initialState,connectedLoad1,connectedLoad2,voltage,nDevices"/>
+			</XDataSink>
+			
+		</XDataSinks>
+	</XFieldExtractor>
+	
+</XServeConfig>

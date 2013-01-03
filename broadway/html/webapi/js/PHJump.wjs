@@ -1,0 +1,190 @@
+/*
+Purpose: PerfectHOST Jump widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: PHJump.wjs 20101 2011-03-06 16:02:15Z bhagn $
+
+change notes:
+added target attribute 2010/02/10 11:22:00 sleimbro
+added title attribute 2010/02/10 13:32:00 sleimbro
+*/
+function PHJump(){
+  this.base = Widget;
+  this.base();
+  this._hitarea_width = '100px';
+  this._hitarea_height = '100px';
+  this._url = '/';
+  this.html_selector_url = true;
+  this._name = 'PHJump';
+  this._z_index = '1000';
+  this.init_value = 'No URL';
+  this._target = '_self';
+  this._tooltip ='';
+ }
+
+PHJump.prototype = new Widget;
+
+PHJump.prototype.init_element = function(){ 
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version','1_0_dev_2');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  this.element.style.width = 'auto';
+  this.element.style.height = 'auto';
+  this.element.style.marginTop = '0px';
+  this.element.style.marginBottom = '0px';
+  this.element.style.marginLeft = '0px';
+  this.element.style.marginRight = '0px';
+  this.element.style.padding = '0px';
+  this.element.backgroundColor = 'transparent';
+  this.element.style.position = 'absolute';
+  this.element.style.zIndex = this._z_index;
+
+  var outline = document.createElement('div');
+  outline.setAttribute('element','outline');
+  var browserIE = new RegExp('internet explorer','gi');
+  outline.style.verticalAlign = 'middle';
+  outline.style.height = this._hitarea_height;
+  outline.style.width = this._hitarea_width;
+  outline.style.margin = '0px';
+  outline.style.padding = '0px';
+  outline.style.border = '0px';
+  outline.style.borderColor = 'transparent';
+  outline.style.top = '0';
+  outline.style.left = '0';
+  outline.style.zIndex = '0';
+
+  var hitarea = document.createElement('div');
+  hitarea.setAttribute('element','hitarea');
+  var browserIE = new RegExp('internet explorer','gi');
+  if(browserIE.test(navigator.appName)) {
+    hitarea.setAttribute('onclick','PHJumpClickHandler(event)');
+  }
+  else {
+    hitarea.setAttribute('onclick','PHJumpClickHandler(event)');
+  }
+  hitarea.style.verticalAlign = 'middle';
+  hitarea.style.height = '100%';
+  hitarea.style.width = '100%';
+  hitarea.style.margin = '0px';
+  hitarea.style.padding = '0px';
+  hitarea.style.border = '0px';
+  hitarea.style.borderColor = 'transparent';
+  if(window.parent && window.parent.WebExpressEditor) {  
+  	var mystring = "'url(" + window.parent.WebExpressProtocol + "//" + window.parent.WebExpressHostname + "/webapi/images/cleardot.gif)'";
+  }
+  else {
+  	var mystring = "'url(" + window.location.protocol + "//" + window.location.hostname + "/webapi/images/cleardot.gif)'";
+  }
+  hitarea.style.backgroundImage = eval(mystring);
+  hitarea.style.backgroundRepeat = 'repeat';
+  hitarea.style.backgroundColor = 'transparent';
+  hitarea.style.cursor = 'pointer';
+  hitarea.style.top = '0';
+  hitarea.style.left = '0';
+  hitarea.style.zIndex = '1';
+  outline.appendChild(hitarea);
+  hitarea.setAttribute('title', this._tooltip);
+
+  var infospan = document.createElement('div');
+  infospan.setAttribute('element','info');
+  infospan.setAttribute('type','hidden');  
+  infospan.setAttribute('url', this._url); 
+  infospan.setAttribute('target', this._target); 
+  infospan.style.backgroundColor = 'transparent';
+  infospan.style.top = '0';
+  infospan.style.left = '0';
+  infospan.style.height = '1';
+  infospan.style.width = '1';
+  infospan.style.zIndex = '0';
+  infospan.style.visibility = 'hidden';
+  infospan.style.display = 'none';
+
+  outline.appendChild(infospan);
+
+  this.element.appendChild(outline);
+}
+
+
+//
+// Gets called with the HTML Element from the page
+// Passed in.  Used to get the currnet config information
+// of the widget
+PHJump.prototype.init = function(element){
+  this._name = 'PHJump';
+  this._z_index = element.getAttribute('zindex');
+
+  var outline = this.get_element(element,'div','outline');
+  if(outline.currentStyle) {
+    this._hitarea_height = outline.currentStyle['height'];
+    this._hitarea_width = outline.currentStyle['width'];
+  }
+  else if(window.getComputedStyle) {
+    var compStyle = window.getComputedStyle(outline,"");
+    this._hitarea_height = compStyle.getPropertyValue('height');
+    this._hitarea_width = compStyle.getPropertyValue('width');
+  }
+  else {
+    this._hitarea_height = '100px';
+    this._hitarea_width = '100px';
+  }
+
+  var infospan = this.get_element(element,'div','info');
+  this._url = this.get_span_attr(infospan, 'url');
+  this._target = this.get_span_attr(infospan, 'target');
+} 
+
+PHJump.prototype.create = function (){
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function PHJump_factory(){
+  return new PHJump();
+}
+
+function PHJumpClickHandler(evt) {
+  Widget_log("PHJumpClickHandler() entered");
+  evt = (evt) ? evt : ((event) ? event : null);
+  if(evt.detail) {
+    Widget_log("PHJumpClickHandler(), evt.detail=" + evt.detail);
+  }
+  var elem = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null);
+  var myWidget = elem.parentNode.parentNode; //topmost div of PHVirtualPoint widget
+  Widget_log("PHJumpClickHandler(), myWidget id = " + myWidget.getAttribute('id'));
+  if(!(window.parent && window.parent.WebExpressEditor)) {  
+    var ielement = PHJumpGetElement(myWidget,'div','info');
+    var myJumpStr = ielement.getAttribute('url');
+	var myTarget = ielement.getAttribute('target');
+    var jsprefix = new RegExp('javascript:','i');
+    if(myJumpStr.search(jsprefix) == 0) { //execute JavaScript
+      eval(myJumpStr);
+    }
+	if(myTarget == '_blank') { //open new window and load URL
+      window.open(myJumpStr,'newWindow','width=800,height=600,resizable=yes');
+    }
+	else { //jump to new URL
+      window.location = myJumpStr;
+    }
+  }
+}
+
+function PHJumpGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e
+}
+
+var PHJump_loaded = true;

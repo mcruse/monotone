@@ -1,0 +1,219 @@
+<!--
+Copyright (C) 2008 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<html>
+<head>
+<!-- $Name: mediator_3_1_2_branch $ -->
+<!-- $Id: test.html 20101 2011-03-06 16:02:15Z bhagn $ -->
+<title>Javascript: Test</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+<link rel="stylesheet" href="css/webapi.css" type="text/css">
+<script language="javascript" src="js/sdk2.js"></script>
+<script language="javascript">
+
+  m = new Mediator();
+  var RETURN_KEY = 13;
+
+
+function get_mediator(){
+   return m
+}
+
+function login_success(m){
+  var e = document.getElementById('login_status');
+  e.innerHTML = '<span style="color:green;">Logged In</span>';
+}
+
+</script>
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td colspan="2">
+       <table width="100%">
+          <tr>
+            <td class="page_header"><img src="images/header.png" width="639px" height="100px"></td>
+            <td align="right" valign="top"><a class="home" href="/index.html">Home</a>&nbsp;</td>
+          </tr>
+        </table></td>
+  </tr>
+   <tr>
+     <td class="header_bottom" colspan="2">&nbsp;
+     </td>
+    </tr>
+    <tr>
+      <td bgColor="#FFFFFF" colspan="2">&nbsp;
+      </td>
+  </tr>
+  <tr>
+    <td width="12%" align="left" valign="top">
+      <table width="100%" border="0" cellspacing="0" cellpadding="5">
+              <tr>
+                <td colspan="2" class="toolbar_heading">Javascript</td>
+              </tr>
+              <tr>
+                <td width="5%">&nbsp;</td>
+                <td width="93%">
+      <table class="toolbar_outer_table" cellspacing="1" cellpadding="0" border="0">
+        <tr>
+          <td>
+            <table class="toolbar" cellspacing="3" cellpadding="2" border="0" >
+              <tr>
+                <td class="side"><img src="images/arrow.png"></td>
+                <td><a href="index.html">About</a></td>
+              </tr>
+               <tr>
+                <td class="side"><img src="images/arrow.png"></td>
+                <td ><a href="getting_started.html">Getting Started</a></td>
+              </tr>
+               <tr>
+                <td class="side"><img src="images/arrow.png"></td>
+                <td><a href="api.html">API</a></td>
+              </tr>
+              <tr>
+                <td class="side"><img src="images/arrow.png"></td>
+                <td ><a href="publishing.html">Publishing</a></td>
+              </tr>
+              <tr>
+                <td class="side"><img src="images/arrow.png"></td>
+                <td><a href="howto.html">Howto</a></td>
+              </tr>
+              <tr>
+                <td class="side"><img src="images/arrow.png"></td>
+                <td class="selected">Test</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+     </td>
+   </tr>
+  </table>
+    </td>
+    <td width="88%" align="left" valign="top">
+      <table class="maincontent"  border="0" cellspacing="0" cellpadding="10" width="100%">
+        <tr>
+          <td align="left" valign="top" >
+            <table width="100%" cellspacing="10">
+              <tr>
+                <td colspan="2">
+This page allows you to test the Javascript API. The page
+contains javascript code that has a Mediator object called <b>m</b> created
+in it . You can use this Mediator object to interact with the system.
+<br>&nbsp;&nbsp;
+<br>Step 1:
+<br>Log in to the mediator by clicking <u><a href="javascript:login_window('get_mediator','login_success')">here</a></u>
+<br>or
+<br>Enter the following command in the command box&nbsp;<input type="text" value="m.login()" size="40" disabled>
+<br>replacing &lt;username> and &lt;password> with the correct username
+and password
+<p>Then start typing commands like:&nbsp;<input type="text" value="n = m.get_node('/services/time')" size="40" disabled>
+                </td>
+              </tr>
+              <tr bgcolor="#FFFFFF">
+                <td width="14%" align="right"><b>Login Status:</b>
+                </td>
+                <td width="86%">
+                  <span id="login_status"><span style="color:#FF0000">Not Logged it</span></span>
+                </td>
+              </tr>
+              <tr bgcolor="#FFFFFF">
+                <td width="14%" align="right"><b>Command:</b>
+                </td>
+                <td width="86%">
+                  <input size="40" type="text" id="command" name="text" value="">
+                </td>
+              </tr>
+              <tr bgcolor="#FFFFFF">
+                <td colspan="2" width="100%" style="font-size:bold;text-align:left;background:#999999;color:#ffffff">Results</td>
+              </tr>
+            </table>
+            <table width="100%">
+              <tr>
+                <td colspan="2" width="100%" id="results" height="500" align="left" valign="top">&nbsp;</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td class="footer" colspan="2"><span class="footer">&copy;Envenergy</span></td>
+  </tr>
+</table>
+
+</body>
+<script language="javascript">
+function keypress(e){
+    var command =  document.getElementById('command').value;
+    var key = null;
+    var r = document.getElementById("results");
+    var result;
+    if (document.all){
+       key = event.keyCode;
+    }
+    else{
+        key = e.which;
+    }
+    if (key == RETURN_KEY){
+       try{
+           result = eval(command);
+           if(typeof(result) == 'object'){
+              var y = "";
+              for( x in result){
+                  y = y + x + ' =' + result[x] + '<br> ' ;
+
+              }
+              r.innerHTML = y
+           }
+           else{
+               r.innerHTML=result;
+           }
+       }
+       catch(e){
+          if(e instanceof MpxException){
+              r.innerHTML= '<font color="#FF0000">' + e + '</font>';
+          }
+          else{
+              r.innerHTML= '<font color="#FF0000">' + e.toString() + '</font>';
+          }
+       }
+    }
+    else{
+       r.innerHTML = "";
+    }
+}
+document.getElementById("command").onkeypress = keypress;
+</script>
+</html>

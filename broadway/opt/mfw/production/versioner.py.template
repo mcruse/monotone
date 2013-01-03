@@ -1,0 +1,19 @@
+#=----------------------------------------------------------------------------
+# emacs -*-Python-*-
+# vim: syntax=python
+#
+# hwtest_versioner.py
+#
+# Print out a stringified version.
+#
+# Copyright (c) 2004 by Encorp, inc.  All rights reserved.
+#
+# Written by S.T. Mansfield (scott.mansfield@encorp.com)
+# $Date: 2004/08/25 17:59:19 $
+#=----------------------------------------------------------------------------
+
+
+def hwtest_version( ):
+    return "%s"
+
+#=- EOF ----------------------------------------------------------------------

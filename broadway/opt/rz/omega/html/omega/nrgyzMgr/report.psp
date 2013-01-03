@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<meta http-equiv="CACHE-CONTROL" content="no-cache" />
+<meta http-equiv="EXPIRES" content="0" />
+<head>
+<!-- Copyright (c) 2005 Richards-Zeta -->
+<!-- $Name: mediator_3_1_2_branch $ -->
+<!-- $Id: report.psp 20101 2011-03-06 16:02:15Z bhagn $ -->
+<style type="text/css">
+<!--
+body {
+        background-color: #CCCCCC;
+}
+-->
+</style>
+</head>
+<%
+import os
+from mpx.lib.http import MultipartCollector
+
+m = request.get_post_data_as_dictionary()
+mkeys = m.keys()
+
+if 'graphtrend' in mkeys:
+    localList = str(m['graphtrend'])
+    if localList:
+        psp.write('<script type="text/javascript">\n')
+        psp.write("graph_page(\"" + str(m['graphtrend'][0]) + "\"); \n")
+        psp.write('</script>\n')
+# here call graph generation function
+%>
+
+<body >
+<!--
+<form action="/omega/nrgyzMgr/report.psp" method="post" enctype="multipart/form-data" name="trendConfigForm">
+-->
+<form action="/omega/nrgyzMgr/report.psp" method="post" name="trendConfigForm>
+<p>
+<font size="5" color="#990000" face="Arial">
+Report Generation
+</font>
+</p>
+Energywise Domain 
+<input type="text"  value=""  id="graphdomain">
+<input type="button" value="..." onclick="openNodeSelector('graphdomain')" >
+<input type="submit"  value="GenerateGraph" onclick="populateHiddenField()" >
+<input type="hidden" name="graphtrend" id = "graphtrend" value = "">
+</form>
+</body>
+</html>

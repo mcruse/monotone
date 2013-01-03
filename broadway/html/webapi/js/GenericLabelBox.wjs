@@ -1,0 +1,154 @@
+/*
+Purpose: Generic LabelBox widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: GenericLabelBox.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+function GenericLabelBox(){
+  this.base = Widget;
+  this.base();
+  this._name = 'GenericLabelBox';
+  this._z_index = '1000';
+  this._text = 'Text';
+  this._text_color = 'black';
+  this.color_selector_text_color = 'true';
+  this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+  this._text_font_size = '12px';
+  this._text_font_weight = 'normal';
+  this._text_background_color = 'lightgrey';
+  this.color_selector_text_background_color = 'true';
+  this._text_padding_bottom = '5px';
+  this._text_padding_left = '5px';
+  this._text_padding_right = '5px';
+  this._text_padding_top = '5px';
+ }
+
+GenericLabelBox.prototype = new Widget;
+
+GenericLabelBox.prototype.init = function(element) {
+  this._name = 'GenericLabelBox';
+  this._z_index = element.getAttribute('zindex');
+  var textdiv = this.get_element(element,'div','text');
+  this._text = textdiv.innerHTML;
+  if(textdiv.currentStyle) {
+    this._text_color = textdiv.currentStyle['color'];
+    this._text_background_color = textdiv.currentStyle['backgroundColor'];
+    this._text_font_family = textdiv.currentStyle['fontFamily'];
+    this._text_font_size = textdiv.currentStyle['fontSize'];
+    // IE bug....this._text_font_weight = textdiv.currentStyle['fontWeight'];
+    this._text_font_weight = textdiv.style.fontWeight;
+    this._text_padding_bottom = textdiv.currentStyle['paddingBottom'];
+    this._text_padding_left = textdiv.currentStyle['paddingLeft'];
+    this._text_padding_right = textdiv.currentStyle['paddingRight'];
+    this._text_padding_top = textdiv.currentStyle['paddingTop'];
+  }
+  else if(window.getComputedStyle) {
+    var compStyle = window.getComputedStyle(textdiv,"");
+    this._text_color = compStyle.getPropertyValue('color');
+    this._text_background_color = compStyle.getPropertyValue('background-color');
+    this._text_font_family = compStyle.getPropertyValue('font-family');
+    this._text_font_size = compStyle.getPropertyValue('font-size');
+    this._text_font_weight = compStyle.getPropertyValue('font-weight');
+    this._text_padding_bottom = compStyle.getPropertyValue('padding-bottom');
+    this._text_padding_left = compStyle.getPropertyValue('padding-left');
+    this._text_padding_right = compStyle.getPropertyValue('padding-right');
+    this._text_padding_top = compStyle.getPropertyValue('padding-top');
+  }
+  else {
+    this._text_color = 'black';
+    this._text_background_color = 'lightgrey';
+    this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+    this._text_font_size = '12px';
+    this._text_font_weight = 'normal';
+    this._text_padding_bottom = '5px';
+    this._text_padding_left = '5px';
+    this._text_padding_right = '5px';
+    this._text_padding_top = '5px';
+  }
+}
+
+GenericLabelBox.prototype.init_element = function (){
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version', '1_0_dev_2');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  this.element.style.position = 'absolute';
+  this.element.style.width = 'auto';
+  this.element.style.height = 'auto';
+  this.element.style.zIndex = this._z_index;
+  var textdiv = document.createElement('div');
+  textdiv.setAttribute('element', 'text');
+  textdiv.innerHTML = this._text;
+  Widget_log("GenericLabelBox.init_element(), this._text_color=" + this._text_color);
+  if(this._text_color != ''){
+    textdiv.style.color = this._text_color;
+  }
+  Widget_log("GenericLabelBox.init_element(), this._text_background_color=" + this._text_background_color);
+  if(this._text_background_color != ''){
+    textdiv.style.backgroundColor = this._text_background_color;
+  }
+  Widget_log("GenericLabelBox.init_element(), this._text_font_family=" + this._text_font_family);
+  if(this._text_font_family != ''){
+    textdiv.style.fontFamily = this._text_font_family;
+  }  
+  Widget_log("GenericLabelBox.init_element(), this._text_font_size=" + this._text_font_size);
+  if(this._text_font_size != ''){
+    textdiv.style.fontSize = this._text_font_size;
+  }
+  Widget_log("GenericLabelBox.init_element(), this._text_font_weight=" + this._text_font_weight);
+  if(this._text_font_weight != ''){
+    textdiv.style.fontWeight = this._text_font_weight;
+  }  
+  Widget_log("GenericLabelBox.init_element(), this._text_padding_bottom=" + this._text_padding_bottom);
+  if(this._text_padding_bottom != ''){
+    textdiv.style.paddingBottom = this._text_padding_bottom;
+  }  
+  Widget_log("GenericLabelBox.init_element(), this._text_padding_left=" + this._text_padding_left);
+  if(this._text_padding_left != ''){
+    textdiv.style.paddingLeft = this._text_padding_left;
+  }  
+  Widget_log("GenericLabelBox.init_element(), this._text_padding_right=" + this._text_padding_right);
+  if(this._text_padding_right != ''){
+    textdiv.style.paddingRight = this._text_padding_right;
+  }  
+  Widget_log("GenericLabelBox.init_element(), this._text_padding_top=" + this._text_padding_top);
+  if(this._text_padding_top != ''){
+    textdiv.style.paddingTop = this._text_padding_top;
+  }  
+  this.element.appendChild(textdiv);
+  // resize widget container
+  Widget_log("GenericLabelBox.init_element(), this.element.getAttribute('id')=" + this.element.getAttribute('id'));
+  Widget_log("GenericLabelBox.init_element(), this.element.innerHTML=" + this.element.innerHTML);
+  if(textdiv.currentStyle) {
+    Widget_log("GenericLabelBox.init_element(), textdiv.currentStyle['width']=" + textdiv.currentStyle['width']);
+    Widget_log("GenericLabelBox.init_element(), textdiv.currentStyle['height']=" + textdiv.currentStyle['height']);
+    //dd.elements[this.element.getAttribute('id')].resizeTo(textdiv.currentStyle['width'],textdiv.currentStyle['height']);
+    //this.element.style.width = textdiv.currentStyle['width'];
+    //this.element.style.height = textdiv.currentStyle['height'];
+  }
+  else if(window.getComputedStyle) {
+    var compStyle = window.getComputedStyle(textdiv,"");
+    Widget_log("GenericLabelBox.init_element(), compStyle.getPropertyValue('width')=" + compStyle.getPropertyValue('width'));
+    Widget_log("GenericLabelBox.init_element(), compStyle.getPropertyValue('height')=" + compStyle.getPropertyValue('height'));
+    //dd.elements[this.element.getAttribute('id')].resizeTo(compStyle.getPropertyValue('width'), compStyle.getPropertyValue('height'));
+    //this.element.style.width = compStyle.getPropertyValue('width');
+    //this.element.style.height = compStyle.getPropertyValue('height');
+  }
+}
+
+
+GenericLabelBox.prototype.create = function (){
+  Widget_log('GenericLabelBox.create(), arguments.length=' + arguments.length);
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function GenericLabelBox_factory(){
+  return new GenericLabelBox();
+}
+
+var GenericLabelBox_loaded = true;

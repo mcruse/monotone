@@ -1,0 +1,1166 @@
+<!--
+Copyright (C) 2009 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" href="/public/styles/page.css" type="text/css" />
+        <link rel="stylesheet" href="/public/styles/tabs.css" type="text/css" />
+        <link rel="stylesheet" href="/public/styles/tables.css" type="text/css" />
+        <link rel="stylesheet" href="/public/styles/messageBox.css" type="text/css" />
+        <link rel="stylesheet" href="/public/styles/configuration.css" type="text/css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dojo/resources/dojo.css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dijit/themes/dijit.css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dijit/themes/tundra/tundra.css" />
+        <link rel="stylesheet" type="text/css" href="/cues/themes/kubrick/layout.css" />
+        <link rel="stylesheet" type="text/css" href="/cues/themes/kubrick/tabs.css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dojox/grid/resources/Grid.css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dojox/grid/resources/tundraGrid.css" />
+        <link rel="stylesheet" href="/public/styles/eventFilters.css" type="text/css" />
+        <link rel="stylesheet" href="/public/nbmweb/edit/themes/Node.css" type="text/css" />
+        <link rel="stylesheet" href="/public/nbmweb/events/themes/EventsTable.css" type="text/css" />
+        <link rel="stylesheet" href="/public/nbmweb/edit/themes/AlarmActions.css" type="text/css" />
+        <style type="text/css">
+            .dojoxGrid table {
+                margin: 0;
+            }
+            #alarmsGridTable tr {
+            	white-space: pre;
+            }
+            #tab2 .alarmsGrid .dojoxGridCellFocus {
+                border-top-color: transparent !important;
+                border-right-color: #D5CDB5 !important;                
+                border-bottom-color: transparent !important;
+                border-left-color: #D5CDB5 !important;
+                border-right: 1px dotted #D5CDB5 !important;
+                border-style: dotted !important;
+                border-width: 1px !important;
+            }            
+        </style>
+        <script type="text/javascript">
+            djConfig = {
+                isDebug: false,
+                debugAtAllCosts: false,
+                parseOnLoad: true,
+                baseUrl: "/dojoroot/dojo/",
+                modulePaths: {
+                    mpx: '/mpx', 
+                    cues: '/cues', 
+                    utils: '/public/utils', 
+                    nbmweb: '/public/nbmweb' 
+                }
+            };
+        </script>
+        <script src="/dojoroot/dojo/dojo.js"></script>
+        <script src="/dojoroot/dojoconfig/mediator_layer.js"></script>
+        <script src="/public/nbmweb/events/EventsTable.js"></script>
+        <script src="/public/nbmweb/events/Manager.js"></script>
+        <script src="/public/nbmweb/events/EventRow.js"></script>
+        <script src="/public/nbmweb/events/AlarmRow.js"></script>
+        <script src="/public/nbmweb/events/TablePager.js"></script>
+        <script src="/public/nbmweb/edit/AlarmActions.js"></script>
+        <script src="/public/nbmweb/edit/CreatePeer.js"></script>
+	<script src="/public/utils/formtools.js"></script>
+        <script type="text/javascript">
+            dojo.require("utils.style");
+        </script>
+        <script type="text/javascript">
+			function decodeSplChars(encoded) { 
+				var div = document.createElement('div');
+				div.innerHTML = encoded;
+				var decoded = div.firstChild.nodeValue;
+				return decoded;
+			}
+            var _widgets = new Array();
+            function formatActions(value, idx) {
+                var actions = _widgets[idx];
+                if (!actions) {
+                    actions = new nbmweb.edit.AlarmActions({ 
+                        value: value,
+                        manager: alarmsTab 
+                    });
+                    actions.startup();
+                    _widgets[idx] = actions;
+                }
+                return actions;
+            }
+            function getConfirmation(args) {
+                console.log("creating Confirm dialog()");
+                var message = args.message;
+                var title = args.title || "Please Confirm";
+                var content = (
+                    '<div id="message-symbol" style="padding-right:15px;">' + 
+                    '<img src="/public/images/warning.png"></div><div>' + 
+                    message + '</div>'
+                );
+                var deferred = new dojo.Deferred();
+                var dialog = new dijit.Dialog({
+                    title: title, 
+                    content: content,
+                    style: "width:300px;",
+                    onHide: function() {
+                        this.destroyRecursive();
+                        dojo.disconnect(closeHandle);
+                    }
+                });
+                var confirmButton = new dijit.form.Button({
+                    label: "confirm",
+                    style: "float: right;", 
+                    onClick: function() {
+                        console.log("confirmed");
+                        deferred.callback(true);
+                        dialog.hide();
+                    }
+                });
+                var cancelButton = new dijit.form.Button({
+                    label: "cancel",
+                    style: "float: right;", 
+                    onClick: function() {
+                        console.log("cancelled");
+                        deferred.callback(false);
+                        dialog.hide();
+                    }
+                });
+                var closeHandle = dojo.connect(dialog.closeButtonNode, "onclick", function() {
+                    console.log("closed");
+                    deferred.callback(false);
+                    confirm.hide();
+                });
+                
+                dialog.domNode.appendChild(cancelButton.domNode);
+                dialog.domNode.appendChild(confirmButton.domNode);
+                dialog.startup();
+                dialog.show();
+                return deferred;
+            }
+        </script>
+        <script type="text/javascript">
+            dojo.addOnLoad(function() {
+                console.log("addOnLoad() running.");
+                window.eventmanager = new nbmweb.events.Manager({
+                    period: 5, 
+                    pageSize: 10, 
+                    autoRefresh: false, 
+                    jsId: "eventManager", 
+                    updateHeader: dojo.byId("last-update"), 
+                    eventsTable: dojo.byId("events-table") 
+                });
+                eventmanager.startup();
+                var autoRefresh = dijit.byId("refresh-enabled").attr("checked");
+                eventmanager.attr("autoRefresh", autoRefresh);
+                console.log("addOnLoad() completed.");
+            });
+        </script>
+        <title>Cisco Network Building Mediator</title>
+    </head>
+    <body class="kubrick tundra">
+        <div id="background">
+            <img src="/public/images/pageBackground.jpg" />
+        </div>
+        <div id="header">
+            <h1 class="title">Network Building Mediator</h1>
+            <ul class="actions">
+                <li><a href="">About</a></li>
+                <li>
+                    <a id="logout" href="/logout">
+                        Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div id="primary-tabs" 
+            title=""
+            class="primary-tabs" 
+            href="/public/templates/primary.html" 
+            extractContent="false"
+            preventCache="false" 
+            dojoType="dijit.layout.ContentPane"
+            onDownloadEnd="dojo.addClass('events-tab-button', 'selected');" >
+        </div>
+        <div id="stage">
+            <div id="contentarea" class="pane">
+                <div id="mainTabContainer" 
+                    persist="false" 
+                    style="width: 100%; height: 100%;"
+                    dojoType="dijit.layout.TabContainer">
+                    <div id="tab1" 
+                        title="Event Manager" 
+                        dojoType="dijit.layout.ContentPane">
+                        <div id="control-panel"
+                            dojoType="dijit.layout.ContentPane"
+                            style="position: absolute; right: 5px; padding: 3px 0;">
+                            <div id="update-control" class="control-group">
+                                <span id="last-update"></span>
+                                <div id="refresh-enabled" 
+                                    type="checkbox" 
+                                    checked="checked" 
+                                    dojoType="dijit.form.CheckBox">
+                                    <script type="dojo/method" event="onChange">
+                                        var enabled = this.attr("checked");
+                                        eventmanager.attr("autoRefresh", enabled);
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
+                        <div title="Filters"
+                            open="false"
+                            id="filtersPane"
+                            jsId="eventFiltersPane"
+                            dojoType="dijit.TitlePane">
+                            <div id="filtersForm"
+                                dojoType="dijit.form.Form">
+                                <script type="dojo/method" event="applyFilters">
+                                    var query = {};
+                                    var values = this.attr("value");
+                                    if (values.eventFromDate) {
+                                        if (!values.eventFromTime)
+                                            dijit.byId("fromTimeFilter").setDisplayedValue("12:00 AM");
+                                        var fromDateTime = new Date(values.eventFromDate);
+                                        var fromTime = dijit.byId("fromTimeFilter").attr("value");
+                                        fromDateTime.setHours(fromTime.getHours());
+                                        fromDateTime.setMinutes(fromTime.getMinutes());
+                                        fromDateTime.setSeconds(fromTime.getSeconds());
+                                        query.fromTime = fromDateTime.getTime() / 1000;
+                                        console.log(fromDateTime);
+                                    }
+                                    if (values.eventToDate) {
+                                        if (!values.eventToTime)
+                                            dijit.byId("toTimeFilter").setDisplayedValue("11:59 PM");
+                                        var toDateTime = new Date(values.eventToDate);
+                                        var toTime = dijit.byId("toTimeFilter").attr("value");
+                                        toDateTime.setHours(toTime.getHours());
+                                        toDateTime.setMinutes(toTime.getMinutes());
+                                        toDateTime.setSeconds(toTime.getSeconds());
+                                        query.toTime = toDateTime.getTime() / 1000;
+                                        console.log(toDateTime);
+                                    }
+                                    console.log(this.attr("id") + ".applyFilters():", values);
+                                    if (values.eventName)
+                                        query.name = values.eventName;
+                                    if (values.eventState != "ALL")
+                                        query.state = values.eventState;
+                                    if (values.eventOrigin)
+                                        query.origin = values.eventOrigin;
+                                    if (values.eventPriority != "ALL")
+                                        query.priority = values.eventPriority;
+                                    eventmanager.attr("queryParams", query);      
+                                    dijit.byId("filtersPane").attr("open", true);
+                                </script>
+                                <script type="dojo/method" event="clearFilters">
+                                    console.log(this.attr("id") + ".clearFilters():", "clearing fields and applying.");
+                                    this.reset();
+                                    this.applyFilters();
+                                    dijit.byId("filtersPane").attr("open", true);
+                                </script>
+                                <table class="eventFiltersTable">
+                                    <tbody>
+                                        <tr class="eventFilterRow">
+                                            <th class="filterLabelCell">
+                                                <label for="nameFilter" 
+                                                    class="filterInputLabel leftLabel">
+                                                    Name:
+                                                </label>
+                                            </th>
+                                            <td class="filterInputCell">
+                                                <input type="text"
+                                                    id="nameFilter" 
+                                                    name="eventName" 
+                                                    class="filterInput"
+                                                    dojoType="dijit.form.TextBox" />    
+                                            </td>
+                                            <th class="filterLabelCell">
+                                                <label for="originFilter" 
+                                                    class="filterInputLabel rightLabel">
+                                                    Origin:
+                                                </label>
+                                            </th>
+                                            <td class="filterInputCell">
+                                                <input type="text" 
+                                                    id="originFilter"
+                                                    class="filterInput" 
+                                                    name="eventOrigin"
+                                                    dojoType="dijit.form.TextBox" />    
+                                            </td>
+                                        </tr>
+                                        <tr class="eventFilterRow">
+                                            <th class="filterLabelCell">
+                                                <label for="priorityFilter" 
+                                                    class="filterInputLabel leftLabel">
+                                                    Priority:
+                                                </label>
+                                            </th>
+                                            <td class="filterInputCell">
+                                                <select
+                                                    id="priorityFilter" 
+                                                    class="filterInput"
+                                                    name="eventPriority" 
+                                                    forceWidth="true"
+                                                    style="width: 15em;"
+                                                    dojoType="dijit.form.Select">
+                                                    <option selected="selected" value="ALL">
+                                                        ALL
+                                                    </option>
+                                                    <option value="P1">P1</option>
+                                                    <option value="P2">P2</option>
+                                                    <option value="P3">P3</option>
+                                                    <option value="P4">P4</option>
+                                                    <option value="P5">P5</option>
+                                                    <option value="P6">P6</option>
+                                                    <option value="P7">P7</option>
+                                                    <option value="P8">P8</option>
+                                                    <option value="P9">P9</option>
+                                                    <option value="P10">P10</option>
+                                                </select>
+                                            </td>
+                                            <th class="filterLabelCell">
+                                                <label for="stateFilter" 
+                                                    class="filterInputLabel rightLabel">
+                                                    State:
+                                                </label>
+                                            </th>
+                                            <td class="filterInputCell">
+                                                <select 
+                                                    id="stateFilter"
+                                                    class="filterInput"
+                                                    name="eventState" 
+                                                    forceWidth="true"
+                                                    style="width: 15em;"
+                                                    dojoType="dijit.form.Select">
+                                                    <option selected="selected" value="ALL">
+                                                        ALL
+                                                    </option>
+                                                    <option value="RAISED">RAISED</option>
+                                                    <option value="ACCEPTED">ACCEPTED</option>
+                                                    <option value="CLEARED">CLEARED</option>
+                                                    <option value="CLOSED">CLOSED</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr class="eventFilterRow">
+                                            <th class="filterLabelCell">
+                                                <label for="fromDateFilter" 
+                                                    class="filterInputLabel leftLabel">
+                                                    From:
+                                                </label>
+                                            </th>
+                                            <td class="filterInputCell">
+                                                <div 
+                                                    value=""
+                                                    type="text"
+                                                    id="fromDateFilter" 
+                                                    name="eventFromDate" 
+                                                    class="filterDateInput"
+                                                    dojoType="dijit.form.DateTextBox">
+                                                    <script type="dojo/method" event="onChange" args="evt">
+                                                        var timeFilter = dijit.byId("fromTimeFilter");
+                                                        if (this.getDisplayedValue() && !timeFilter.getDisplayedValue())
+                                                            timeFilter.setDisplayedValue("12:00 AM");
+                                                    </script>
+                                                </div>
+                                                <input 
+                                                    value=""                                              
+                                                    type="text" 
+                                                    id="fromTimeFilter" 
+                                                    name="eventFromTime"
+                                                    class="filterTimeInput" 
+                                                    dojoType="dijit.form.TimeTextBox" />
+                                            </td>
+                                            <th class="filterLabelCell">
+                                                <label for="toDateFilter" 
+                                                    class="filterInputLabel rightLabel">
+                                                    To:
+                                                </label>
+                                            </th>
+                                            <td class="filterInputCell">
+                                                <div 
+                                                    value=""                                              
+                                                    type="text" 
+                                                    id="toDateFilter"
+                                                    name="eventToDate" 
+                                                    class="filterDateInput" 
+                                                    dojoType="dijit.form.DateTextBox">
+                                                    <script type="dojo/method" event="onChange" args="evt">
+                                                        var timeFilter = dijit.byId("toTimeFilter");
+                                                        if (this.getDisplayedValue() && !timeFilter.getDisplayedValue())
+                                                            timeFilter.setDisplayedValue("11:59 PM");
+                                                    </script>                                        
+                                                </div>
+                                                <input 
+                                                    value=""                                              
+                                                    type="text" 
+                                                    id="toTimeFilter"
+                                                    name="eventToTime" 
+                                                    class="filterTimeInput" 
+                                                    dojoType="dijit.form.TimeTextBox" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4" align="center">
+                                                <div type="button" 
+                                                    id="applyFiltersButton"
+                                                    dojoType="dijit.form.Button">
+                                                    <script type="dojo/method" event="onClick">
+                                                        console.log(this.attr("id") + ".onClick() applying filters.");
+                                                        dijit.byId("filtersForm").applyFilters();
+                                                    </script>
+                                                    Apply
+                                                </div>
+                                                <div type="button" 
+                                                    id="clearFiltersButton"
+                                                    dojoType="dijit.form.Button">
+                                                    <script type="dojo/method" event="onClick">
+                                                        console.log(this.attr("id") + ".onClick() clearing filters.");
+                                                        dijit.byId("filtersForm").clearFilters();
+                                                    </script>
+                                                    Clear
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div><!-- End filtersPane -->
+                        <div dojoType="dijit.layout.ContentPane">
+                            <div id="events-table"></div>
+                        </div>
+                    </div>
+                    <div id="tab2" 
+                        title="Alarms" 
+                        jsId="alarmsTab" 
+                        style="width: 100%; height: 100%;"
+                        dojoType="dijit.layout.BorderContainer">
+                        <script type="dojo/method">
+                            dojo.mixin(this, {
+                                debug: 0, 
+                                widgets: new Object(), 
+                                manager: new mpx.node.Proxy("/services/network/http_server/Alarm Configurator"), 
+                                store: new dojo.data.ItemFileWriteStore({
+                                    data: {
+                                        items: [], 
+                                        label: "name", 
+                                        identifier: "nodeUrl"
+                                    }
+                                }),
+                                invalidateCache: function() {
+                                    console.log("Invalidating cache:", this, this.widgets);
+                                    for (var value in this.widgets) {
+                                        var item = this.widgets[value];
+                                        if (item && item.destroy)
+                                            item.destroyRecursive();
+                                    }
+                                    this.widgets = new Object();
+                                }, 
+                                getActions: function(value, idx) {
+                                    var actions = this.widgets[value];
+                                    if (!actions) {
+                                        if (this.debug)
+                                            console.log("getActions() creating new widget:", value, idx);
+                                        actions = new nbmweb.edit.AlarmActions({
+                                            value: value, 
+                                            manager: this
+                                        });
+                                        actions.startup();
+                                        this.widgets[value] = actions;
+                                    }
+                                    if (this.debug > 1)
+                                        console.log("getActions()", this, value, idx, actions);
+                                    return actions;
+                                }, 
+                                formatLoad: function(value, idx) {
+                                    return this.getActions(value, idx).loadButton;
+                                }, 
+                                formatDelete: function(value, idx) {
+                                    return this.getActions(value, idx).deleteButton;
+                                }, 
+                                formatEdit: function(value, idx) {
+                                    return this.getActions(value, idx).editButton;
+                                }, 
+                                formatTrigger: function(value, idx) {
+                                    return this.getActions(value, idx).triggerButton;
+                                }, 
+                                formatClear: function(value, idx) {
+                                    return this.getActions(value, idx).clearButton;
+                                }, 
+                                _onShow: function() {
+                                    if (!this.attr("initialized")) {
+                                        this._onChangeConn = dojo.connect(
+                                            this.store, 
+                                            "_structureChanged", 
+                                            this, "invalidateCache");
+                                        this._onClearConn = dojo.connect(
+                                            this.store, "_clearData", 
+                                            this, "invalidateCache");
+                                        this._onDestroyConn = dojo.connect(
+                                            this.store, "destroy", 
+                                            this, "invalidateCache");
+                                        this.refresh(true);
+                                    }
+                                    this.attr("initialized", true);
+                                }, 
+                                refresh: function(firstLoad) {
+                                    var newItems = [];
+                                    var deferred = new dojo.Deferred();
+                                    console.log("Refreshing alarm configs.");
+                                    if (!firstLoad) {
+                                        this.store.fetch({
+                                            scope: this, 
+                                            onComplete: function(items) {
+                                                dojo.forEach(items, this.store.deleteItem, this.store);
+                                                this.store.save();
+                                            }
+                                        });
+                                        this.invalidateCache();
+                                    }
+                                    var error = function(response) {
+                                        var title = "Unable to load alarms:"; 
+                                        utils.display.failure(title, response);
+                                        console.log("Request failed:", response);
+                                        this.attr("initialized", false);
+                                        deferred.errback(response);
+                                        return response;
+                                    };
+                                    var load = dojo.hitch(this, function(response) {
+                                        var items = dojo.map(response, function(item) {
+                                            return {
+                                                name: item, 
+                                                loaded: false, 
+                                                nodeUrl: this.getAlarmUrl(item) 
+                                            };
+                                        }, this);
+                                        dojo.forEach(items, function(item, index) {
+                                            newItems.push(this.store.newItem(item));
+                                        }, this);
+                                        this.store.save();
+                                        console.log("Refresh complete.");
+                                        deferred.callback(newItems);
+                                    });
+                                    var fetch = dojo.hitch(this, function() {
+                                        var deferred = this.manager.get_alarm_names();
+                                        deferred.addBoth(function(response) {
+                                            alarmsGrid.beginUpdate();
+                                            console.debug("alarmsGrid.beginUpdate()");
+                                            return response;
+                                        });
+                                        deferred.addCallbacks(load, error);
+                                        deferred.addBoth(function(response) {
+                                            if (!firstLoad) {
+                                                console.debug("alarmsGrid.sort()");
+                                                alarmsGrid.sort();
+                                            }
+                                            console.debug("alarmsGrid.endUpdate()");
+                                            alarmsGrid.endUpdate();
+                                            return response;
+                                        });
+                                        return deferred;
+                                    });
+                                    deferred.addCallback(dojo.hitch(this, function(items) {
+                                        dojo.forEach(items, function(item, index) {
+                                            var loaded = this.store.getValue(item, "loaded");
+                                            if (!loaded) {
+                                                var name = this.store.getValue(item, "name");
+                                                this.refreshAlarmConfiguration(name);
+                                            }
+                                        }, this);
+                                    }));
+                                    fetch();
+                                    return deferred;
+                                }, 
+                                getAlarmUrl: function(alarmName) {
+                                    return "/services/Alarm Manager/" + alarmName;
+                                },
+                                getAlarmName: function(alarmUrl) {
+                                    var nameIndex = alarmUrl.lastIndexOf("/") + 1;
+                                    var nameSegment = alarmUrl.slice(nameIndex);
+                                    return decodeURIComponent(nameSegment);
+                                }, 
+                                triggerAlarm: function(alarmName) {
+                                    console.log("Trigger alarm:", alarmName);
+                                    var alarmUrl = this.getAlarmUrl(alarmName);
+                                    var deferred = this.manager.trigger_alarm(alarmName);
+                                    deferred.addCallback(dojo.hitch(this, function(response) {
+                                        this.loadAlarmCounts(alarmUrl, response);
+                                        return response;
+                                    }));
+                                    deferred.addErrback(function(response) {
+                                        var title = "Trigger '" + alarmName + "' failed:";
+                                        utils.display.failure(title, response);
+                                        console.log(title, response);
+                                    });
+                                    return deferred;
+                                }, 
+                                clearAlarm: function(alarmName) {
+                                    console.log("Clear alarm:", alarmName);
+                                    var alarmUrl = this.getAlarmUrl(alarmName);
+                                    var deferred = this.manager.clear_alarm(alarmName);
+                                    deferred.addCallback(dojo.hitch(this, function(response) {
+                                        this.loadAlarmCounts(alarmUrl, response);
+                                        return response;
+                                    }));
+                                    deferred.addErrback(function(response) {
+                                        var title = "Clear '" + alarmName + "' failed:";
+                                        utils.display.failure(title, response);
+                                        console.log(title, response);
+                                    });
+                                    return deferred;
+                                }, 
+                                loadAlarmConfiguration: function(alarmUrl, config, skipSave) {
+                                    var alarmItem = dojo.mixin({}, config, {
+                                        nodeUrl: alarmUrl
+                                    });
+                                    delete(alarmItem.counts);
+                                    console.log("Loading config:", config, alarmItem);
+                                    this.store.fetchItemByIdentity({
+                                        scope: this, 
+                                        identity: alarmUrl, 
+                                        onItem: function(item) {
+                                            if (!item) {
+                                                alarmsGrid.beginUpdate();
+                                                var index = alarmsGrid.rowCount;
+                                                item = this.store.newItem(alarmItem);
+                                                this.store.save();
+                                                alarmsGrid.sort();
+                                                alarmsGrid.endUpdate();
+                                                console.log("Created new alarm item:", alarmItem, item);
+                                            } else {
+                                                for (var attr in alarmItem) {
+                                                    if (attr == "nodeUrl")
+                                                        continue;
+                                                    var value = alarmItem[attr];
+                                                    if (dojo.isArray(value))
+                                                        this.store.setValues(item, attr, value);
+                                                    else
+                                                        this.store.setValue(item, attr, value);
+                                                }
+                                                console.log("Updated alarm item:", item, alarmItem);
+                                            }
+                                            if (!this.store.getValue(item, "loaded"))
+                                                this.store.setValue(item, "loaded", true);
+                                            this.loadAlarmCounts(item, config.counts, skipSave);
+                                        }
+                                    });
+                                }, 
+                                loadAlarmCounts: function(alarmItem, counts, skipSave) {
+                                    var raised = counts.raised;
+                                    var cleared = counts.cleared;
+                                    var accepted = counts.accepted;
+                                    var total = raised + cleared + accepted;
+                                    var onItem = dojo.hitch(this, function(item) {
+                                        console.log("Updating item:", item, raised, cleared, accepted);
+                                        this.store.setValue(item, "raised", raised);
+                                        this.store.setValue(item, "cleared", cleared);
+                                        this.store.setValue(item, "accepted", accepted);
+                                        this.store.setValue(item, "total", total);
+                                        if (!skipSave)
+                                            this.store.save();
+                                    });
+                                    if (dojo.isString(alarmItem)) {
+                                        this.store.fetchItemByIdentity({
+                                            onItem: onItem, 
+                                            identity: alarmItem
+                                        });
+                                    } else { 
+                                        onItem(alarmItem);
+                                    }
+                                }, 
+                                refreshAlarmConfiguration: function(alarmName) {
+                                    var alarmUrl = this.getAlarmUrl(alarmName);
+                                    var deferred = this.manager.get_alarm_configuration(alarmName);
+                                    deferred.addCallback(dojo.hitch(this, function(response) {
+                                        this.loadAlarmConfiguration(alarmUrl, response);
+                                        return response;
+                                    }));
+                                    deferred.addErrback(function(response) {
+                                        var title = "Unable to load '"; 
+                                        title += alarmName + "' configuration";
+                                        utils.display.failure(title, response);
+                                        console.log("Request failed:", response);
+                                        return response;
+                                    });
+                                    return deferred;
+                                }, 
+                                refreshAlarmCounts: function(alarmName) {
+                                    var alarmUrl = this.getAlarmUrl(alarmName);
+                                    var deferred = this.manager.get_event_counts(alarmName);
+                                    deferred.addCallback(dojo.hitch(this, function(response) {
+                                        this.loadAlarmCounts(alarmUrl, response);
+                                        return response;
+                                    }));
+                                    deferred.addErrback(function(response) {
+                                        var title = "Unable to load '"; 
+                                        title += alarmName + "' counts";
+                                        utils.display.failure(title, response);
+                                        console.log("Request failed:", response);
+                                        return response;
+                                    });
+                                    return deferred;
+                                }, 
+                                openEditor: function(args) {
+                                    console.log(this.declaredClass, "openEditor()", args);
+                                    var deferred = new dojo.Deferred();
+                                    var onCommit = args.onCommit;
+                                    if (dojo.isString(onCommit))
+                                        onCommit = dojo.hitch(this.manager, onCommit);
+                                    var onCancel = args.onCancel;
+                                    if (dojo.isString(onCancel))
+                                        onCancel = dojo.hitch(this.manager, onCancel);
+                                    var dialog = new dijit.Dialog({
+                                        preload: true, 
+                                        parseOnLoad: true, 
+                                        extractContent: false,
+                                        title: args.title || "Node Editor" 
+                                    });
+                                    dialog.attr("class", "editDialog");
+                                    function onLoad(response) {
+                                        var summary = dialog.attr("title") + " succeeded";
+                                        console.log(summary, ": ", response);
+                                        deferred.callback(response);
+                                        return response;
+                                    }
+                                    function onError(response) {
+                                        var summary = dialog.attr("title") + " failed";
+                                        var errorMessage = response;
+                                        if (dojo.isObject(response) && response.message)
+                                            errorMessage = response.message;
+                                        console.error(summary, ": ", response, errorMessage);
+                                        setTimeout(function() {
+                                            utils.display.failure(summary, errorMessage);
+                                        }, 500);
+                                        deferred.errback(response);
+                                        return response;
+                                    }
+                                    var onComplete = dojo.hitch(this, function(response) {
+                                        console.log("Cleaning up " + dialog.attr("title") + " dialog.");
+                                        dialog.destroyRecursive();
+                                        return response;
+                                    });
+                                    var closeHandle = dojo.connect(dialog.closeButtonNode, "onclick", onComplete);
+                                    var connection = dojo.connect(dialog, "onLoad", function() {
+                                        var editor = dijit.findWidgets(dialog.domNode)[0];
+                                        editor.onCommit = function(values) {
+                                            console.debug("Committing node edits:", values);
+                                            var deferred = onCommit(values);
+                                            deferred.addCallbacks(onLoad, onError);
+                                            deferred.addBoth(onComplete);
+                                        };
+                                        editor.onCancel = function(values) {
+                                            if (onCancel)
+                                                onCancel(values);
+                                            onComplete();
+                                        };
+                                        function populateEditor(values) {
+                                            if (values){
+                                                editor.attr("value", values);
+                                                if (values.name)
+                                                    editor.nameInput.attr("readOnly", true);
+                                            }
+                                            dialog.show();
+                                            return values;
+                                        }
+                                        if (args.loadValues)
+                                            args.loadValues.addCallback(populateEditor);
+                                        else 
+                                            populateEditor(args.values);
+                                        dojo.disconnect(connection);
+                                    });
+                                    dialog.attr("href", args.href);
+                                    return deferred;
+                                },  
+                                createNewAlarm: function() {
+                                    var createNode = dojo.hitch(this, function(values) {
+                                        var deferred = this.manager.create_node(values.name, values);
+                                        deferred.addCallback(dojo.hitch(this, function(response) {
+                                            this.refreshAlarmConfiguration(values.name);
+                                        }));
+                                        return deferred;
+                                    });
+                                    var deferred = this.openEditor({
+                                        onCommit: createNode, 
+                                        title: "Create New Alarm", 
+                                        href: "/public/nbmweb/edit/forms/EditAlarm.html" 
+                                    });
+                                    deferred.addBoth(function(response) {
+                                        console.log("node.create_alarm() callback handler:", response);
+                                        return response;
+                                    });
+                                }, 
+                                editAlarm: function(alarmName) {
+                                    var configureNode = dojo.hitch(this, function(values) {
+                                        var deferred = this.manager.configure_alarm(alarmName, values);
+                                        deferred.addCallback(dojo.hitch(this, function(response) {
+                                            if (alarmName != values.name) {
+                                                this.store.fetchItemByIdentity({
+                                                    scope: this, 
+                                                    identity: this.getAlarmUrl(alarmName), 
+                                                    onItem: function(item) {
+                                                        if (!item) {
+                                                            console.log("No alarm item with old name exists:", alarmName);
+                                                        } else {
+                                                            this.store.deleteItem(item);
+                                                            console.log("Deleted alarm item with old name from store:", alarmName);
+                                                            this.store.save();
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                            this.refreshAlarmConfiguration(values.name);
+                                            return response;
+                                        }));
+                                        return deferred;
+                                    });
+                                    var deferred = this.openEditor({
+                                        onCommit: configureNode, 
+                                        title: "Edit '" + alarmName + "'",  
+                                        href: "/public/nbmweb/edit/forms/EditAlarm.html", 
+                                        loadValues: this.manager.get_alarm_configuration(alarmName) 
+                                    });
+                                    deferred.addBoth(function(response) {
+                                        console.log("editNode() callback handler:", alarmName, response);
+                                        return response;
+                                    });
+                                    return deferred;
+                                },  
+                                deleteAlarm: function(alarmName) {
+                                    var confirmation = getConfirmation({
+                                        title: "Confirmation", 
+                                        message: (
+                                            "Are you sure you want to delete the alarm - " + 
+                                            "<b>" + alarmName + "</b>, and its configuration?")
+                                    });
+                                    confirmation.addCallback(dojo.hitch(this, function(confirmed) {
+                                        if (!confirmed)
+                                            return;
+                                        var alarmUrl = this.getAlarmUrl(alarmName);
+                                        var onLoad = dojo.hitch(this, function(response) {
+                                            console.log("deleteAlarm() response received", response);
+                                            this.store.fetchItemByIdentity({
+                                                scope: this, 
+                                                identity: alarmUrl, 
+                                                onItem: function(item) {
+                                                    if (!item) {
+                                                        console.log("Deleted alarm URL has not store item:", alarmUrl);
+                                                    } else {
+                                                        this.store.deleteItem(item);
+                                                        console.log("Deleted alarm item from store:", alarmUrl);
+                                                        this.store.save();
+                                                        this.refresh();
+                                                    }
+                                                }
+                                            });
+                                            return response;
+                                        });
+                                        function onError(response) {
+											var summary = "Delete " + alarmName + " failed";
+            								var errorMessage = response;
+            								if (dojo.isObject(response) && response.message)
+                								errorMessage = response.message;
+        	
+        									if(new RegExp(/403/).exec(errorMessage)) 
+        										errorMessage = "Permission Denied";
+            								console.error("deleteAlarm() failed:", alarmName, response);
+            								utils.display.failure(summary, errorMessage);
+                                            
+                                            return response;
+                                        }
+                                        console.debug("deleteAlarm() deleting alarm:", alarmName);
+                                        var deferred = this.manager.remove_alarm(alarmName);
+                                        deferred.addCallbacks(onLoad, onError);
+                                        return confirmed;
+                                    }));
+                                }
+                            });
+                        </script>
+                        <table jsId="alarmsGrid"
+                        	id="alarmsGridTable"
+                            region="center"
+                            cellOverClass=""
+                            clientSort="true"
+                            sortInfo="1"
+                            class="alarmsGrid"
+                            selectionMode="none"
+                            formatterScope="alarmsTab"
+                            store="alarmsTab.store"
+                            dojoType="dojox.grid.DataGrid">
+                            <script type="dojo/method" event="canSort" args="idx">
+                                console.log("canSort()", idx);
+                                return idx == 1 || idx == -1;
+                            </script>
+                            <thead>
+                                <tr>
+                                    <th field="name"
+                                        width="200px"
+                                        noresize="true"
+                                        editable="false" 
+                                        draggable="false">
+                                        Name
+                                    </th>
+                                    <th field="priority"
+                                        width="30px" noresize="true"
+                                        editable="false" draggable="false"  
+                                        cellType="dojox.grid.cells.Select"
+                                        options="P1,P2,P3,P4,P5,P6,P7,P8,P9,P10">
+                                        PRI
+                                    </th>
+                                    <th field="description"  
+                                        width="50%" noresize="true"
+                                        editable="false" draggable="false">
+                                        Description
+                                    </th>
+                                    <th field="raised" 
+                                        width="55px" noresize="true"
+                                        editable="false" draggable="false">
+                                        Raised
+                                    </th>
+                                    <th field="cleared" 
+                                        width="55px" noresize="true"
+                                        editable="false" draggable="false">
+                                        Cleared
+                                    </th>
+                                    <th field="accepted" 
+                                        width="55px" noresize="true"
+                                        editable="false" draggable="false">
+                                        Accepted
+                                    </th>
+                                    <th field="total" 
+                                        width="55px" noresize="true"
+                                        editable="false" draggable="false">
+                                        Total
+                                    </th>
+                                    <th field="name"
+                                        width="45px" noresize="true"
+                                        classes="actionColumn"
+                                        cellClasses="actionColumnCell"
+                                        headerClasses="actionColumnHeader" 
+                                        formatter="alarmsTab.formatLoad"
+                                        editable="false" draggable="false">
+                                        Load
+                                    </th>
+                                    <th field="name" 
+                                        width="30px" noresize="true"
+                                        classes="actionColumn"
+                                        cellClasses="actionColumnCell"
+                                        headerClasses="actionColumnHeader" 
+                                        formatter="alarmsTab.formatDelete"
+                                        editable="false" draggable="false">
+                                        Delete
+                                    </th>
+                                    <th field="name" 
+                                        width="45px" noresize="true"
+                                        classes="actionColumn"
+                                        cellClasses="actionColumnCell"
+                                        headerClasses="actionColumnHeader" 
+                                        formatter="alarmsTab.formatEdit"
+                                        editable="false" draggable="false">
+                                        Edit
+                                    </th>
+                                    <th field="name" 
+                                        width="55px" noresize="true"
+                                        classes="actionColumn"
+                                        cellClasses="actionColumnCell"
+                                        headerClasses="actionColumnHeader" 
+                                        formatter="alarmsTab.formatTrigger"
+                                        editable="false" draggable="false">
+                                        Trigger
+                                    </th>
+                                    <th field="name" 
+                                        width="50px" noresize="true"
+                                        classes="actionColumn"
+                                        cellClasses="actionColumnCell"
+                                        headerClasses="actionColumnHeader" 
+                                        formatter="alarmsTab.formatClear"
+                                        editable="false" draggable="false">
+                                        Clear
+                                    </th>
+                                </tr>
+                            </thead>
+                        </table>
+                        <div region="bottom"
+                            dojoType="dijit.layout.ContentPane"
+                            style="padding: 0 5px; border-style: none;">
+                            <button type="button" 
+                                style="float: right;"
+                                dojoType="dijit.form.Button" 
+                                onClick="alarmsTab.createNewAlarm();">
+                                +
+                            </button>
+                            <button type="button" 
+                                style="float: right;"
+                                dojoType="dijit.form.Button" 
+                                onClick="alarmsTab.refresh();">
+                                reload
+                            </button>
+                        </div> 
+                    </div>
+                    <div id="tab3"
+                        title="Triggers"
+                        dojoType="dijit.layout.ContentPane">
+                        <script type="dojo/method">
+                            console.debug("Creating trigger manager.");
+                            var scope = utils.configure.trigger;
+                            this.manager = new scope.Manager({
+                                tableId: "triggers-table", 
+                                configuratorUrl: "/services/network/https_server/Trigger%20Configurator"
+                            });
+                            this.manager.refresh();
+                            dojo.byId("triggers-table").manager = this.manager;
+                        </script>
+                        <table class="configureNodesTable" id="triggers-table">
+                            <thead>
+                                <tr class="table-header">
+                                    <th scope="col" abbr="Name">Name</th>
+                                    <th class="control" abbr="Actions">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                            <tfoot>
+                                <tr class="table-footer">
+                                    <td colspan="5">
+                                        <div 
+                                            class="create control" 
+                                            dojoType="dijit.form.Button">
+                                            <script type="dojo/method" event="onClick" args="evt">
+                                                var parentNode = this.domNode.parentNode;
+                                                var container = dijit.getEnclosingWidget(parentNode);
+                                                container.manager.createNewNode(evt);
+                                            </script>
+                                            +
+                                        </div>
+                                        <div style="float: right;" 
+                                            dojoType="dijit.form.Button">
+                                            <script type="dojo/method" event="onClick" args="evt">
+                                                var parentNode = this.domNode.parentNode;
+                                                var container = dijit.getEnclosingWidget(parentNode);
+                                                container.manager.refresh();
+                                            </script>
+                                            reload
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div id="tab4"
+                        title="Exporters"
+                        dojoType="dijit.layout.ContentPane">
+                        <script type="dojo/method">
+                            console.debug("Creating export manager.");
+                            var scope = utils.configure.exporter;
+                            this.manager = new scope.Manager({
+                                tableId: "exporters-table", 
+                                configuratorUrl: "/services/network/https_server/Exporter%20Configurator"
+                            });
+                            this.manager.refresh();
+                            dojo.byId("exporters-table").manager = this.manager;
+                        </script>
+                        <table class="configureNodesTable" id="exporters-table">
+                            <thead>
+                                <tr class="table-header">
+                                    <th scope="col" abbr="Name">Name</th>
+                                    <th class="control" abbr="Actions">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                            <tfoot>
+                                <tr class="table-footer">
+                                    <td colspan="5">
+                                        <div class="create control" dojoType="dijit.form.Button">
+                                            <script type="dojo/method" event="onClick" args="evt">
+                                                var parentNode = this.domNode.parentNode;
+                                                var container = dijit.getEnclosingWidget(parentNode);
+                                                container.manager.createNewNode(evt);
+                                            </script>
+                                            +
+                                        </div>
+                                        <div style="float: right;" 
+                                            dojoType="dijit.form.Button">
+                                            <script type="dojo/method" event="onClick" args="evt">
+                                                var parentNode = this.domNode.parentNode;
+                                                var container = dijit.getEnclosingWidget(parentNode);
+                                                container.manager.refresh();
+                                            </script>
+                                            reload
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div id="tab6" 
+                        title="Cloud" 
+                        dojoType="dijit.layout.ContentPane">
+                        <script type="dojo/method">
+                            console.debug("Creating cloud manager.");
+                            var package = utils.configure.cloud;
+                            this.manager = new package.Manager({
+                                tableId: "peers-table",
+                                configuratorUrl: "/services/network/http_server/Cloud%20Configurator"
+                            });
+                            dojo.byId("peers-table").manager = this.manager;
+                        </script>
+                        <script type="dojo/method" event="_onShow" args="evt">
+                            console.debug("Refreshing peers on show.");
+                            this.manager.refresh();
+                        </script>
+                        <table class="configureNodesTable" id="peers-table">
+                            <thead>
+                                <tr class="table-header">
+                                    <th scope="col" abbr="Peer">Peer/Portal (First one below is Portal)</th>
+                                    <th class="control" abbr="Action">
+                                        Action
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                            <tfoot>
+                                <tr class="table-footer">
+                                    <td colspan="5">
+                                        <button class="create control" dojoType="dijit.form.Button">
+                                            <script type="dojo/method" event="onClick" args="evt">
+                                                var parentNode = this.domNode.parentNode;
+                                                var container = dijit.getEnclosingWidget(parentNode);
+                                                container.manager.createNewNode(evt);
+                                            </script>
+                                            +
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

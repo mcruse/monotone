@@ -1,0 +1,131 @@
+<!--
+Copyright (C) 2008 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<!-- 
+
+Purpose: provides schedule list for schedule selection
+$Name: mediator_3_1_2_branch $
+$Id: scheduleSelector.htm 20101 2011-03-06 16:02:15Z bhagn $ -->
+<title>Schedule Selector</title>
+<style type="text/css">
+.orangeText {color:#ff9933; font-size:16px; font-family: verdana, arial, san-serif;}
+.messageText {font-size:10px; font-family: verdana, arial, san-serif; text-align:left; vertical-align:top;}
+.nameText {font-size:14px; font-family: verdana, arial, san-serif;}
+</style>
+</head>
+<body topmargin="0" leftmargin="0" marginheight="0" marginwidth="0">
+<table width="600">
+<tr>
+	<td><img src="/webapi/images/RZWebExpress.gif" width="328" height="59" alt="" border="0"></td>
+</tr>
+<tr>
+  <td>
+	<!-- this table is for the background image -->
+		<table width="600" cellpadding="0" cellspacing="0" background="/webapi/images/bg_node.gif" height="379">
+		<tr>
+			<td class="orangeText">&nbsp;&nbsp;<img src="/webapi/images/spacer.gif" width="1" height="30" alt="" border="0">Select a name for the saved schedule below:</td>
+		</tr>
+		<tr>
+			<td align="center" valign="top">
+						<table>
+						<tr>
+							<td>
+							      <select id="theSchedule">
+								<option value="VAV1_1">VAV1_1</option>
+								<option value="VAV1_2">VAV1_2</option>
+								<option value="VAV1_3">VAV1_3</option>
+        							</select>
+                                                        </td>
+						</tr>
+						</table>
+			</td>
+		</tr>
+		<tr>
+			<td class="orangeText" valign="top">&nbsp;&nbsp;<img src="/webapi/images/spacer.gif" width="1" height="30" alt="" border="0">Schedule name:&nbsp;&nbsp;<input id="sched_name" type="text" size="60"></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td align="center"><img src="/webapi/images/button_cancel.gif" width="95" height="33" alt="" border="0" onclick="javascript:close_window()">&nbsp;&nbsp;&nbsp;&nbsp;<img src="/webapi/images/button_save.gif" onclick="javascript:savefunction()"  width="95" height="33" alt="" border="0"></td>
+</tr>
+</table>
+<script type="text/javascript">
+//@@
+// @function get_query_string_args
+// returns an associative array of the query string arguments if any or  empty object
+// @return associative array
+function get_query_string_args(){
+  var args = new Object();
+  var query_string = window.location.search.substring(1);
+  var pairs = query_string.split("&");
+  var name_value = null;
+  for(x=0;x<pairs.length;x++){
+    if (pairs[x].indexOf('=') != -1){
+      name_value = pairs[x].split('='); 
+      args[name_value[0]] = decodeURIComponent(name_value[1]);
+    } 
+  }
+  return args;
+}
+
+var SCHEDNAME = get_query_string_args()['schedulename'];
+var SAVEFUNCTION = get_query_string_args()['savefunction'];
+
+if(SCHEDNAME == "NEWSCHEDULE") {
+  document.getElementById('sched_name').value = '';
+}
+else {
+  document.getElementById('sched_name').value = SCHEDNAME;
+}
+
+function close_window(){
+   if (window.opener){
+      window.close();
+   }
+}
+
+function savefunction(){
+  if(window.opener && SAVEFUNCTION != null) {
+    eval('window.opener.' + SAVEFUNCTION + '();');
+  }
+}
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,11 @@
+@CHARSET "UTF-8";
+
+form.add {
+    float: left;
+    margin: 5px;
+}
+
+form.navigation {
+    float: right;
+    margin: 5px;
+}

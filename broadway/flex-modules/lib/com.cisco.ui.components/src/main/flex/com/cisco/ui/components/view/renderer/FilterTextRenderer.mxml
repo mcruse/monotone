@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GenericRenderer xmlns="com.cisco.ui.components.view.renderer.*" 
+	xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" 
+	height="100%" xmlns:view="com.cisco.ui.components.view.*">
+	<mx:Script>
+		<![CDATA[
+		
+			public var changeHandler:Function;
+			public var enableFunction:Function;
+			
+			
+			private function searchChangeHandler():void {
+				if ( changeHandler != null ) {
+					changeHandler(data,searchField.inSearchMode?searchField.text:"");
+				}
+			}
+			
+			override protected function extractData():void {
+				if ( enableFunction != null ) {
+					searchField.enabled = enableFunction(data);
+				}
+			}
+			
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
+				super.updateDisplayList(unscaledWidth,unscaledHeight);
+				searchField.move(1,1);
+				searchField.setActualSize(unscaledWidth-5,unscaledHeight-2);
+			}
+			
+			
+		]]>
+	</mx:Script>
+	<view:FilterTextInput width="100%" height="100%" id="searchField" change="searchChangeHandler()"/>
+</GenericRenderer>

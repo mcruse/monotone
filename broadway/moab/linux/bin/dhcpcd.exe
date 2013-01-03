@@ -1,0 +1,110 @@
+#!/usr/bin/env python-mpx
+#
+# $Revision: 20101 $
+#
+# Copyright (c) 2003 Envenergy.  All rights reserved.
+#
+
+import ConfigParser
+import os
+import string
+import sys
+
+# The following two functions were ripped off from /etc/rc.mpx
+def load_config(filename):
+    cp = ConfigParser.ConfigParser()
+    fp = open(filename, 'r')
+    cp.readfp(fp)
+    fp.close()
+    return cp
+
+def get_option(config, section, option):
+    if config.has_section(section) and config.has_option(section, option):
+        return config.get(section, option)
+    return ''
+
+#################################  M A I N  #################################
+# Note: Parameters are expected to look like:
+#    dhcpcd.exe <HostInfoFilePath> <up|down|new> [-d]
+#       where HostInfoFilePath is a file name like /etc/dhcpc/dhcpcd-eth0.info
+argc = len(sys.argv)
+if argc != 3 and argc != 4:
+    print 'Called with the wrong number of parameters.'
+    sys.exit(-1)
+    
+cfgfile = sys.argv[1]
+cmd = sys.argv[2]
+
+# For now, just exit if cmd is not up or new
+if (cmd != 'up') and (cmd != 'new'):
+    sys.exit(0)
+    
+basefile, baseext = os.path.splitext(os.path.basename(cfgfile))
+    
+x, interface = string.split(basefile, '-')
+
+# For now, just exit if we aren't being updated on eth0
+if interface != 'eth0':
+    sys.exit(0)
+
+CONFIGURATION_FILE = '/etc/mpxinit.conf'
+
+config = load_config(CONFIGURATION_FILE)
+
+# Load the MPX configuration file.
+hostname = get_option(config, 'host', 'hostname')
+if not hostname:
+    hostname = 'unknown'
+
+# Parse the dhcpd-eth0.info file, looking for the IPADDR=XX line
+ip_addr = None
+dhcp_domain = None
+f = None
+i = 0
+try: # Still use DHCP even if dhcpcd-eth0.info is corrupt (CSCtb24792.)
+    f = open(cfgfile, 'r')
+    for orig_line in f.xreadlines():
+        i += 1
+        line = orig_line.strip()
+        if line[0:1] == '#':
+            continue
+        var, val = string.split(line, '=')
+        if var == 'IPADDR':
+            ip_addr = val
+        if var == 'DOMAIN':
+            # This string seems to have 's on each side.  If they are
+            # there, then strip them out.
+            if val[0] == "'":
+                val = val[1:-1]
+            dhcp_domain = val
+except:
+    sys.stderr.write("dhcpcd.exe: Syntax Error in %s at line %d:\n    %s" %
+                     (cfgfile, i, orig_line))
+finally:
+    if f is not None:
+        f.close()
+
+domainname = get_option(config, 'host', 'domain_name')
+# If the user did not specify a domain name, then check to see
+# if the DHCP server returned one.  If so, use it.  Otherwise
+# use an obviously bogus domain name (example.com) to alert
+# the user to that fact.
+if not domainname:
+    if not dhcp_domain:
+        domainname = 'example.com'
+    else:
+        domainname = dhcp_domain
+
+# If we found an IP address, regenerate /etc/hosts
+if ip_addr:
+    fname = '/etc/hosts.tmp'
+    f = open(fname, 'w')
+    f.write("# The following file is generated automatically, please don't edit.\n")
+    f.write("127.0.0.1\tlocalhost.localdomain\tlocalhost\n")
+    f.write("%s\t%s.%s\t%s\n" % (ip_addr, hostname, domainname, hostname))
+    f.close()
+
+    # Make sure the new file has good perms
+    os.chmod(fname, 0664)
+
+    os.system('mv /etc/hosts.tmp /etc/hosts')

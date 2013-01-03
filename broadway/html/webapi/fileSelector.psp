@@ -1,0 +1,99 @@
+<% 
+# $Name: mediator_2_2_branch $
+# $Id: fileSelector.psp,v 1.1 2008/02/14 00:16:08 mevans Exp $
+from mpx import properties
+import os, fnmatch
+
+#set fileSelector query string items to defaults
+
+selectfiles = 'all' #filter files: all, html, image, or sound
+
+#override with values from this page's query string
+
+qs = request.get_query_dictionary()
+if qs.has_key('selectfiles'):
+    selectfiles = '%s' % qs['selectfiles']
+
+psp.write('<html>\n')
+psp.write('<head>\n')
+psp.write('<title> File Selector</title>\n')
+psp.write('<!-- Modify this file to change the way the tree looks -->\n')
+psp.write('<link type="text/css" rel="stylesheet" href="/webapi/js/xloadtree/xtree.css">\n')
+
+psp.write('<!-- The xtree script file -->\n')
+psp.write('<script src="/webapi/js/xloadtree/xtree.js"></script>\n')
+psp.write('<script src="/webapi/js/xloadtree/xloadtree.js"></script>\n')
+psp.write('<script src="/webapi/js/xloadtree/xmlextras.js"></script>\n')
+psp.write('</head>\n')
+psp.write('<body>\n')
+psp.write('<p>\n')
+psp.write('<script type="text/javascript">\n')
+psp.write('var tree = new WebFXTree("/","javascript:file_selected()");\n')
+
+if request.get_protocol() == 'http':
+    root = properties.HTTP_ROOT
+else:
+    root = properties.HTTPS_ROOT
+
+EXCLUDES = ['admin.html', 'index.html', 'login.html', 'redirect.html', 'msglog', 'webapi', 'omega']
+
+if selectfiles == 'html':
+    pattern_list = ['*.htm','*.html']
+elif selectfiles == 'image':
+    pattern_list = ['*.jpg','*.gif','*.png']
+elif selectfiles == 'sound':
+    pattern_list = ['*.wav']
+else:
+    #selectfiles == 'all'
+    pattern_list = ['*']
+
+def caseIndependentSort(something, other):
+    something, other = something.lower(), other.lower()
+    return(cmp(something, other))
+
+files = os.listdir(root)
+files.sort(caseIndependentSort)
+
+for name in files:
+    #filter out system files and directories
+    for exclude in EXCLUDES:
+        if not selectfiles == 'all' and fnmatch.fnmatch(name, exclude):
+           break
+    else:
+        #filter by file selection
+        fullname = os.path.normpath(os.path.join(root, name))
+        if os.path.isfile(fullname):
+            for pattern in pattern_list:
+                lowname = name.lower()
+                if fnmatch.fnmatch(lowname, pattern):
+                   psp.write('tree.add(new WebFXTreeItem("%s","javascript:file_selected()"));\n' % (name))
+                   break
+        else:
+            psp.write('tree.add(new WebFXLoadTreeItem("%s","/webapi/psp/file_tree.psp?selectfiles=%s&dir=%s","javascript:file_selected()"));\n' % (name, selectfiles, fullname))
+
+psp.write('document.write(tree);\n')
+
+psp.write('function file_selected(){\n')
+psp.write('   var n = tree.getSelected();\n')
+psp.write('   var parentNode = n.parentNode;\n')
+psp.write('   var file_name = n.text; \n')
+psp.write('   while (parentNode){\n')
+psp.write('      if (parentNode.text == "/"){\n')
+psp.write('         file_name = parentNode.text + file_name;\n')
+psp.write('         parentNode = null  \n')
+psp.write('      }\n')
+psp.write('      else{\n')
+psp.write('        file_name = parentNode.text + "/" + file_name;\n')
+psp.write('        parentNode = parentNode.parentNode;\n')
+psp.write('      }      \n')
+psp.write('   }\n')
+   
+psp.write('   window.parent.document.getElementById("file_name").value = file_name;\n')
+psp.write('}\n')
+
+
+psp.write('</script>\n')
+
+psp.write('</body>\n')
+psp.write('</html>\n')
+%>

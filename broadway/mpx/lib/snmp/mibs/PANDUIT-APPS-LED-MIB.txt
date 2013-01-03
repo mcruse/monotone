@@ -1,0 +1,266 @@
+PANDUIT-APPS-LED-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+		MODULE-IDENTITY,
+		OBJECT-IDENTITY,
+		OBJECT-TYPE,
+		Unsigned32
+                                	FROM SNMPv2-SMI
+
+		MODULE-COMPLIANCE, 
+		OBJECT-GROUP
+                                	FROM SNMPv2-CONF
+
+		panduitApps
+					FROM PANDUIT-REG
+
+		PanduitLedColor,
+		PanduitBlinkState,
+		PanduitOverride,
+		PanduitDuration
+					FROM PANDUIT-TC;
+
+
+--
+-- Managed Network Solutions contact information.
+--
+panduitAppsLED 		MODULE-IDENTITY
+        LAST-UPDATED    "200605150000Z"         
+        ORGANIZATION    "Panduit Corp."
+        CONTACT-INFO
+                "       Panduit Corp.
+                        Managed Network Solutions Group
+
+                Postal: Panduit Corp.
+                        17301 Ridgeland Avenue
+                        Tinley Park, IL 60477-3091
+                        USA
+
+                   Tel: +1 708 532-1800/888-506-5400
+
+                E-mail: info@panduit.com"
+
+        DESCRIPTION
+                        "MIB module to support LED functionality."
+
+        REVISION        "200504290000Z"         
+
+        DESCRIPTION
+                        "Initial version of this MIB module."
+
+        REVISION        "200605150000Z"         
+
+        DESCRIPTION
+                        "Corrected OID errors."
+
+        ::= { panduitApps 4 }
+
+
+--
+--                      port LED Table Objects
+--
+panduitLEDPortLedTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF PanduitLEDPortLedEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "Led information by Port."
+        ::= { panduitAppsLED 1 }
+
+panduitLEDPortLedEntry OBJECT-TYPE
+        SYNTAX PanduitLEDPortLedEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "Port LED Table Row definition"
+	INDEX	{ panduitLEDPortLedIndex }
+        ::= { panduitLEDPortLedTable 1 }
+
+	PanduitLEDPortLedEntry ::= SEQUENCE{
+		panduitLEDPortLedIndex 	Unsigned32,
+		panduitLEDPortLedColor	PanduitLedColor,
+		panduitLEDPortLedRate	PanduitBlinkState,
+		panduitLEDPortLedOverride	PanduitOverride
+		}
+
+panduitLEDPortLedIndex OBJECT-TYPE
+        SYNTAX Unsigned32(1..2147483647)
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "Table index."
+        ::= { panduitLEDPortLedEntry 1 }
+
+panduitLEDPortLedColor OBJECT-TYPE
+        SYNTAX PanduitLedColor
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "LED Color."
+        ::= { panduitLEDPortLedEntry 2 }
+
+panduitLEDPortLedRate OBJECT-TYPE
+        SYNTAX PanduitBlinkState
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "LED Blink status.  Can be set to blink or steady."
+        ::= { panduitLEDPortLedEntry 3 }
+
+panduitLEDPortLedOverride OBJECT-TYPE
+        SYNTAX PanduitOverride
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+		"Override normal functionality.  Normal functionality is 
+		to flash green.  To override, set this value to override(2)
+		and set panduitLEDPortLedColor, panduitLEDPortLedRate,
+		and panduitLEDPortLEDPeriod to achieve the desired result."
+        ::= { panduitLEDPortLedEntry 4 }
+
+panduitLEDPortLedPeriod OBJECT-TYPE
+        SYNTAX PanduitDuration
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+		"Override normal functionality.  Normal functionality is 
+		to flash green.  To override, set this value to override(2)
+		and set panduitLEDPortLedColor, panduitLEDPortLedRate,
+		and panduitLEDPortLEDPeriod to achieve the desired result."
+        ::= { panduitAppsLED 2 }
+
+
+--
+--                      System LED Table Objects
+--
+
+panduitLEDSystemLedTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF PanduitLEDSystemLedEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "Led information by Port."
+        ::= { panduitAppsLED 3 }
+
+panduitLEDSystemLedEntry OBJECT-TYPE
+        SYNTAX PanduitLEDSystemLedEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "A row in the Trap Receiver Table."
+	INDEX	{ panduitLEDSystemLedIndex }
+        ::= { panduitLEDSystemLedTable 1 }
+
+	PanduitLEDSystemLedEntry ::= SEQUENCE{
+		panduitLEDSystemLedIndex 		Unsigned32,
+		panduitLEDSystemLedColor		PanduitLedColor,
+		panduitLEDSystemLedRate		PanduitBlinkState,
+		panduitLEDSystemLedOverride	PanduitOverride
+		}
+
+panduitLEDSystemLedIndex OBJECT-TYPE
+        SYNTAX Unsigned32(1..2147483647)
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "Table Index."
+        ::= { panduitLEDSystemLedEntry 1 }
+
+panduitLEDSystemLedColor OBJECT-TYPE
+        SYNTAX PanduitLedColor
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "LED Color."
+        ::= { panduitLEDSystemLedEntry 2 }
+
+panduitLEDSystemLedRate OBJECT-TYPE
+        SYNTAX PanduitBlinkState
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "LED Blink status.  Can be set to blink or steady."
+        ::= { panduitLEDSystemLedEntry 3 }
+
+panduitLEDSystemLedOverride OBJECT-TYPE
+        SYNTAX PanduitOverride
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+		"Override normal functionality.  Normal functionality is 
+		to flash green.  To override, set this value to override(2)
+		and set panduitLEDSystemLedColor, panduitLEDSystemLedRate,
+		and panduitLEDSystemLedPeriod to achieve the desired result."
+        ::= { panduitLEDSystemLedEntry 4 }
+
+panduitLEDSystemLedPeriod OBJECT-TYPE
+        SYNTAX PanduitDuration
+        MAX-ACCESS  read-write
+        STATUS current
+        DESCRIPTION
+		"Override normal functionality.  Normal functionality is 
+		to flash green.  To override, set this value to override(2)
+		and set panduitLEDSystemLedColor, panduitLEDSystemLedRate,
+		and panduitLEDSystemLedPeriod to achieve the desired result."
+        ::= { panduitAppsLED 4 }
+
+
+--
+--		Conformance Section 
+--
+
+panduitAppsLEDConformance OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of Compliance and Group information for MIB."
+	::= { panduitAppsLED 5 }
+
+panduitAppsLEDGroups OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of groups within MIB."
+	::= { panduitAppsLEDConformance 1 }
+
+panduitAppsLEDCompliances OBJECT-IDENTITY
+	STATUS current
+	DESCRIPTION "Compliance specifications for MIB."
+	::= { panduitAppsLEDConformance 2 }
+
+panduitAppsLEDPortLEDGroup OBJECT-GROUP
+	OBJECTS {
+		panduitLEDPortLedColor	,
+		panduitLEDPortLedRate,
+		panduitLEDPortLedOverride,
+		panduitLEDPortLedPeriod
+		}
+        STATUS current
+        DESCRIPTION
+                "Panduit Port Led Objects."
+        ::= { panduitAppsLEDGroups 1 }
+
+panduitAppsLEDSystemLEDGroup OBJECT-GROUP
+	OBJECTS {
+		panduitLEDSystemLedColor	,
+		panduitLEDSystemLedRate,
+		panduitLEDSystemLedOverride,
+		panduitLEDSystemLedPeriod
+		}
+        STATUS current
+        DESCRIPTION
+                "Panduit System LED Objects."
+        ::= { panduitAppsLEDGroups 2 }
+
+panduitAppsLEDCompliance MODULE-COMPLIANCE
+	STATUS current
+	DESCRIPTION "Compliance requirements for the MIB."
+	MODULE
+		MANDATORY-GROUPS {
+			panduitAppsLEDPortLEDGroup
+			}
+
+		GROUP  panduitAppsLEDSystemLEDGroup 
+		DESCRIPTION
+			"This group is mandatory only for those
+			managed objects that have implemented a system LED."
+
+	::=	{ panduitAppsLEDCompliances 1 }
+
+END				

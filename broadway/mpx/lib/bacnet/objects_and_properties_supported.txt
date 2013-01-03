@@ -1,0 +1,315 @@
+object
+	property id # and description
+
+analog input
+    0   	Acked Transistions
+    17  	Notification Class
+    22  	COV Increment
+    25  	Deadband
+    28  	Description
+    31  	Device Type
+    35  	Event Enable
+    36  	Event State
+    45  	High Limit
+    52  	Limit Enable
+    59  	Low Limit
+    65  	Maximum Present Value
+    69  	Minimum Present Value
+    72  	Notify Type
+    75  	Object Identifier
+    77  	Object Name
+    79  	Object Type
+    81  	Out Of Service
+    85  	Present Value
+    103 	Reliability
+    106 	Resolution
+    111 	Status Flags
+    113 	Time Delay
+    117 	Units
+    118 	Update Interval
+    130 	Event Time Stamps
+    168 	Profile Name
+
+analog output
+    0   	Acked Transistions
+    17  	Notification Class
+    22  	COV Increment
+    25  	Deadband
+    28  	Description
+    31  	Device Type
+    35  	Event Enable
+    36  	Event State
+    45  	High Limit
+    52  	Limit Enable
+    59  	Low Limit
+    65  	Maximum Present Value
+    69  	Minimum Present Value
+    72  	Notify Type
+    75  	Object Identifier
+    77  	Object Name
+    79  	Object Type
+    81  	Out Of Service
+    85  	Present Value
+    87  	Priority Array
+    103 	Reliability
+    104 	Relinquish Default
+    106 	Resolution
+    111 	Status Flags
+    113 	Time Delay
+    117 	Units
+    130 	Event Time Stamps
+    168 	Profile Name
+
+analog value
+    0   	Acked Transistions
+    17  	Notification Class
+    22  	COV Increment
+    25  	Deadband
+    28  	Description
+    35  	Event Enable
+    36  	Event State
+    45  	High Limit
+    52  	Limit Enable
+    59  	Low Limit
+    72  	Notify Type
+    75  	Object Identifier
+    77  	Object Name
+    79  	Object Type
+    81  	Out Of Service
+    85  	Present Value
+    87  	Priority Array
+    103 	Reliability
+    104 	Relinquish Default
+    111 	Status Flags
+    113 	Time Delay
+    117 	Units
+    130 	Event Time Stamps
+    168 	Profile Name
+
+binary input
+    0   	Acked Transistions
+    4   	Active Text
+    6   	Alarm Value
+    15  	Change of State Count
+    16  	Change of State Time
+    17  	Notification Class
+    28  	Description
+    31  	Device Type
+    33  	Elapsed Active Time
+    35  	Event Enable
+    36  	Event State
+    46  	Inactive Text
+    72  	Notify Type
+    75  	Object Identifier
+    77  	Object Name
+    79  	Object Type
+    81  	Out Of Service
+    84  	Polarity
+    85  	Present Value
+    103 	Reliability
+    111 	Status Flags
+    113 	Time Delay
+    114 	Time Of Active Time Reset
+    115 	Time Of State Count Reset
+    130 	Event Time Stamps
+    168 	Profile Name
+
+binary output
+    0   	Acked Transistions
+    4   	Active Text
+    15  	Change of State Count
+    16  	Change of State Time
+    17  	Notification Class
+    28  	Description
+    31  	Device Type
+    33  	Elapsed Active Time
+    35  	Event Enable
+    36  	Event State
+    40  	Feedback Value
+    46  	Inactive Text
+    66  	Minimum Off Time
+    67  	Minimum On Time
+    72  	Notify Type
+    75  	Object Identifier
+    77  	Object Name
+    79  	Object Type
+    81  	Out Of Service
+    84  	Polarity
+    85  	Present Value
+    87  	Priority Array
+    103 	Reliability
+    104 	Relinquish Default
+    111 	Status Flags
+    113 	Time Delay
+    114 	Time Of Active Time Reset
+    115 	Time Of State Count Reset
+    130 	Event Time Stamps
+    168 	Profile Name
+
+binary value
+    0   	Acked Transistions
+    4   	Active Text
+    6   	Alarm Value
+    15  	Change of State Count
+    16  	Change of State Time
+    17  	Notification Class
+    28  	Description
+    33  	Elapsed Active Time
+    35  	Event Enable
+    36  	Event State
+    46  	Inactive Text
+    66  	Minimum Off Time
+    67  	Minimum On Time
+    72  	Notify Type
+    75  	Object Identifier
+    77  	Object Name
+    79  	Object Type
+    81  	Out Of Service
+    85  	Present Value
+    87  	Priority Array
+    103 	Reliability
+    104 	Relinquish Default
+    111 	Status Flags
+    113 	Time Delay
+    114 	Time Of Active Time Reset
+    115 	Time Of State Count Reset
+    130 	Event Time Stamps
+    168 	Profile Name
+
+calendar
+    23  	Date List
+    28  	Description
+    75  	Object Identifier
+    77  	Object Name
+    79  	Object Type
+    85  	Present Value
+    168 	Profile Name
+
+device
+    5   	Active VT Sessions
+    10  	APDU Segment Timeout
+    11  	APDU Timeout
+    12  	Application Software Version
+    24  	Daylight Savings Status
+    28  	Description
+    30  	Device Address Binding
+    44  	Firmware revision
+    55  	List of Session Keys
+    56  	Local Date
+    57  	Local Time
+    58  	Location
+    62  	Max APDU length
+    63  	Max Info Frames
+    64  	Max Master
+    70  	Model Name
+    73  	Number of APDU Retries
+    75  	Object Identifier
+    76  	Object List (actually an Array... go figure, 0)
+    77  	Object Name
+    79  	Object Type
+    96  	Protocol Object Types supported
+    97  	Protocol Services supported
+    98  	Protocol Version
+    107 	Segmentaion Supported
+    116 	Time Synchronization Recipients
+    112 	System status
+    119 	UTC Offset
+    120 	Vendor Indentifier
+    121 	Vendor Name
+    122 	VT_Classes Supported
+    139 	Protocol Revision
+    152 	Active COV Subscriptions
+    153 	Backup Failure Timeout
+    154 	Configuration Files
+    155 	Database Revision
+    157 	Last Restore Time
+    167 	Max Segments Accepted
+    168 	Profile Name
+
+multistate input
+    0   	Acked Transistions
+    7   	Alarm Values
+    17  	Notification Class
+    28  	Description
+    31  	Device Type
+    35  	Event Enable
+    36  	Event State
+    39  	Fault Values
+    72  	Notify Type
+    74  	Number Of States
+    75  	Object Identifier
+    77  	Object Name
+    79  	Object Type
+    81  	Out Of Service
+    85  	Present Value
+    103 	Reliability
+    110 	State Text
+    111 	Status Flags
+    113 	Time Delay
+    130 	Event Time Stamps
+    168 	Profile Name
+
+multistate output
+    0   	Acked Transistions
+    17  	Notification Class
+    28  	Description
+    31  	Device Type
+    35  	Event Enable
+    36  	Event State
+    40  	Feedback
+    72  	Notify Type
+    74  	Number Of States
+    75  	Object Identifier
+    77  	Object Name
+    79  	Object Type
+    81  	Out Of Service
+    85  	Present Value
+    87  	Priority Array
+    103 	Reliability
+    104 	Relinquish Default
+    110 	State Text
+    111 	Status Flags
+    113 	Time Delay
+    130 	Event Time Stamps
+    168 	Profile Name
+
+multistate value
+    0   	Acked Transistions
+    7   	Alarm Values
+    17  	Notification Class
+    28  	Description
+    35  	Event Enable
+    36  	Event State
+    39  	Fault Values
+    72  	Notify Type
+    74  	Number Of States
+    75  	Object Identifier
+    77  	Object Name
+    79  	Object Type
+    81  	Out Of Service
+    85  	Present Value
+    87  	Priority Array
+    103 	Reliability
+    104 	Relinquish Default
+    110 	State Text
+    111 	Status Flags
+    113 	Time Delay
+    130 	Event Time Stamps
+    168 	Profile Name
+
+schedule
+    28  	Description
+    32  	Effective_Period
+    38  	Exception_Schedule
+    54  	List_Of_Device_Object_Property_References
+    75  	Object Identifier
+    77  	Object Name
+    79  	Object Type
+    81  	Out Of Service
+    85  	Present Value
+    88  	Priority_For_Writing
+    103 	Reliability
+    111 	Status Flags
+    123 	Weekly_Schedule
+    168 	Profile Name
+    174 	Schedule_Default

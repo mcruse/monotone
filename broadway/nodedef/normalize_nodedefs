@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+# @note This script is duplicated in the CVSROOT project's
+#       CVSROOT/bin/validate_nodedef_normalized.sh file used to enforce
+#       only checking in normalized nodedefs.  No doubt this cut-and-paste
+#       code reuse (tm) will cause future pain.  You have been warned.
+
+# 20100314 Use echo -e to work around versions of (g)sed that don't support
+#          \r.  Also fixup any master.script that was broken by a
+#          normalize_nodedefs script prior to this fix. Finally, moved into
+#          a function to improve the scary cut-and-paste reuse in
+#          CVSROOT/bin/validate_nodedef_normalized.sh
+#
+# 20071101 Removed enforcing conversion of NULL to '' as this caused delayed
+#          changes of boolean columns (which default to NULL as well, but
+#          the next edit changes '' to false).
+#
+# 20080321 Strip leading and trailing whitespace and also enforce consistent
+#          DOS style line endings.
+#
+# 20080431 Ensure use of GNU sed so the script, error out if it is not
+#          available.
+
+normalize_nodedefs () {
+    ORIG_FILE="$1"
+    TMP_FILE=${ORIG_FILE}-$$
+    SORTED_FILE=${ORIG_FILE}-$$-sorted
+    NEW_FILE="$2"
+
+    if sed --version 2>/dev/null | grep "GNU sed" >/dev/null
+    then
+        SED=sed
+    elif gsed --version 2>/dev/null | grep "GNU sed" >/dev/null
+    then
+        SED=gsed
+    elif gnused --version 2>/dev/null | grep "GNU sed" >/dev/null
+    then
+        SED=gnused
+    else
+        echo "Error:  normalize_nodedefs requires GNU sed." >&2
+        echo "        No suitable sed, gsed, nor gnused where in the PATH." >&2
+        exit 1
+    fi
+
+    if [ -z "${ORIG_FILE}" ]
+    then
+        echo "Error:  An input file is required." >&2
+        exit 1
+    fi
+
+    if [ -z "${NEW_FILE}" ]
+    then
+        NEW_FILE="${ORIG_FILE}"
+    fi
+
+    EXP='s/r$/\r/'               # Fix \rr EOL broken be earlier version.
+    EXP=${EXP}';s/^[ \t]*//'     # Remove leading whitespace.
+    EXP=${EXP}';s/[ \t\r]*$/\r/' # Rmv trailing whitespace and ensure \r\n EOL.
+
+    # @note It's very important that a consistent locale is used to sort.
+    export LC_ALL=C
+    cat "${ORIG_FILE}" | \
+        ${SED} "$(echo -e $EXP)" | sort > "${SORTED_FILE}"
+    rm -f ${TMP_FILE}
+
+    # Force each section to be sorted by consistent rules.
+    for SECTION in "^CREATE TABLE" "^CREATE INDEX" "^CREATE UNIQUE" \
+        "^CREATE ALIAS" "^CREATE USER" "^GRANT ALL" "^INSERT INTO"
+    do
+	cat "${SORTED_FILE}" | grep -e "${SECTION}" >>${TMP_FILE}
+    done
+
+    mv -f "${TMP_FILE}" "${NEW_FILE}"
+    rm -f "${SORTED_FILE}" 
+}
+
+normalize_nodedefs "$@"

@@ -1,0 +1,4 @@
+This directory is not part of the standard build process, it is here
+to server as a reference for implementing IETF compliant UUIDs.
+
+Look into providing a Module interface to libuuid.

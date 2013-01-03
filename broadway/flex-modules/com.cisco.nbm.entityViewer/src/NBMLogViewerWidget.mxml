@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cisco:EntityViewerWidgetApp
+	xmlns:cisco="com.cisco.nbm.entityviewer.*"
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="vertical"
+	horizontalAlign="left"
+	paddingBottom="3" paddingLeft="3" paddingRight="3" paddingTop="3" 
+	>
+	<mx:Style source="kubrick.css" />
+	<mx:Style>
+		.entityNameStyle
+		{
+			font-weight: bold;
+			font-size: 16;
+		}
+		
+		.sectionLabel
+		{
+			font-weight: bold;
+			font-size: 20;
+		} 
+	</mx:Style>
+	<mx:Script>
+		<![CDATA[
+			import mx.utils.StringUtil;
+			import com.cisco.nbm.entities.EntityProperty;
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]
+			private var logs:ArrayCollection = new ArrayCollection();
+			
+			override protected function init():void
+			{
+				logs.filterFunction = filterLogs;
+				logs.refresh();
+			}
+			
+			private function filterLogs(item:EntityProperty):Boolean
+			{
+				// Must test specifically for log, because otherwise we get "Analog" points
+				return item.type.toLowerCase().indexOf("log") == 0;
+			}
+			
+			private function handleLogsDoubleClicked():void
+			{
+				var item:EntityProperty = gridLogs.selectedItem as EntityProperty;
+				
+				logger.debug("selected log: " + item.name);
+				
+				//browserBridge.executeCall("lanuchTrendViewer", item.name); 
+				ExternalInterface.call("launchTrendViewer", item.name);
+			}
+			
+			override protected function customizeBrowserBridge():void
+			{
+				if (initialSelectedEntity != null && initialSelectedEntity.length != 0)
+				{
+					//logger.debug("Showing entity: " + initialSelectedEntity);
+					tiEntityPath.text = initialSelectedEntity;
+				}
+			}
+			
+			override protected function getLoggerName():String
+			{
+				return "cisco.nbm.widgets.entityLogViewer";
+			}
+			
+			override protected function entityPropertiesLoaded():void
+			{
+				super.entityPropertiesLoaded();
+				updateControls();
+			}
+			
+			override protected function entitySelected():void
+			{
+				super.entitySelected();
+				
+				tiEntityPath.text = entity.path;//entityId;
+				
+				updateControls();
+			}
+			
+			private function updateControls():void
+			{
+				labelEntityName.text = entity.label;
+				
+				if (entity.propertiesLoaded)
+				{
+					logs.list = entity.properties;
+					logs.refresh();					
+				}
+			}
+			
+			override protected function enableDebug():void
+			{
+				super.enableDebug();
+				debugBox.visible = true;
+				debugBox.height = debugBox.measuredHeight;
+			}
+		]]>
+	</mx:Script>
+	<mx:HBox
+		id="debugBox"
+		styleName="debugBox" 
+		width="100%" verticalAlign="middle" height="0"
+		visible="false">
+		<mx:Label text="Entity Path" />
+		<mx:TextInput width="200" id="tiEntityPath" text="{Globals.INITIAL_ENTITY_PATH}"  />
+		<mx:Button label="Load" click="debugLoadEntity(tiEntityPath.text)" 
+			enabled="{StringUtil.trim(tiEntityPath.text).length != 0 &amp;&amp; ready}" 
+			/>
+	</mx:HBox>
+	<mx:Label styleName="entityNameStyle" id="labelEntityName" />
+	<mx:AdvancedDataGrid id="gridLogs" width="100%" dataProvider="{logs}"
+		doubleClickEnabled="true"
+		doubleClick="handleLogsDoubleClicked()">
+		<mx:columns>
+			<mx:AdvancedDataGridColumn headerText="Name" dataField="name" width="100" />
+			<mx:AdvancedDataGridColumn headerText="Label" dataField="label" width="150" />
+			<mx:AdvancedDataGridColumn headerText="Description" dataField="description" />
+		</mx:columns>
+	</mx:AdvancedDataGrid>
+	<mx:HBox width="100%" horizontalAlign="left">
+		<mx:Button label="View" enabled="{gridLogs.selectedItem != null}" click="handleLogsDoubleClicked()" />
+	</mx:HBox>
+</cisco:EntityViewerWidgetApp>

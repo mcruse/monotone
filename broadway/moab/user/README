@@ -1,0 +1,48 @@
+This directory is intended for MOAB's ever evolving user abstraction.
+
+NOTE:  Please remember that while MOAB is intended to provide Platform
+       Independence via Agnostic Abstractions, it is OK to be UNIX/Linux
+       centric in our implementations and even in our current abstractions.
+
+       There are several reasons this is not only OK (even laudible):
+
+       * Frequently, what's viewed is the "perfect abstraction" is only
+         perfect today.
+       * If this is the first time a problem is being solved in the context of
+         MOAB and Broadway, there is not enough information to make perfect
+         design decisions.
+       * Over-implementing a vague abstraction usually leads to interfaces
+         that include falls-constraints.
+       * Ultimately, software is just the implementation of an abstraction,
+         not a monument cast in stone.
+       * If you could presict the future, you would not have to be a
+         software engineer to make money...
+
+       For all these reasons and more, software is never done.  Therefore,
+       write software that can be changed.
+
+P.S.  None of the above is an excuse to write bad code.
+
+CONTENTS:
+        identity.py:    Implements Broadway's underlying identity concepts.
+                        In otherwords the API related to uniquely identify
+                        an individual user of the system.
+
+                        This is part of MOAB for two major reasons:
+                        1)  It is required by other parts of MOAB (e.g.
+                            the configuration service.)
+                        2)  To support the most powerful identity abstraction,
+                            it should ultimately relay on the underlying OS
+                            to simplify coordinating efforts with other parts
+                            of the system.
+
+        management.py:  Provides Broadway's underlying API to manage users and
+                        there roles.
+
+# Configure this file the way "The Bastard" likes it in Emacs.
+# Local Variables:
+# mode:Text
+# mode:Auto-Fill
+# fill-column:79
+# indent-tabs-mode:nil
+# End:

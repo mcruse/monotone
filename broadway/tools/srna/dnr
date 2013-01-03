@@ -1,0 +1,9 @@
+#!/bin/bash
+# Reboot this NBM.
+#
+exec </dev/null >/dev/null 2>/dev/null
+sleep 1
+init 2
+sleep 5
+init 3
+sleep 5

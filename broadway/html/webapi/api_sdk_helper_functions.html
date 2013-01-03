@@ -1,0 +1,180 @@
+<!--
+Copyright (C) 2008 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<html>
+<head>
+<!-- $Name: mediator_3_1_2_branch $ -->
+<!-- $Id: api_sdk_helper_functions.html 20101 2011-03-06 16:02:15Z bhagn $ -->
+<title>Documentation SDK Functions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+<link rel="stylesheet" href="css/webapi.css" type="text/css">
+</head>
+
+<body>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr> 
+    <td  colspan="2"> 
+      <table width="100%">
+        <tr> 
+          <td class="page_header"><img src="images/header.png" width="639px" height="100px"></td>
+          <td align="right" valign="top"><a href="/index.html">Home Page</a>&nbsp;|&nbsp;&nbsp;<a href="api.html">back to api</a></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr> 
+    <td class="header_bottom" >&nbsp;</td>
+  </tr>
+  <tr> 
+    <td width="100%" class="documentation_header">SDK Functions   
+    </td>
+  </tr>
+  <tr> 
+    <td width="100%">
+      <table width="100%" border="0">
+        <tr> 
+          <td><a href="#login_window" class="function">login_window</a></td>
+        </tr>  
+         <tr> 
+          <td><a href="#precision" class="function">precision</a></td>
+        </tr> 
+        <tr> 
+          <td><a href="#start_refresh_loop" class="function">start_refresh_loop</a></td>
+        </tr> 
+         <tr> 
+          <td>&nbsp;</td>
+        </tr>         
+        <tr> 
+          <td class="outer_color">
+<table width="100%" border="0" cellpadding="3">
+  <tr> 
+    <td colspan="2" class="function_header">
+       <a name="login_window"></a><span class="function">login_window</span>(<span class="param">get_mediator</span>,<span class="param">callback</span>)</td>
+  </tr>
+  <tr> 
+    <td class="inner_color" colspan="2" class="function_def">opens a login window so the user can login</td>
+  </tr>
+  <tr><td width="30" class="param">get_mediator</td>
+<td width="91%" class="param_def">name of function to call to get a refrence to the mediator object
+</td>
+</tr>
+<tr><td width="30" class="param">callback</td>
+<td width="91%" class="param_def">name of the callback function you want called after login
+</td>
+</tr>
+
+  <tr><td class="label" width="30">Return</td>
+<td class="return">null</td></tr>
+  <tr><td class="label" width="30">NOTE</td>
+<td class="note">get_mediator and callback are strings to functions in your main page the login window uses the eval function to call your function</td>
+</tr><tr><td class="label" width="30">NOTE</td>
+<td class="note">Example:  eval('window.opener.' + get_mediator + '()')</td>
+</tr><tr><td class="label" width="30">NOTE</td>
+<td class="note">get_mediator should return a refrence to your mediator object</td>
+</tr><tr><td class="label" width="30">NOTE</td>
+<td class="note">the callback function will be passed the mediator object that is logged in</td>
+</tr>
+</table>
+          </td>
+        </tr>
+        <tr>
+          <td>&nbsp;
+          </td>
+        </tr>
+        <tr>
+          <td class="outer_color">
+<table width="100%" border="0" cellpadding="3">
+  <tr> 
+    <td colspan="2" class="function_header">
+       <a name="precision"></a><span class="function">precision</span>(<span class="param">element</span>,<span class="param">value</span>,<span class="param">decimal_places</span>,<span class="param">display_error</span>)</td>
+  </tr>
+  <tr> 
+    <td class="inner_color" colspan="2" class="function_def">takes a float value and returns a float to the decimal places specified and then updates the given element</td>
+  </tr>
+  <tr><td width="30" class="param">element</td>
+<td width="91%" class="param_def">refrence to an HTML element
+</td>
+</tr>
+<tr><td width="30" class="param">value</td>
+<td width="91%" class="param_def">current value
+</td>
+</tr>
+<tr><td width="30" class="param">decimal_places</td>
+<td width="91%" class="param_def">the number of decimal_places to change to
+</td>
+</tr>
+<tr><td width="30" class="param">display_error</td>
+<td width="91%" class="param_def">value to display if there is an error
+</td>
+</tr>
+
+  <tr><td class="label" width="30">Return</td>
+<td class="return">null</td></tr>
+  
+</table>
+          </td>
+        </tr>
+        <tr>
+          <td>&nbsp;
+          </td>
+        </tr>
+        <tr>
+          <td class="outer_color">
+
+
+        <table width="100%" border="0" cellpadding="3">
+  <tr> 
+    <td colspan="2" class="function_header">
+       <a name="start_refresh_loop"></a><span class="function">start_refresh_loop</span>(<span class="param">page_properties</span>)</td>
+  </tr>
+  <tr> 
+    <td class="inner_color" colspan="2" class="function_def">start the refreshing of the page</td>
+  </tr>
+  <tr><td width="30" class="param">page_properties</td>
+<td width="91%" class="param_def"></td>
+</tr>
+
+  <tr><td class="label" width="30">Return</td>
+<td class="return">null</td></tr>
+  
+</table>
+       </td>
+       </tr>
+      </table>
+    </td>
+  </tr>
+  <tr> 
+    <td class="footer" colspan="2"><span class="footer">&copy;Envenergy</span></td>
+  </tr>
+</table>
+</body>
+</html>

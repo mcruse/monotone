@@ -1,0 +1,3 @@
+Note that "pageBackground.jpg" is the same image as 
+"Wallpaper_Adefault_1260x1024.jpg".  I decided to use a shorter named 
+version that could be replace by different versions if needed.

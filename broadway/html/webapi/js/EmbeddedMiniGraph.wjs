@@ -1,0 +1,581 @@
+/*
+Purpose: Embedded Mini-Graph widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: EmbeddedMiniGraph.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+
+function CFGParameter(widget, attribute, cfg_param, default_value,
+		      /* [ */ override_encode /* ] */) {
+  this.widget = widget;
+  this.attribute = attribute;
+  this.cfg_param = cfg_param;
+  this.default_value = default_value;
+  this.override_encode = override_encode;
+  widget[attribute] = default_value;
+  return;
+}
+
+CFGParameter.prototype.needsSpecifying = function () {
+  var encoded_attr = this.encode(this.widget[this.attribute]);
+  var encoded_default = this.encode(this.default_value);
+  var result = (encoded_attr != encoded_default);
+  return result;
+};
+
+CFGParameter.prototype.encode = function (value) {
+  if (this.override_encode != undefined) {
+    var result = this.override_encode.apply(this, [value]);
+    return result;
+  }
+  return value.toString();
+};
+
+CFGParameter.prototype.asAddVariable = function () {
+  var value = this.encode(this.widget[this.attribute]);
+  if (value == "$none") {
+    value = "";
+  }
+  var result = ('so.addVariable("' +
+		this.cfg_param +
+		'", "' +
+		value +
+		'");\n');
+  return result;
+};
+
+function CFGOverride(cfg_param, override_value,
+		      /* [ */ override_encode /* ] */) {
+  this.cfg_param = cfg_param;
+  this.override_value = override_value;
+  this.override_encode = override_encode;
+  return;
+}
+
+CFGOverride.prototype.encode = function (value) {
+  if (this.override_encode != undefined) {
+    var result = this.override_encode.apply(this, [value]);
+    return result;
+  }
+  return value.toString();
+};
+
+CFGOverride.prototype.asAddVariable = function () {
+  var result = ('so.addVariable("' +
+		this.cfg_param +
+		'", "' +
+		this.encode(this.override_value) +
+		'");\n');
+  return result;
+};
+
+function EmbeddedMiniGraph(){
+  this.base = Widget;
+  this.base();
+  this._name = 'EmbeddedMiniGraph';
+  this.config_description ='';
+
+  this.cfg_dict = {};
+  this.override_dict = {};
+
+  this._graph_width = '100px';
+  this._graph_height = '100px';
+  this._z_index = '1000';
+
+  this.node_selector_log_node = 'true';
+  this.color_selector_background_color = 'true';
+  this.color_selector_text_color = 'true';
+
+  var strip_regex = new RegExp("^\\s*(.*)\\s*$", "");
+  var encode_strip = function (value) {
+    if (value == null) {
+      return null;
+    }
+    var result = strip_regex.exec(value.toString());
+    if (result == null || result.length != 2) {
+      return "";
+    }
+    return result[1];
+  };
+
+  var color_regex = new RegExp("^\\W*([0-9A-Fa-f]+)\\W*$", "");
+  var encode_color = function (color) {
+    if (color == null) {
+      return null;
+    }
+    var hex = color_regex.exec(color);
+    if (hex == null || hex.length != 2) {
+      return value;
+    }
+    return "0x" + hex[1];
+  };
+  this.encode_color = encode_color;
+
+  var encode_csl = function (csl) {
+    var columns = csl.split(',');
+    for (var i=0; i<columns.length; i++) {
+      columns[i] = encode_strip(columns[i]);
+    }
+    return columns.join();
+  };
+
+  var timespan_regex = new RegExp("^\\s*([0-9]+[\\.]?[0-9]*)\\s*("
+				  + "s|sec[\\.]?|second[s]?"
+				  + "|m|min[\\.]?|minute[s]?"
+				  + "|h|hr[\\.]?|hour[s]?"
+				  + "|d|day[s]?"
+				  + "|w|wk[\\.]?|week[s]?"
+				  + "|mon[\\.]?|month[s]?"
+				  + "|y|yr[\\.]?|year[s]?"
+				  + ")?\\s*$", "i");
+  var encode_timespan = function (timespan) {
+    if (timespan == null) {
+      return null;
+    }
+    var result = timespan_regex.exec(timespan);
+    if (result == null || result.length == 2) {
+      // No units specified.
+      return result[1];
+    }
+    if (result == null || result.length != 3) {
+      return value;
+    }
+    var n = Number(result[1]);
+    var unit = result[2].toLowerCase();
+    var seconds = 6*3600;
+    switch (unit[0]) {
+    case 's':
+      // seconds:
+      seconds = n * 1;
+      break;
+    case 'm':
+      if (unit.length > 1 && unit[1] == 'o') {
+	// months: 60 seconds/minute * 60 minutes/hour *
+	//         24 hours/day * 28 days/month
+	seconds = n * 2419200;
+      } else {
+	// minutes: 60 seconds/minute
+	seconds = n * 60;
+      }
+      break;
+    case 'h':
+      // hours: 60 seconds/minute * 60 minutes/hour
+      seconds = n * 3600;
+      break;
+    case 'd':
+      // days: 60 seconds/minute * 60 minutes/hour * 24 hours/day
+      seconds = n * 86400;
+      break;
+    case 'w':
+      // weeks: 60 seconds/minute * 60 minutes/hour *
+      //        24 hours/day * 7 days/week
+      seconds = n * 604800;
+      break;
+    case 'y':
+      // years: 60 seconds/minute * 60 minutes/hour *
+      //        24 hours/day * 365 days/year
+      seconds = n * 31536000;
+      break;
+    }
+    return seconds.toString();
+  };
+
+  this.add_cfg_param('_log_node', 'CFG.log_uri', '', encode_strip);
+  this.add_cfg_param('_graph_title', 'CFG.titlebar.title_text', '',
+		     encode_strip);
+  this.add_cfg_param('_legend_lable_text', 'CFG.legend.label.text', 'Legend',
+		     encode_strip);
+  this.add_cfg_param('_text_fontname', 'CFG.text_format.font', "Verdana",
+		     encode_strip);
+  this.add_cfg_param('_text_fontsize', 'CFG.text_format.size', null,
+		     encode_strip);
+  this._text_fontsize = '10';
+  this.add_cfg_param('_text_color', 'CFG.text_format.color', null,
+		     encode_color);
+  this._text_color = '#FFFF33';
+  this.add_cfg_param('_background_color',
+		     'CFG.background.fill_style.rgb', null, encode_color);
+  this._background_color = "#000033";
+  this.add_cfg_param('_yaxis_from',
+		     'CFG.axes.value1.range_origin', "auto", encode_strip);
+  this.add_cfg_param('_yaxis_to', 'CFG.axes.value1.range_limit', "auto",
+		     encode_strip);
+  this.add_cfg_param('_yaxis_type', 'CFG.axes.value1.type', "numeric",
+		     encode_strip);
+  this.add_cfg_param('_yaxis_value_map', 'CFG.axes.value1.value_map', "",
+		     encode_strip);
+  this.add_cfg_param('_initial_timespan',
+		     'CFG.axes.time.default_timespan', null,
+		     encode_timespan);
+  this._initial_timespan = "1 minute";
+  this.add_cfg_param('_enable_secondary_yaxis',
+		     'CFG.axes.value2.enable', false, encode_strip);
+  this.add_cfg_param('_secondary_yaxis_points',
+		     'CFG.axes.value2.points', "", encode_csl);
+  this.add_cfg_param('_secondary_yaxis_from',
+		     'CFG.axes.value2.range_origin', "auto", encode_strip);
+  this.add_cfg_param('_secondary_yaxis_to',
+		     'CFG.axes.value2.range_limit', "auto", encode_strip);
+  this.add_cfg_param('_secondary_yaxis_type',
+		     'CFG.axes.value2.type', "binary", encode_strip);
+  this.add_cfg_param('_secondary_yaxis_value_map',
+		     'CFG.axes.value2.value_map', "", encode_strip);
+  /*
+    _level0['CFG.legend.label.text'] = '?';
+    _level0['CFG.titlebar.title_text'] = '';
+
+    _level0['CFG.axes.time.default_timespan'] = '60 samples'
+    _level0['CFG.legend.label.text_format.size'] = '8'
+    _level0['CFG.matte.gradient_fill_style.colors'] = '0x000033'
+  */
+
+  this.add_cfg_override("CFG.toolbar.enable", "false");
+  this.add_cfg_override("CFG.titlebar.enable", "true");
+  this.add_cfg_override("CFG.axes.value1.enable", "false");
+  this.add_cfg_override("CFG.axes.value2.enable", "false");
+  this.add_cfg_override("CFG.axes.time.enable", "false");
+  this.add_cfg_override("CFG.axes.time.semi_auto_scroll", "false");
+  this.add_cfg_override("CFG.axes.time.force_auto_scroll", "true");
+  this.add_cfg_override("CFG.annotation.format", "small");
+  this.add_cfg_override("CFG.legend.label.justification", "right");
+  this.add_cfg_override("CFG.titlebar.title_justification", "left");
+  this.add_cfg_override("CFG.menu.zoomin", "true");
+  this.add_cfg_override("CFG.menu.zoomout", "true");
+
+  for (var i=1; i<10; i++) {
+    // CFG.graph.id[1-9].line_style.rgb
+    this['color_selector_point_' + i.toString() + '_color'] = 'true';
+    this.add_cfg_param('_point_' + i.toString() + '_color',
+		       'CFG.graph.id' + i.toString() + '.line_style.rgb',
+		       this.DEFAULT_LINE_COLORS[i-1],
+		       encode_color);
+  }
+  this.graph_id = null;
+  this.EDIT_DOC_HACK = true;
+  this.edit_doc = null;
+  return;
+}
+
+EmbeddedMiniGraph.prototype = new Widget();
+
+EmbeddedMiniGraph.prototype.DEFAULT_LINE_COLORS = ["#FF0000",
+					       "#00FF00",
+					       "#0000FF",
+					       "#FFFF00",
+					       "#CC00CC",
+					       "#00CC00",
+					       "#0000CC",
+					       "#CCCC00",
+					       "#00CCCC",
+					       "#CC00CC"];
+
+EmbeddedMiniGraph.prototype.add_cfg_param = function(attribute_name,
+						 cfg_param_name,
+						 default_value,
+						 override_encode) {
+  var cfg_param_obj = new CFGParameter(this,
+				       attribute_name,
+				       cfg_param_name,
+				       default_value,
+				       override_encode);
+  this.cfg_dict[attribute_name] = cfg_param_obj;
+  return;
+};
+
+EmbeddedMiniGraph.prototype.add_cfg_override = function(cfg_param_name,
+							override_value,
+							override_encode) {
+  var cfg_override_obj = new CFGOverride(cfg_param_name,
+					 override_value,
+					 override_encode);
+  this.override_dict[cfg_param_name] = cfg_override_obj;
+  return;
+};
+
+EmbeddedMiniGraph.prototype.newGraphID = function(){
+  var id;
+  var number = 1;
+  var e = null;
+  while(true){
+    id = 'embedded_graph_' + number.toString();
+    e = this.edit_doc.getElementById(id);
+    if (e == null){
+        break;
+    }
+    else{
+      number++;
+    }
+  }
+  return id;
+};
+
+EmbeddedMiniGraph.prototype.after_config_table = function() {
+  Widget_log('EmbeddedMiniGraph.after_config_table(), at top');
+};
+
+EmbeddedMiniGraph.prototype.get_enable_secondary_yaxis_defaults = function() {
+  var s = document.createElement('input');
+  s.setAttribute('id', 'EmbeddedMiniGraph_enable_secondary_yaxis');
+  s.setAttribute('type', 'checkbox');
+  if (this._enable_secondary_yaxis == true ||
+      this._enable_secondary_yaxis == 'true') {
+    this.checked = true; // Doesn't seem to work for dynamic content before
+                         // it's inserted.
+    s.setAttribute('checked', 'true'); // Presence of attribute works for FF.
+    s.setAttribute('defaultChecked', 'true'); // Belt AND suspenders for IE.
+  }
+  // else:  Lack of attributes is unchecked.
+  return s;
+};
+
+EmbeddedMiniGraph.prototype.get_yaxis_type_defaults = function() {
+  var s = document.createElement('select');
+
+  s.setAttribute('id', 'EmbeddedMiniGraph_yaxis_type');
+
+  var o = document.createElement('option');
+
+  o.value = 'numeric';
+  o.innerHTML = 'numeric';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'binary';
+  o.innerHTML = 'binary';
+  s.appendChild(o);
+  return s;
+};
+
+EmbeddedMiniGraph.prototype.get_secondary_yaxis_type_defaults = function() {
+  var s = document.createElement('select');
+
+  s.setAttribute('id', 'EmbeddedMiniGraph_secondary_yaxis_type');
+
+  var o = document.createElement('option');
+
+  o.value = 'numeric';
+  o.innerHTML = 'numeric';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'binary';
+  o.innerHTML = 'binary';
+  s.appendChild(o);
+  return s;
+};
+
+EmbeddedMiniGraph.prototype.after_config_table = function() {
+  document.getElementById('EmbeddedMiniGraph_yaxis_type').value = this._yaxis_type;
+  document.getElementById(
+    'EmbeddedMiniGraph_secondary_yaxis_type').value = this._secondary_yaxis_type;
+  return;
+};
+
+EmbeddedMiniGraph.prototype.init = function(element) {
+  Widget_log('EmbeddedMiniGraph.init(), at top');
+  this._z_index = element.getAttribute('zindex');
+  var infospan = this.get_element(element,'div','info');
+  this._graph_height = infospan.getAttribute('graph_height');
+  this._graph_width = infospan.getAttribute('graph_width');
+
+  // Load all "_voodoo" instance attributes (in cfg_dict) from the
+  // info DIV "voodoo" attributes:
+  for (var name in this.cfg_dict) {
+    var value = infospan.getAttribute(name.slice(1));
+    if (value != undefined) {
+      this[name] = value;
+    }
+  }
+  return;
+};
+
+EmbeddedMiniGraph.prototype.init_element = function (){
+  Widget_log('EmbeddedMiniGraph.init_element(), at top');
+  if (this.edit_doc == null) {
+    alert("Internal Error: this.edit_doc must be externally set.");
+  }
+  var edit_doc = this.edit_doc;
+  this.graph_id = this.newGraphID();
+  this.element = edit_doc.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version', '1_0_dev_2');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  this.element.style.position = 'absolute';
+  this.element.style.zIndex = this._z_index;
+
+  var container = edit_doc.createElement('div');
+  container.setAttribute('element','container');
+  container.style.position = 'relative';
+  container.style.verticalAlign = 'middle';
+  container.style.height = 'auto';
+  container.style.width = 'auto';
+  container.style.backgroundColor = 'transparent';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.zIndex = '0';
+
+  var infospan = edit_doc.createElement('div');
+  infospan.setAttribute('element','info');
+  infospan.setAttribute('graph_height', this._graph_height);
+  infospan.setAttribute('graph_title', this._graph_title);
+  infospan.setAttribute('graph_width', this._graph_width);
+
+  // Load all "_voodoo" instance attributes (in cfg_dict) to the
+  // info DIV "voodoo" attributes:
+  for (var name in this.cfg_dict) {
+    infospan.setAttribute(name.slice(1), this[name]);
+  }
+
+  infospan.style.position = 'relative';
+  infospan.style.backgroundColor = 'transparent';
+  infospan.style.top = '0';
+  infospan.style.left = '0';
+  infospan.style.height = 'auto';
+  infospan.style.width = 'auto';
+  infospan.style.zIndex = '0';
+
+  container.appendChild(infospan);
+
+  var graph_element = edit_doc.createElement('div');
+  graph_element.setAttribute('element','embedded_graph');
+  graph_element.setAttribute('id', this.graph_id);
+  graph_element.style.position = 'relative';
+  graph_element.style.backgroundColor = 'transparent';
+  graph_element.style.top = '0';
+  graph_element.style.left = '0';
+  graph_element.style.height = this._graph_height;
+  graph_element.style.width = this._graph_width;
+  graph_element.style.zIndex = '0';
+  graph_element.innerHTML = "Loading Graph for " + this._log_node;
+
+  container.appendChild(graph_element);
+
+  var script_element = edit_doc.createElement('script');
+
+  script_element.setAttribute('type',"text/javascript");
+  script_element.text = this.swfObjectScript(this.graph_id);
+
+  var insert_script = function (c, e) {
+    // append script element e into container c AFTER the
+    // swfobject script has loaded.
+    c.appendChild(e);
+    return;
+  };
+
+  var head = edit_doc.getElementsByTagName('head').item(0);
+  if (edit_doc.getElementById('swfobject') == undefined) {
+    var swfobject_element = edit_doc.createElement('script');
+    swfobject_element.id = 'swfobject';
+    swfobject_element.type = 'text/javascript';
+    swfobject_element.src = '/graphtool/swfobject.js';
+    if (swfobject_element.addEventListener) {
+      /* var event_callback = function () {
+       *   // This is called, but FAILS TO modify actual DOM although
+       *   // the container instance does contain the appended script_element.
+       *   insert_script(container, script_element);
+       *   return;
+       * }
+       * swfobject_element.addEventListener("load", event_callback, true);
+       */
+      // FireFox seems to wait for the previous script to load before
+      // executing the next inserted script.  But more to the point,
+      // doing the insert in the commented out callback did not work...
+      insert_script(container, script_element);
+    } else {
+      // Assumes IE...
+      swfobject_element.onreadystatechange = function () {
+	if (this.readyState == "loaded") {
+	  insert_script(container, script_element);
+	}
+	return;
+      }
+    }
+    head.appendChild(swfobject_element);
+  } else {
+    insert_script(container, script_element);
+  }
+
+  this.element.appendChild(container);
+
+  return;
+};
+
+EmbeddedMiniGraph.prototype.encodeVariableValue = function (config_value) {
+  return config_value;
+};
+
+EmbeddedMiniGraph.prototype.addVariableScript = function (config_variable,
+							config_value) {
+  config_variable = this.encodeVariableValue(config_variable);
+  return (
+    'so.addVariable("' + config_variable + '", "' + config_value + '");\n'
+    );
+};
+
+EmbeddedMiniGraph.prototype.swfObjectScript = function (){
+  var script_text = '\n';
+  script_text += 'if (window != undefined && window.parent != undefined';
+  script_text += ' && window.parent.WebExpressEditor) {\n';
+  script_text += 'var e = document.getElementById("'+this.graph_id+'");';
+  script_text += 'e.innerHTML = "This EmbeddedMiniGraph is disabled while ';
+  script_text += 'editting the web-page.";';
+  script_text += '} else {\n';
+  script_text += 'var so = new SWFObject("/graphtool/EmbeddedGraph.swf", ';
+  script_text += '"' + this.graph_id + '_swf", ';
+  script_text += '"' + parseInt(this._graph_width) + '", ';
+  script_text += '"' + parseInt(this._graph_height) + '", ';
+  script_text += '"8");\n';
+  script_text += 'so.addParam("wmode", "opaque");\n';
+  for (var attr in this.cfg_dict) {
+    var cfg_param_obj = this.cfg_dict[attr];
+    if (cfg_param_obj.needsSpecifying()) {
+      script_text += cfg_param_obj.asAddVariable();
+    }
+  }
+  /* Force matte background to match graph background. */
+  this.add_cfg_override("CFG.matte.gradient_fill_style.colors",
+			this.encode_color(this._background_color));
+  /* Set parameters that make this a MiniGraph */
+  for (attr in this.override_dict) {
+    var override_param_obj = this.override_dict[attr];
+    script_text += override_param_obj.asAddVariable();
+  }
+  script_text += 'so.write("' + this.graph_id + '");\n';
+  script_text += '}\n';
+
+  return script_text;
+};
+
+EmbeddedMiniGraph.prototype.create = function (){
+  Widget_log('EmbeddedMiniGraph.create(), at top');
+  //_msglog('EmbeddedMiniGraph.create(), arguments.length=' + arguments.length);
+  this.init_element();
+  return;
+};
+
+function EmbeddedMiniGraph_factory(){
+  return new EmbeddedMiniGraph();
+}
+
+function EmbeddedMiniGraphGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e;
+}
+
+
+var EmbeddedMiniGraph_loaded = true;
+
+/*
+  Local Variables: ***
+  mode:javascript ***
+  End: ***
+*/

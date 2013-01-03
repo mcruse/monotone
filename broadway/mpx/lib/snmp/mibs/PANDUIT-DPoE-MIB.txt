@@ -1,0 +1,729 @@
+PANDUIT-DPoE-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+		MODULE-IDENTITY,
+		OBJECT-IDENTITY,
+		OBJECT-TYPE,
+		Unsigned32,
+		NOTIFICATION-TYPE
+                                	FROM SNMPv2-SMI
+
+		MODULE-COMPLIANCE, 
+		OBJECT-GROUP,
+		NOTIFICATION-GROUP,
+		AGENT-CAPABILITIES
+
+                                	FROM SNMPv2-CONF
+
+		sysName 
+					FROM SNMPv2-MIB
+
+		pethMainPseUsageThreshold,
+		pethMainPseConsumptionPower,
+		pethPsePortPowerClassifications,
+		pethPsePortType
+					FROM POWER-ETHERNET-MIB
+
+		panduitProdPanel,
+		panduitCapabilities 
+					FROM PANDUIT-REG
+
+		PanduitLedColor,
+		PanduitBlinkState,
+		PanduitOverride,
+		PanduitDuration,
+		PanduitPoEForcePowerType,
+		PanduitPoEDetectType,
+		PanduitPoEMPSType,
+		PanduitPoELegacyDelay,
+		PanduitPoEVoltageType  
+					FROM PANDUIT-TC
+
+		panduitIdentificationMAC,
+		panduitNetSNMPTrapRecvIP,
+		panduitCommonNotifyPortNumber 
+					FROM PANDUIT-COMMON-MIB
+
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonPortLocLocation,
+		panduitProdPanelCommonRackPositionId
+					FROM PANDUIT-PRODUCTS-PANEL-COMMON-MIB;
+
+				
+
+--
+-- Managed Network Solutions contact information.
+--
+panduitProdPanelDPoE MODULE-IDENTITY
+        LAST-UPDATED    "200609120000Z"         
+        ORGANIZATION    "Panduit Corp."
+        CONTACT-INFO
+                "       Panduit Corp.
+                        Managed Network Solutions Group
+
+                Postal: Panduit Corp.
+                        17301 Ridgeland Avenue
+                        Tinley Park, IL 60477-3091
+                        USA
+
+                   Tel: +1 708 532-1800/888-506-5400
+
+                E-mail: info@panduit.com"
+
+        DESCRIPTION
+                        "MIB module to support managed objects for the DPoE Powered Panels."
+
+        REVISION        "200501050000Z"         
+
+        DESCRIPTION
+                        "Initial version of this MIB module."
+
+        REVISION        "200609120000Z"         
+
+        DESCRIPTION
+                        "Update for new features:
+			 - New OID Structure
+			 - Firmware Update Support
+			 - Deprecated old OIDs"
+
+
+        ::= { panduitProdPanel 2 }
+
+
+--
+--                      port LED Table Objects
+--
+panduitProdDPoEPortLedTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF PanduitProdDPoEPortLedEntry
+        MAX-ACCESS not-accessible
+        STATUS deprecated
+        DESCRIPTION
+                "Led information by Port."
+        ::= { panduitProdPanelDPoE 1 }
+
+panduitProdDPoEPortLedEntry OBJECT-TYPE
+        SYNTAX PanduitProdDPoEPortLedEntry
+        MAX-ACCESS not-accessible
+        STATUS deprecated
+        DESCRIPTION
+                "Port LED Table Row definition"
+	INDEX	{ panduitProdDPoEPortLedIndex }
+        ::= { panduitProdDPoEPortLedTable 1 }
+
+	PanduitProdDPoEPortLedEntry ::= SEQUENCE{
+		panduitProdDPoEPortLedIndex 	Unsigned32,
+		panduitProdDPoEPortLedColor	PanduitLedColor,
+		panduitProdDPoEPortLedRate	PanduitBlinkState,
+		panduitProdDPoEPortLedOverride	PanduitOverride
+		}
+
+panduitProdDPoEPortLedIndex OBJECT-TYPE
+        SYNTAX Unsigned32(1..2147483647)
+        MAX-ACCESS read-only
+        STATUS deprecated
+        DESCRIPTION
+                "Table index.  This object is only accessible for
+		notification, but SNMPv2-SMI only allows not-accessible."
+        ::= { panduitProdDPoEPortLedEntry 1 }
+
+panduitProdDPoEPortLedColor OBJECT-TYPE
+        SYNTAX PanduitLedColor
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+                "LED Color."
+        ::= { panduitProdDPoEPortLedEntry 2 }
+
+panduitProdDPoEPortLedRate OBJECT-TYPE
+        SYNTAX PanduitBlinkState
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+                "LED Blink status.  Can be set to blink or steady."
+        ::= { panduitProdDPoEPortLedEntry 3 }
+
+panduitProdDPoEPortLedOverride OBJECT-TYPE
+        SYNTAX PanduitOverride
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+		"Override normal functionality.  Normal functionality is 
+		to flash green.  To override, set this value to override(2)
+		and set panduitProdDPoEPortLedColor, panduitProdDPoEPortLedRate,
+		and panduitProdDPoEPortLEDPeriod to achieve the desired result."
+        ::= { panduitProdDPoEPortLedEntry 4 }
+
+panduitProdDPoEPortLedPeriod OBJECT-TYPE
+        SYNTAX PanduitDuration
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+		"Override normal functionality.  Normal functionality is 
+		to flash green.  To override, set this value to override(2)
+		and set panduitProdDPoEPortLedColor, panduitProdDPoEPortLedRate,
+		and panduitProdDPoEPortLEDPeriod to achieve the desired result."
+        ::= { panduitProdPanelDPoE 2 }
+
+
+--
+--                      System LED Table Objects
+--
+
+panduitProdDPoESystemLedTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF PanduitProdDPoESystemLedEntry
+        MAX-ACCESS not-accessible
+        STATUS deprecated
+        DESCRIPTION
+                "Led information by Port."
+        ::= { panduitProdPanelDPoE 3 }
+
+panduitProdDPoESystemLedEntry OBJECT-TYPE
+        SYNTAX PanduitProdDPoESystemLedEntry
+        MAX-ACCESS not-accessible
+        STATUS deprecated
+        DESCRIPTION
+                "A row in the Trap Receiver Table."
+	INDEX	{ panduitProdDPoESystemLedIndex }
+        ::= { panduitProdDPoESystemLedTable 1 }
+
+	PanduitProdDPoESystemLedEntry ::= SEQUENCE{
+		panduitProdDPoESystemLedIndex 		Unsigned32,
+		panduitProdDPoESystemLedColor		PanduitLedColor,
+		panduitProdDPoESystemLedRate		PanduitBlinkState,
+		panduitProdDPoESystemLedOverride	PanduitOverride
+		}
+
+panduitProdDPoESystemLedIndex OBJECT-TYPE
+        SYNTAX Unsigned32(1..2147483647)
+        MAX-ACCESS not-accessible
+        STATUS deprecated
+        DESCRIPTION
+                "Table Index."
+        ::= { panduitProdDPoESystemLedEntry 1 }
+
+panduitProdDPoESystemLedColor OBJECT-TYPE
+        SYNTAX PanduitLedColor
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+                "LED Color."
+        ::= { panduitProdDPoESystemLedEntry 2 }
+
+panduitProdDPoESystemLedRate OBJECT-TYPE
+        SYNTAX PanduitBlinkState
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+                "LED Blink status.  Can be set to blink or steady."
+        ::= { panduitProdDPoESystemLedEntry 3 }
+
+panduitProdDPoESystemLedOverride OBJECT-TYPE
+        SYNTAX PanduitOverride
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+		"Override normal functionality.  Normal functionality is 
+		to flash green.  To override, set this value to override(2)
+		and set panduitProdDPoESystemLedColor, panduitProdDPoESystemLedRate,
+		and panduitProdDPoESystemLedPeriod to achieve the desired result."
+        ::= { panduitProdDPoESystemLedEntry 4 }
+
+panduitProdDPoESystemLedPeriod OBJECT-TYPE
+        SYNTAX PanduitDuration
+        MAX-ACCESS  read-write
+        STATUS deprecated
+        DESCRIPTION
+		"Override normal functionality.  Normal functionality is 
+		to flash green.  To override, set this value to override(2)
+		and set panduitProdDPoESystemLedColor, panduitProdDPoESystemLedRate,
+		and panduitProdDPoESystemLedPeriod to achieve the desired result."
+        ::= { panduitProdPanelDPoE 4 }
+
+--
+--			Panduit PoE Objects
+--
+
+panduitProdDPoEPoETable OBJECT-TYPE
+        SYNTAX SEQUENCE OF PanduitProdDPoEPoEEntry
+        MAX-ACCESS not-accessible
+        STATUS deprecated
+        DESCRIPTION
+                "Led information by Port."
+        ::= { panduitProdPanelDPoE 5 }
+
+panduitProdDPoEPoEEntry OBJECT-TYPE
+        SYNTAX PanduitProdDPoEPoEEntry
+        MAX-ACCESS not-accessible
+        STATUS deprecated
+        DESCRIPTION
+                "A row in the Trap Receiver Table."
+	INDEX	{ panduitProdDPoEPoEIndex }
+        ::= { panduitProdDPoEPoETable 1 }
+
+	PanduitProdDPoEPoEEntry ::= SEQUENCE{
+		panduitProdDPoEPoEIndex 	Unsigned32,
+		panduitProdDPoEPoEForcePwr	PanduitPoEForcePowerType ,
+		panduitProdDPoEPoEDetectControl	PanduitPoEDetectType,
+		panduitProdDPoEPoEMPSType	PanduitPoEMPSType 
+		}
+
+panduitProdDPoEPoEIndex OBJECT-TYPE
+        SYNTAX Unsigned32(1..2147483647)
+        MAX-ACCESS not-accessible
+        STATUS deprecated
+        DESCRIPTION
+                "Table Index."
+        ::= { panduitProdDPoEPoEEntry 1 }
+
+
+panduitProdDPoEPoEForcePwr OBJECT-TYPE
+        SYNTAX PanduitPoEForcePowerType
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+                "Allows power to be forced for PDs that can not be 
+				detected by PSE.  Not all PDs may be supported."
+
+        ::= { panduitProdDPoEPoEEntry 2 }
+
+panduitProdDPoEPoEDetectControl OBJECT-TYPE
+        SYNTAX PanduitPoEDetectType
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+                "Determines what PD types will be detected."
+        ::= { panduitProdDPoEPoEEntry 3 }
+
+panduitProdDPoEPoEMPSType OBJECT-TYPE
+        SYNTAX PanduitPoEMPSType
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+                "The Maintain Power Signature component(s) monitored by the PSE."
+        ::= { panduitProdDPoEPoEEntry 4 }
+
+
+panduitProdDPoELegacyDelay OBJECT-TYPE
+        SYNTAX PanduitPoELegacyDelay
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+                "Length of time to detect a legacy PD."
+        ::= { panduitProdPanelDPoE 6 }
+
+panduitProdDPoEVoltage OBJECT-TYPE
+        SYNTAX PanduitPoEVoltageType 
+        MAX-ACCESS read-only
+        STATUS deprecated
+        DESCRIPTION
+                "Input voltage to the PSE.  802.3af states that the voltage
+				should be between 44-57 volts."
+        ::= { panduitProdPanelDPoE 7 }
+
+panduitProdDPoEVoltageA OBJECT-TYPE
+        SYNTAX PanduitPoEVoltageType 
+        MAX-ACCESS read-only
+        STATUS deprecated
+        DESCRIPTION
+                "Input voltage at Power connector A.  802.3af states that the voltage
+		should be between 44-57 volts."
+        ::= { panduitProdPanelDPoE 8 }
+
+panduitProdDPoEVoltageB OBJECT-TYPE
+        SYNTAX PanduitPoEVoltageType 
+        MAX-ACCESS read-only
+        STATUS deprecated
+        DESCRIPTION
+		"Input voltage at Power Connector B.  802.3af states that the voltage
+		should be between 44-57 volts."
+        ::= { panduitProdPanelDPoE 9 }
+
+--
+--		DPoE Notification Objects
+--
+panduitProdPanelDPoENotifications OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "DPoE Notifications."
+        ::= { panduitProdPanelDPoE 0 }
+
+panduitDPoEPanelSelfTestPass NOTIFICATION-TYPE
+	OBJECTS {	
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName }
+        STATUS deprecated
+        DESCRIPTION
+		"DPoE panel has completed diagnostics successfully and is
+		up and running.  This notification has not been implemented."
+        ::= { panduitProdPanelDPoENotifications 1 }
+
+panduitDPoEPortPowerStatusChange OBJECT IDENTIFIER ::= { panduitProdPanelDPoENotifications 3 }
+
+panduitDPoEPortPowerStatusOn NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName,
+		panduitCommonNotifyPortNumber,
+		pethPsePortPowerClassifications,
+		panduitProdPanelCommonPortLocLocation }
+        STATUS deprecated
+        DESCRIPTION
+		"The PSE has detected and powered a PD.  All columnar
+		objects refer to the port connected to the PD."
+        ::= { panduitDPoEPortPowerStatusChange 1}
+
+panduitDPoEPortPowerStatusOff NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName,
+		panduitCommonNotifyPortNumber,
+		pethPsePortPowerClassifications,
+		panduitProdPanelCommonPortLocLocation }
+        STATUS deprecated
+        DESCRIPTION
+                "The PSE has detected and powered a PD at a port.  All columnar
+		objects refer to the port connected to the PD."
+        ::= { panduitDPoEPortPowerStatusChange 2 }
+
+panduitDPoEPortPowerStatusFault NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName,
+		panduitCommonNotifyPortNumber,
+		pethPsePortPowerClassifications,
+		panduitProdPanelCommonPortLocLocation }
+        STATUS deprecated
+        DESCRIPTION
+                "The PSE has detected a overcurrent fault."
+        ::= { panduitDPoEPortPowerStatusChange 3 }
+
+panduitDPoEPanelAboveThreshold NOTIFICATION-TYPE
+	OBJECTS {	
+			panduitIdentificationMAC,
+			panduitProdPanelCommonRackId,
+			panduitProdPanelCommonRackPositionId,
+			sysName,
+			pethMainPseUsageThreshold,
+			pethMainPseConsumptionPower }
+	STATUS deprecated
+        DESCRIPTION
+                "The Power consumption has gone above the user-defined
+				threshold, pethMainPseUsageThreshold."
+        ::= { panduitProdPanelDPoENotifications 4 }
+
+panduitDPoEPanelBelowThreshold NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName,
+		pethMainPseUsageThreshold,
+		pethMainPseConsumptionPower
+		}
+	STATUS deprecated
+        DESCRIPTION
+                "The Power consumption has previously gone above the user-defined
+		threshold,pethMainPseUsageThreshold, and is now below the 
+		user-defined threshold."
+        ::= { panduitProdPanelDPoENotifications 5 }
+
+panduitDPoEPanelFailure NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName
+		}
+	STATUS deprecated
+        DESCRIPTION
+                "The panel's 12A port power fuse has blown and the
+		ports can no longer provide power to the atttached
+		PDs."
+        ::= { panduitProdPanelDPoENotifications 6 }
+
+panduitDPoEPortLocationChange NOTIFICATION-TYPE
+	OBJECTS {	
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName,
+		panduitCommonNotifyPortNumber,
+		pethPsePortType,
+		panduitProdPanelCommonPortLocLocation }
+        STATUS deprecated
+        DESCRIPTION
+		"The work area location for a panel port has been changed.
+		All columnar objects refer to the affected panel port."
+        ::= { panduitProdPanelDPoENotifications 7 }
+
+panduitDPoESelfTestFail NOTIFICATION-TYPE
+	OBJECTS { panduitIdentificationMAC }
+        STATUS deprecated
+        DESCRIPTION
+                "The panel has failed POST.  This notification has not been
+				implemented."
+        ::= { panduitProdPanelDPoENotifications 8 }
+
+panduitDPoETrapRecipientAdded NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		sysName,
+		panduitNetSNMPTrapRecvIP
+		}
+        STATUS deprecated
+        DESCRIPTION
+                "A trap recipient has been added or enabled."
+        ::= { panduitProdPanelDPoENotifications 9 }
+
+panduitDPoEPortPDDetectionFault NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName,
+		panduitCommonNotifyPortNumber,
+		pethPsePortType,
+		panduitProdPanelCommonPortLocLocation }
+        STATUS deprecated
+        DESCRIPTION
+		"The PSE has detected a device attached to a port,
+		but could not classify the PD or has encountered an
+		error in the power detection algorithm.  All columnar
+		objects refer to the port connected to the PD."
+        ::= { panduitProdPanelDPoENotifications 10 }
+
+panduitDPoEPanelPowerLow NOTIFICATION-TYPE
+	OBJECTS {
+			panduitIdentificationMAC,
+			panduitProdPanelCommonRackId,
+			panduitProdPanelCommonRackPositionId,
+			sysName,
+			panduitProdDPoEVoltage
+			}
+        STATUS deprecated
+        DESCRIPTION
+		"The incoming voltage to the panel is below the valid 
+		range.  The incoming voltage must be between 46 and 
+		57 volts.  The event is sent once for each time the 
+		measured incoming voltage transitions below the 
+		valid range."
+        ::= { panduitProdPanelDPoENotifications 11 }
+
+panduitDPoEPanelPowerHigh NOTIFICATION-TYPE
+	OBJECTS {
+			panduitIdentificationMAC,
+			panduitProdPanelCommonRackId,
+			panduitProdPanelCommonRackPositionId,
+			sysName,
+			panduitProdDPoEVoltage
+			}
+        STATUS deprecated
+        DESCRIPTION
+                "The incoming voltage to the panel is above the valid 
+		range.  The incoming voltage must be between 46 and 
+		57 volts.  The event is sent once for each time the 
+		measured incoming voltage transitions above the 
+		valid range."
+        ::= { panduitProdPanelDPoENotifications 12 }
+
+--
+--		DPoE Conformance Section 
+--
+
+panduitDPoEConformance OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of Compliance and Group information for MIB."
+	::= { panduitProdPanelDPoE 10 }
+
+panduitDPoEGroups OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of groups within MIB."
+	::= { panduitDPoEConformance 1 }
+
+panduitDPoECompliances OBJECT-IDENTITY
+	STATUS current
+	DESCRIPTION "Compliance specifications for MIB."
+	::= { panduitDPoEConformance 2 }
+
+panduitDPoEPortLEDGroup OBJECT-GROUP
+	OBJECTS {
+		panduitProdDPoEPortLedColor	,
+		panduitProdDPoEPortLedRate,
+		panduitProdDPoEPortLedOverride,
+		panduitProdDPoEPortLedPeriod
+		}
+        STATUS deprecated
+        DESCRIPTION
+                "Panduit Port Led Objects."
+        ::= { panduitDPoEGroups 1 }
+
+panduitDPoESystemLEDGroup OBJECT-GROUP
+	OBJECTS {
+		panduitProdDPoESystemLedColor	,
+		panduitProdDPoESystemLedRate,
+		panduitProdDPoESystemLedOverride,
+		panduitProdDPoESystemLedPeriod
+		}
+        STATUS deprecated
+        DESCRIPTION
+                "Panduit System LED Objects."
+        ::= { panduitDPoEGroups 2 }
+
+panduitDPoEPoEGroup OBJECT-GROUP
+	OBJECTS {
+		panduitProdDPoEPoEForcePwr,
+		panduitProdDPoEPoEDetectControl,
+		panduitProdDPoEPoEMPSType, 
+		panduitProdDPoEVoltage,
+		panduitProdDPoEVoltageA,
+		panduitProdDPoEVoltageB,
+		panduitProdDPoEPortLedIndex			
+		}
+        STATUS deprecated
+        DESCRIPTION "Panduit PoE Objects."
+        ::= { panduitDPoEGroups 3 }
+
+panduitDPoENotificationGroup NOTIFICATION-GROUP
+	NOTIFICATIONS {	
+		panduitDPoEPanelSelfTestPass,
+		panduitDPoEPortPowerStatusOn,
+		panduitDPoEPortPowerStatusOff,
+		panduitDPoEPortPowerStatusFault,
+		panduitDPoEPanelAboveThreshold,
+		panduitDPoEPanelBelowThreshold,
+		panduitDPoEPanelFailure,
+		panduitDPoEPortLocationChange,
+		panduitDPoESelfTestFail,
+		panduitDPoETrapRecipientAdded,
+		panduitDPoEPortPDDetectionFault,
+		panduitDPoEPanelPowerLow,
+		panduitDPoEPanelPowerHigh
+		}
+        STATUS deprecated
+        DESCRIPTION	"DPoE Notification Objects."
+        ::= { panduitDPoEGroups 4 }
+
+panduitDPoEDeprecatedGroup OBJECT-GROUP
+	OBJECTS { panduitProdDPoELegacyDelay }
+        STATUS deprecated
+        DESCRIPTION "Deprecated Objects."
+        ::= { panduitDPoEGroups 6 }
+
+panduitDPoECompliance MODULE-COMPLIANCE
+	STATUS deprecated
+	DESCRIPTION "Compliance requirements for the MIB."
+	MODULE
+		MANDATORY-GROUPS {
+			panduitDPoEPortLEDGroup,
+			panduitDPoESystemLEDGroup,
+			panduitDPoEPoEGroup,
+			panduitDPoENotificationGroup
+			}
+	::=	{ panduitDPoECompliances 1 }
+
+panduitDPoECapabilites AGENT-CAPABILITIES
+	PRODUCT-RELEASE	"20050110000000z"
+	STATUS		deprecated
+	DESCRIPTION	"Agent capabilities for Panduit Powered Patch
+			Panels."
+	SUPPORTS	SNMPv2-MIB
+		INCLUDES	{snmpGroup,systemGroup,
+				snmpBasicNotificationsGroup
+				}
+		VARIATION	sysORTable
+			DESCRIPTION
+				"snmpMIB is the only implemented MIB in
+				sysORTable."
+			
+	SUPPORTS	POWER-ETHERNET-MIB
+		INCLUDES	{pethPsePortGroup,pethMainPseGroup,
+				pethNotificationControlGroup,
+				pethPsePortNotificationGroup,
+				pethMainPowerNotificationGroup
+				}
+		VARIATION	pethMainPsePower
+			DESCRIPTION	"Divide Value by 100"
+		VARIATION	pethMainPseConsumptionPower
+			DESCRIPTION	"Divide Value by 100"
+							
+	SUPPORTS	PANDUIT-COMMON-MIB
+		INCLUDES	{panduitCommonIdentificationGroup,
+				panduitCommonNetworkGroup,
+				panduitCommonNotificationGroup
+				}
+							
+	SUPPORTS	PANDUIT-PRODUCTS-PANEL-COMMON-MIB
+		INCLUDES	{panduitProdPanelCommonInfoGroup }
+	::=	{ panduitCapabilities 1 }
+							
+
+panduitDPoECapabilites2 AGENT-CAPABILITIES
+	PRODUCT-RELEASE	"200608020000000z"
+	STATUS		current
+	DESCRIPTION	"Agent capabilities for Panduit Powered Patch
+			Panels."
+	SUPPORTS	SNMPv2-MIB
+		INCLUDES	{snmpGroup,systemGroup,
+				snmpBasicNotificationsGroup
+				}
+		VARIATION	sysORTable
+			DESCRIPTION
+				"snmpMIB is the only implemented MIB in
+				sysORTable."
+			
+	SUPPORTS	POWER-ETHERNET-MIB
+		INCLUDES	{pethPsePortGroup,pethMainPseGroup,
+				pethNotificationControlGroup,
+				pethPsePortNotificationGroup,
+				pethMainPowerNotificationGroup
+				}
+		VARIATION	pethMainPsePower
+			DESCRIPTION	"Divide Value by 100"
+		VARIATION	pethMainPseConsumptionPower
+			DESCRIPTION	"Divide Value by 100"
+							
+	SUPPORTS	PANDUIT-COMMON-MIB
+		INCLUDES	{panduitCommonIdentification2Group,
+				panduitCommonNetworkGroup,
+				panduitCommonNotification2Group
+				}
+							
+	SUPPORTS	PANDUIT-PRODUCTS-PANEL-COMMON-MIB
+		INCLUDES	{panduitProdPanelCommonInfo2Group }
+
+	SUPPORTS	PANDUIT-APPS-LED-MIB 
+		INCLUDES	{panduitAppsLEDPortLEDGroup,
+				panduitAppsLEDSystemLEDGroup 
+				}
+
+	SUPPORTS	PANDUIT-APPS-PoE-MIB 
+		INCLUDES	{panduitAppsPoEGeneralGroup,
+				panduitAppsPoENotificationGroup
+				}
+
+	SUPPORTS	PANDUIT-APPS-PORTLOC-MIB
+		INCLUDES	{panduitAppsPortLocationGeneralGroup,
+				panduitAppsPortLocationNotificationGroup
+				}
+
+	SUPPORTS	PANDUIT-APPS-POWER-MIB
+		INCLUDES	{panduitAppsPowerGroup,
+				panduitAppsPowerNotificationGroup
+				}
+
+	SUPPORTS	PANDUIT-APPS-FWUPDATE-MIB 
+		INCLUDES	{panduitAppsFWUpdateGeneral2Group,
+				panduitAppsFWUpdateNotificationGroup 
+				}
+
+	::=	{ panduitCapabilities 9 }
+						
+END				

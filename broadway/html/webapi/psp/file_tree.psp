@@ -1,0 +1,75 @@
+<%
+# Copyright (c) 2005 Richards-Zeta
+# $Name: mediator_3_1_2_branch $
+# $Id: file_tree.psp 20101 2011-03-06 16:02:15Z bhagn $
+from mpx import properties
+import os, fnmatch
+
+if request.get_protocol() == 'http':
+    root = properties.HTTP_ROOT
+else:
+    root = properties.HTTPS_ROOT
+
+#set fileSelector query string items to defaults
+
+selectfiles = 'all' #filter files: all, html, image, or sound
+dir = root
+
+#override with values from this page's query string
+
+qs = request.get_query_dictionary()
+if qs.has_key('dir'):
+    dir = '%s' % qs['dir']
+if qs.has_key('selectfiles'):
+    selectfiles = '%s' % qs['selectfiles']
+
+def sort_children(n1,n2):    
+    name1 = string.lower(n1.name) 
+    name2 = string.lower(n2.name) 
+    if name1 > name2:        
+        return 1
+    if name1 < name2:
+        return -1
+    if name1==name2:
+        return 0
+        
+response['Content-Type'] = 'text/xml'
+
+if selectfiles == 'html':
+    pattern_list = ['*.htm','*.html']
+elif selectfiles == 'image':
+    pattern_list = ['*.jpg','*.gif','*.png']
+elif selectfiles == 'sound':
+    pattern_list = ['*.wav']
+else:
+    #selectfiles == 'all'
+    pattern_list = ['*']
+
+def caseIndependentSort(something, other):
+    something, other = something.lower(), other.lower()
+    return(cmp(something, other))
+
+files = os.listdir(dir)
+files.sort(caseIndependentSort)
+
+theList = []
+theList.append('<?xml version="1.0"?>')
+#theList.append('<!DOCTYPE xloadtree SYSTEM "http://206.14.181.103/webapi/js/xloadtree/tree.dtd">')
+theList.append('<tree>')
+
+for name in files:
+    #filter by file selection
+    fullname = os.path.normpath(os.path.join(dir, name))
+    if os.path.isfile(fullname):
+        for pattern in pattern_list:
+            lowname = name.lower()
+            if fnmatch.fnmatch(lowname, pattern):
+                theList.append('<tree text="%s" action="javascript:file_selected();" />' % (name))
+                break
+    else:
+        theList.append('<tree text="%s" action="javascript:file_selected();" src="file_tree.psp?selectfiles=%s%%26dir=%s" />' % (name, selectfiles, fullname))
+
+theList.append('</tree>')
+for item in theList:
+    psp.write(item + '\n')
+%>

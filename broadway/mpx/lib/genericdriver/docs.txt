@@ -1,0 +1,134 @@
+Documentation for Cisco Generic Driver
+
+$Revision: 20101 $
+
+The heart of the Cisco Generic Driver is the Protocol Compiler (protocompiler).
+
+It is used to take relatively simple protocol definition files and turn them into 
+python classes that can easily be used to parse and generate binary data suitable
+for communicating with many types of devices.  With the addition of several other
+classes including SimpleLineHandler, IO point mixins and connection abstractions,
+developing a protocol which communicates with many types of devices is possible.
+
+The classes are designed such that if a more complicated protocol is required,
+that individual parts can be replaced while keeping the functionality of the
+others.  For example, if SimpleLineHandler does not fully perform as required
+for a given protocol it can be replaced with a different line handler class
+and the other pieces can remain the same as long as the new line handler
+conforms to some simple interface rules.
+
+Similarly, the connection abstractions are provided so that developement and/or
+unit tests can test a protocol using mock devices over TCP/IP while for
+production the more typical serial port can be used to communicate with the
+real device.  Again, for future purposes the connection can be based on
+some other medium (e.g. UDP) as long as the connection class conforms to the
+abstract connection interface.
+
+Each component of the Cisco Generic Driver is described in more detail below.
+
+
+-------------
+ProtoCompiler
+------------
+
+The proto compiler's job is to turn fairly simple textual descriptions of
+protocol data into python code which can be used to parse and/or generate
+the protocol data as necessary.  A typical usage scenario is as follows:
+The protocol developer has been assigned a new device protocol, so he/she
+gathers the relevant information from the protocol documentation.  Typically
+the protocols will consist of sending a request to the device and waiting
+for an appropriate response.  Both the requests and responses are usually
+some fairly simple objects or items like integers packed into a binary
+format for transmission.  In our scenario the protocol developer should
+have been able to capture from the protocol document the relevant requests
+and responses required to communicate with the device.  Once the developer
+has this information they would create protocol definition files 
+describing the requests and responses appropriate for the device.  These
+protocol definition files ("proto files") are fed into the protocol 
+compiler (protocompiler) during development and possibly at build time
+to create Python classes which can then be used by Framework nodes to
+generate the binary requests for the device and parse the binary
+responses from the device.
+
+Here is an example protocol definition file:
+class singlebyte {
+      uint8 preamble = 0xAA;
+      uint8 data;
+      uint8 postamble = 0xFF;
+}
+
+It describes a fairly simple request or response which always starts with
+a preamble of 0xAA, has one byte of data, then ends with a postamble
+of 0xFF.  So, if our data was 0xCC, then on the wire our request would
+look something like:
+
+AA CC FF
+
+To "compile" this protocol definition, the developer would save it
+in a file, say singlebyte.proto, then invoke the proto compiler:
+
+protocompiler singlebyte.proto singlebyte.py
+
+(Note: If not invoking proto compiler from the build directory, it may be
+       necessary to invoke it along these lines:
+
+       python2.2 ./protocompiler.py singlebyte.proto singlebyte.py
+)
+
+This will generate a file called singlebyte.py which will have the 
+python class which can be used to generate or parse the simple
+example requests/responses.
+
+At the time of this writing, the generated python code is:
+
+--- Begin Code --
+# This code was generated from File: singlebyte.proto .
+# Please modify the original source rather than this generated code.
+
+didimport = 0
+try:
+    import mpx.lib.genericdriver.gdhelpers as gd
+    didimport = 1
+except:
+    pass
+if not didimport:
+    try:
+        import gdhelpers as gd
+        didimport = 1
+    except:
+        pass
+if not didimport:
+    raise "Error: Could not import gdhelpers."
+
+
+class singlebyte(gd.BaseGDClass):
+    def __init__(self):
+        gd.BaseGDClass.__init__(self)
+        #
+        self.name = 'singlebyte'
+        self._isFixed = 1
+        self._width = 3
+        self._num_items = 3
+        self._isPackCompatible = 1
+        self._packSpec = '<B<B<B'
+        #
+        # Code to create item objects.
+        self.items = []
+        #
+        x = gd.IntItem(name="preamble", width=1, value=0xAA, packspec="<B", ispack=1, widthispack=0, type="uint8")
+        self.items.append(x)
+        #
+        x = gd.IntItem(name="data", width=1, packspec="<B", ispack=1, widthispack=0, type="uint8")
+        self.items.append(x)
+        #
+        x = gd.IntItem(name="postamble", width=1, value=0xFF, packspec="<B", ispack=1, widthispack=0, type="uint8")
+        self.items.append(x)
+
+--- End Code ---
+
+The code here isn't too interesting, but the most important point is that the
+generated code builds on the BaseGDClass and IntItem classes from which you
+get the actual interfaces by which you can access your new singlebyte class.
+
+These classes and others are defined in gdhelpers.py .
+

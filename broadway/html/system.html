@@ -1,0 +1,447 @@
+<!--
+Copyright (C) 2009 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" href="/public/styles/page.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/tabs.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/tables.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/pagination.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/events.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/configuration.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/messageBox.css" type="text/css">
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dojo/resources/dojo.css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dijit/themes/dijit.css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dijit/themes/tundra/tundra.css" />
+        <link rel="stylesheet" type="text/css" href="/cues/themes/kubrick/layout.css" />
+        <link rel="stylesheet" type="text/css" href="/cues/themes/kubrick/tabs.css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dojox/grid/resources/Grid.css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dojox/grid/resources/tundraGrid.css" />
+        
+        <script type="text/javascript">
+            djConfig = {
+                isDebug: false,
+                debugAtAllCosts: false,
+                parseOnLoad: true,
+                baseUrl: "/dojoroot/dojo/",
+                modulePaths: {
+                    mpx: '/mpx',
+                    cues: '/cues',
+                    utils: '/public/utils',
+                    nbmweb: '/public/nbmweb'
+                }
+            };
+        </script>
+        <script type="text/javascript" src="/dojoroot/dojo/dojo.js"></script>
+        <script type="text/javascript" src="/public/utils/debug.js"></script>
+        <script type="text/javascript" src="/public/utils/style.js"></script>
+        <script type="text/javascript" src="/dojoroot/dojoconfig/mediator_layer.js"></script>
+        <script type="text/javascript">
+            dojo.require("utils.style");
+            dojo.require("dojox.dtl._HtmlTemplated");
+            dojo.require("dojo.parser");
+            dojo.require("dijit.form.Button");
+            dojo.require("dojox.layout.ContentPane");
+            dojo.require("dijit.layout.TabContainer");
+            dojo.require("dijit.layout.ContentPane");
+            dojo.require("dojox.uuid.generateRandomUuid");
+            dojo.require("dojox.grid.DataGrid");
+            dojo.require("dijit.TitlePane");
+            dojo.require("dojo.data.ItemFileWriteStore");
+            dojo.require("dojo.date.locale");
+            dojo.require("dojox.validate.web");
+        </script>
+        <script language="JavaScript" type="text/javascript" src="/public/utils/loader.js"></script>
+        <script language="JavaScript" type="text/javascript" src="/public/utils/formtools.js"></script>
+        <script language="JavaScript" type="text/javascript">
+            function setup_actions() {
+                var container = dijit.byId("mainTabContainer");
+            }
+            loader.add_postload(setup_actions);
+        </script>
+        <script>
+        function validate_hostname(id_str) {
+                var id = dojo.byId(id_str);
+                var exp = new RegExp(/[^A-Za-z0-9\-]/);
+                if (exp.exec(id.value)) {
+                        id.style.background="red";
+                        return false;
+                } else {
+                        id.style.background="white";
+                        return true;
+                }
+        }
+        function validate_ip(id_str) {
+            var id = dojo.byId(id_str);
+            if (id.value == "") { // test for blank string
+                id.value = "0.0.0.0"; // force to zero's
+            }
+            if (dojox.validate.isIpAddress(id.value)) {
+                id.style.background="white";
+                return true;
+            } else {
+                id.style.background="red";
+                return false;
+            }
+        }
+        function validate_domain_name(id_str) {
+            var id = dojo.byId(id_str);
+            var exp = new RegExp(/^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/i);
+            if (!exp.test(id.value)) {
+                id.style.background = "red";
+                return false;
+            } else {
+                id.style.background = "white";
+                return true;
+            }
+        }
+        function validate_page() {
+            return validate_hostname('id_hostname') && 
+                validate_ip('id_hostgateway') && 
+                validate_ip('id_hostnameserver') && 
+                validate_ip('id_hostproxyserver') && 
+                validate_ip('id_eth0ipaddr') && 
+                validate_ip('id_eth1ipaddr') && 
+                validate_ip('id_eth0netmask') && 
+                validate_ip('id_eth1netmask') &&
+                validate_domain_name('id_domainname'); 
+        }
+        </script>
+
+
+<title>Cisco Network Building Mediator</title>
+</head>
+    <body class="kubrick tundra">
+        <div id="background">
+            <img src="/public/images/pageBackground.jpg" />
+        </div>
+        <div id="header">
+            <h1 class="title">Network Building Mediator</h1>
+            <ul class="actions">
+                <li><a href="">About</a></li>
+                <li>
+                    <a id="logout" href="/logout">
+                        Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div id="primary-tabs"
+            title=""
+            class="primary-tabs"
+            href="/public/templates/primary.html"
+            extractContent="false"
+            preventCache="false"
+            dojoType="dijit.layout.ContentPane"
+            onDownloadEnd="dojo.addClass('system-tab-button', 'selected');" >
+        </div>
+        <div id="stage">
+            <div id="contentarea" class="pane">
+                <div id="mainTabContainer" persist="true" dojoType="dijit.layout.TabContainer" style="width: 100%;height: 100%;">
+                    <div id="status" 
+                        title="Status" 
+                        contentType="forms" 
+                        preventCache="true" 
+                        extractContent="true" 
+                        href="/webapi/psp/mediatorconfig.psp" 
+                        dojoType="dijit.layout.ContentPane">
+                    </div>
+                    <div jsid="msglogTab" 
+                        title="Troubleshooting" 
+                        executeScripts="true" 
+                        contentType="forms" 
+                        preventCache="true" 
+                        extractContent="true" 
+                        dojoType="dojox.layout.ContentPane">
+                        <script type="dojo/method">
+                            dojo.mixin(this, {
+                              debug: 0,
+                              items: [],
+                              filteredItems: [],
+                              proxy: null,
+                              application: "all",
+                              logLevel: "all",
+                              sortOrder: "dsc",
+                              rowsToDisplay: 25,
+                              lastSeq: 0,
+                              BATCH_SIZE: 250,
+                              refreshEnabled: false,
+                              refreshRate: 10,
+                              _applications: new Object(),
+
+                              initialize: function() {
+                                this.proxy = new mpx.node.Proxy("/services/network/http_server/msglog_browser");
+                                this.loadLogs();
+                              },
+
+                              loadLogs: function() {
+                                var deferred = this.proxy.get_msglog(this.lastSeq, this.BATCH_SIZE);
+                                deferred.addCallback(function(response) {
+                                  if(response.length != 0) {
+                                    console.log("Items downloaded");
+                                    var items = response.sort(function(a, b){
+                                      return (b._seq-a._seq);});
+                                    dojo.forEach(items, function(item) {
+                                      item.timestamp = dojo.date.locale.format(new Date(item.timestamp*1000), {datePattern: "MM/dd/yyyy", timePattern: "HH:mm:ss.SS a"});
+                                      var pattern = msglogTab.getApplicationPattern(item.application);
+                                      if(!msglogTab._applications[pattern])
+                                          msglogTab._applications[pattern] = 1;
+                                      msglogTab._applications[pattern]++;
+                                    });
+                                    msglogTab.items = items.concat(msglogTab.items);
+                                    msglogTab.lastSeq = msglogTab.items[0]._seq + 1;
+                                    msglogTab.display();
+                                    msglogTab.loadLogs();
+                                  } else {
+                                    console.log("last record received");
+                                    var select = dojo.byId("application");
+                                    for(var application in msglogTab._applications) {
+                                        var option = document.createElement("option");
+                                        option.value = application.split("*")[0];
+                                        option.innerHTML = application;
+                                        select.appendChild(option);
+                                    }
+                                    select.disabled = false;
+                                    msglogTab.update();
+                                  }
+                                });
+                              },
+
+                              update: function() {
+                                if(msglogTab.refreshEnabled) {
+                                  var deferred = this.proxy.get_msglog(this.lastSeq, this.BATCH_SIZE);
+                                  deferred.addCallback(function(response) {
+                                    if(response.length != 0) {
+                                      console.log("Items downloaded");
+                                      var items = response.sort(function(a, b){
+                                        return (b._seq-a._seq);});
+                                      dojo.forEach(items, function(item) {
+                                        item.timestamp = dojo.date.locale.format(new Date(item.timestamp*1000), {datePattern: "MM/dd/yyyy", timePattern: "HH:mm:ss.SS a"});
+                                      });
+                                      msglogTab.items = items.concat(msglogTab.items);
+                                      msglogTab.lastSeq = msglogTab.items[0]._seq + 1;
+                                      msglogTab.display();
+                                  }});
+                                } else {
+                                  msglogTab.refreshEnabled = true;
+                                }
+                                setTimeout("msglogTab.update()", (msglogTab.refreshRate * 1000));
+                              },
+
+                              display: function() {
+                                this.filter();
+                                //clear the store & fill it with filtered items
+                                this.store.fetch({
+                                  scope: this,
+                                  onComplete: function(items) {
+                                    dojo.forEach(items, this.store.deleteItem, this.store);
+                                    this.store.save();
+                                  }
+                                });
+                                for(var i=0; i<this.rowsToDisplay &&  i<this.filteredItems.length; i++)
+                                  this.store.newItem(this.filteredItems[i]);
+                                this.store.save();
+                              },
+
+                              filter: function() {
+                                if((this.application == "all") && (this.logLevel == "all")) {
+                                  this.filteredItems = this.items;
+                                  return;
+                                }
+                                this.filteredItems = [];
+                                var application_filter;
+                                var logLevel_filter;
+                                
+                                for(var i=0; i<this.items.length; i++) {
+                                  if(this.application == "all" || this.items[i].application.indexOf(this.application) == 0)
+                                    application_filter = true;
+                                  else
+                                    application_filter = false;
+                                  if(this.logLevel == "all" || this.logLevel == this.items[i].type)
+                                    logLevel_filter = true;
+                                  else
+                                    logLevel_filter = false;
+
+                                  if(application_filter && logLevel_filter)
+                                    this.filteredItems.push(this.items[i]);
+                                }
+                              },
+
+                              getApplicationPattern: function(application) {
+                                  var pattern = null;
+                                  if(application.indexOf("localhost") == 0) {
+                                      if(application.indexOf("(") > 0)
+                                          pattern = application.split("(")[0] + "*";
+                                      else
+                                          pattern = application.split(",")[0] + "*";
+                                  } else if(application.indexOf("(") > 0) {
+                                      pattern = application.split("(")[0] + "*";
+                                  } else {
+                                      pattern = application;
+                                  }
+                                  return pattern;
+                              },
+
+                              error: function(err) {
+                                console.error(err);
+                              },
+
+                              store: new dojo.data.ItemFileWriteStore({
+                                data: {
+                                  items: [],
+                                  label: "timestamp",
+                                  identifier: "_seq"
+                                }
+                              }),
+
+                              _onShow: function() {
+                                if (!this.attr("initialized")) {
+                                  this.initialize();
+                                }
+                                this.attr("initialized", true);
+                              }
+                            });
+                        </script>
+                        <div dojotype="dijit.layout.ContentPane" style="overflow:hidden;">
+                            <div title="Setup" 
+                                open="false" 
+                                id="filterPane" 
+                                jsId="logsFilterPane" 
+                                dojoType="dijit.TitlePane">
+                                <form>
+                                    <table>
+                                        <tr>
+                                            <td style="width: 100px;">Application</td>
+                                            <td>
+                                                <select id="application" style="width: 150px;" disabled="disabled"/>
+                                                    <option value="all">All</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Log Level</td>
+                                            <td>
+                                                <select id="log_level" style="width: 150px;">
+                                                    <option value="all">All</option>
+                                                    <option value="error">Error</option>
+                                                    <option value="exception">Exception</option>
+                                                    <option value="fatal">Fatal</option>
+                                                    <option value="warning">Warning</option>
+                                                    <option value="traceback">Traceback</option>
+                                                    <option value="information">Information</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>No. of rows</td>
+                                            <td><input type="text" dojoType="dijit.form.NumberTextBox" value="25" constraints="{min:0}" id="rows" style="width: 150px;"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Refresh every</td>
+                                            <td><input type="text" dojoType="dijit.form.NumberTextBox" constraints="{min:0}" id="refresh" value="10" style="width: 150px;"/>seconds</td>
+                                        </tr>
+                                        <tr style="text-align: right;">
+                                            <td colspan="2">
+                                                <button dojoType="dijit.form.Button">
+                                                    <script type="dojo/method" event="onClick">
+                                                        if(!dijit.byId("rows").isValid() || !dijit.byId("refresh").isValid())
+                                                            return false;
+                                                        msglogTab.application = dojo.byId("application").value;
+                                                        msglogTab.rowsToDisplay = Number(dijit.byId("rows").value);
+                                                        var logLevel = dojo.byId("log_level");
+                                                        msglogTab.logLevel = logLevel.options[logLevel.selectedIndex].value;
+                                                        msglogTab.refreshRate = Number(dijit.byId("refresh").value);
+                                                        msglogTab.display();
+                                                        return false;
+                                                    </script>
+                                                    Update
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </form>
+                            </div>
+                            <br/>
+                            <table jsId="msglog" 
+                                region="center" 
+                                clientSort="false" 
+                                selectionMode="none" 
+                                store="msglogTab.store" 
+                                dojoType="dojox.grid.DataGrid" style="height:95%;">
+                                <script type="dojo/method" event="onStyleRow" args="row">
+                                    var item = msglog.getItem(row.index);
+                                    if (item) {
+                                        var type = msglogTab.store.getValue(item, "type", null);
+                                        if (type == "error" || type == "exception" || type == "fatal") {
+                                            row.customStyles += "color:#FF0000;";
+                                        } else if (type == "warning") {
+                                            row.customStyles += "color:#E56717;";
+                                        }
+                                    }
+                                </script>
+                                <thead>
+                                    <tr>
+                                        <th field="_seq" width="50px" noresize="true" editable="false" draggable="false">
+                                            Seq. No
+                                        </th>
+                                        <th field="timestamp" width="60px" noresize="true" editable="false" draggable="false">
+                                            Timestamp
+                                        </th>
+                                        <th field="message" width="50%" noresize="true" editable="false" draggable="false">
+                                            Message
+                                        </th>
+                                        <th field="type" width="50px" noresize="true" editable="false" draggable="false">
+                                            Type
+                                        </th>
+                                        <th field="application" width="50px" noresize="true" editable="false" draggable="false">
+                                            Application
+                                        </th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="backupRestore" 
+                        title="Backup/Restore" 
+                        contentType="forms" 
+                        preventCache="true" 
+                        extractContent="true" 
+                        href="/restore.html" 
+                        dojoType="dijit.layout.ContentPane">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+        

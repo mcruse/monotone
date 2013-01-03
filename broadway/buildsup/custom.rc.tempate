@@ -1,0 +1,59 @@
+#
+# Template build RC file for specifying tools for a custom/experimental build.
+#
+
+#
+# CC and CXX are considered the de-facto way to specify the C and C++
+# compilers, respectively.  'configure' will pick these up and set all
+# generated output files (Makefile, Constants.make, &c) to these
+# values.
+#
+CC=""
+CXX=""
+
+#
+# ac_XXX variables are intended as an intermediate resource for configure.
+# This is because autoconf is pretty particular about how it looks for non-
+# traditional programs (as opposed to the standard 'CC' and 'CXX').  In
+# order to detect and use the correct programs that support the toolchain
+# we want we have to do a little black magic in the configure script.  Sorry
+# about the extra warts.
+#
+# The ac_toolchain_dir is the base directory from whence configure will try
+# to find and test the necessary programs.  During the detection phase the
+# configure script will make a FQPN of "$ac_toolchain_dir/$ac_XXX" and
+# complain if said FQPN doesn't exist.
+#
+ac_toolchain_dir="/example/bin"
+ac_AR="ar"
+ac_LD="ld"
+ac_NM="nm"
+
+#
+# If you have compatibility issues with the local m4 installed on your system
+# then remove this line and un-comment the "M4=..." immediately below.
+#
+ac_M4="m4"
+#M4="/example/bin/m4"
+
+ac_RANLIB="ranlib"
+ac_STRIP="strip"
+
+#
+# These aren't used at the moment, planned for future version of
+# the devtools.  It is ok to leave them blank.
+#
+AUTOMAKE=""
+AUTOCONF=""
+AUTOHEADER=""
+ACLOCAL=""
+
+#
+# ENVENERGY_DT_HOME, JAVA_HOME, and ANT_HOME are Envenergy-required
+# build variables (not needed in your user environment).
+#
+# These are in devtools 3.0, which everyone has as of this writing...
+#
+ENVENERGY_DT_HOME="/opt/envenergy/devtools/3.0"
+JAVA_HOME="$ENVENERGY_DT_HOME/java/j2sdk1.4.1_02"
+ANT_HOME="$ENVENERGY_DT_HOME/ant"

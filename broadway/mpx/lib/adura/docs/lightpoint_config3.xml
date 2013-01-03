@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE XServeConfig SYSTEM "./xserve_config.dtd">
+<XServeConfig>
+	<XFieldExtractor name="LightPoint Config - Scenes 1-4" order="3">
+		<XFields>
+			<XField name="amtype" byteoffset="2" length="1" type="uint8"/>
+			<XField name="firmware_id" byteoffset="7" length="2" type="uint16" specialtype="nodeid"/>
+			<XField name="parent" byteoffset="14" length="2" type="uint16" specialtype="parentid"/>
+			<XField name="group" byteoffset="3" length="1" type="uint8"/>
+			<XField name="socketid" byteoffset="11" length="1" type="uint8"/>
+			<XField name="board_id" byteoffset="12" length="1" type="uint8" specialtype="boardid"/>
+			<XField name="packet_id" byteoffset="13" length="1" type="uint8"/>
+			<XField name="scene1" byteoffset="18" length="2" type="uint16"/>
+			<XField name="scene1_state" byteoffset="20" length="2" type="uint16"/>
+			<XField name="scene2" byteoffset="22" length="2" type="uint16"/>
+			<XField name="scene2_state" byteoffset="24" length="2" type="uint16"/>
+			<XField name="scene3" byteoffset="26" length="2" type="uint16"/>
+			<XField name="scene3_state" byteoffset="28" length="2" type="uint16"/>
+			<XField name="scene4" byteoffset="30" length="2" type="uint16"/>
+			<XField name="scene4_state" byteoffset="32" length="2" type="uint16"/>
+		</XFields>
+		<XFilter>
+			<XCondAnd>
+			
+				<!--
+					Check if this is a sensor type packet...AMTYPE_MULTIHOP or AMTYPE_XDEBUG
+					The Byte offsets defined above assume that there is a multihop header
+				-->
+				<XCondOr>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="amtype"/>
+						<XFilterParam name="fieldvalue" value="0x31"/>
+					</XCond>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="amtype"/>
+						<XFilterParam name="fieldvalue" value="0x33"/>
+					</XCond>
+					<XCondAnd>
+						<XCondOr>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="socketid"/>
+								<XFilterParam name="fieldvalue" value="0x31"/>
+							</XCond>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="socketid"/>
+								<XFilterParam name="fieldvalue" value="0x33"/>
+							</XCond>
+						</XCondOr>
+						<XCondOr>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="amtype"/>
+								<XFilterParam name="fieldvalue" value="0x0B"/>
+							</XCond>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="amtype"/>
+								<XFilterParam name="fieldvalue" value="0x0D"/>
+							</XCond>
+						</XCondOr>										
+					</XCondAnd>
+				</XCondOr>
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="board_id"/>
+					<XFilterParam name="fieldvalue" value="0x84"/>
+				</XCond>				
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="packet_id"/>
+					<XFilterParam name="fieldvalue" value="0x3"/>
+				</XCond>				
+			</XCondAnd>
+		</XFilter>
+		<XDataSinks>
+			<XDataSink name="Generic Print Datasink">
+				<XDSParam name="printstring" value="Scenes 1-4 for LightPoint %s: Scene1: %s | %s, Scene2: %s | %s, Scene3: %s | %s, Scene4: %s | %s"/>
+				<XDSParam name="printfields" value="firmware_id,scene1,scene1_state,scene2,scene2_state,scene3,scene3_state,scene4,scene4_state"/>
+			</XDataSink>
+			
+			<XDataSink name="Open Log Datasink">
+				<XDSParam name="tablename_1" value="fieldstate_groups"/>
+				<XDSParam name="createsql_1" value="CREATE TABLE fieldstate_groups ( id serial primary key, result_time timestamp without time zone, firmware_id integer, relay_group_id integer, type integer, relays integer, index integer )"/>
+				
+				<XDSParam name="deletesql_1" value="DELETE FROM fieldstate_groups WHERE firmware_id = %i AND type = 2 AND index = 1"/>
+				<XDSParam name="deletefields_1" value="firmware_id"/>
+				
+				<XDSParam name="insertsql_1" value="INSERT INTO fieldstate_groups ( firmware_id, relay_group_id, type, relays, index ) VALUES ( %i, %i, 2, %i, 1 )"/>
+				<XDSParam name="insertfields_1" value="firmware_id,scene1,scene1_state"/>
+				
+				<XDSParam name="insertsql_2" value="INSERT INTO fieldstate_groups ( firmware_id, relay_group_id, type, relays, index ) VALUES ( %i, %i, 2, %i, 1 )"/>
+				<XDSParam name="insertfields_2" value="firmware_id,scene2,scene2_state"/>
+				
+				<XDSParam name="insertsql_3" value="INSERT INTO fieldstate_groups ( firmware_id, relay_group_id, type, relays, index ) VALUES ( %i, %i, 2, %i, 1 )"/>
+				<XDSParam name="insertfields_3" value="firmware_id,scene3,scene3_state"/>
+				
+				<XDSParam name="insertsql_4" value="INSERT INTO fieldstate_groups ( firmware_id, relay_group_id, type, relays, index ) VALUES ( %i, %i, 2, %i, 1 )"/>
+				<XDSParam name="insertfields_4" value="firmware_id,scene4,scene4_state"/>
+			</XDataSink>
+			
+		</XDataSinks>
+	</XFieldExtractor>
+	
+</XServeConfig>

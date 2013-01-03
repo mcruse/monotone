@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:DataGrid xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:render="com.cisco.nbm.globalsetpoints.widget.renderers.*"
+	editable="true" allowMultipleSelection="true" doubleClickEnabled="true">
+	
+	<mx:Metadata>
+	   [ Event( name="release", type="com.cisco.nbm.globalsetpoints.event.ReleaseOverrideEvent") ]
+	</mx:Metadata>
+	
+	<mx:Script>
+	<![CDATA[
+		import com.cisco.nbm.globalsetpoints.event.ReleaseOverrideEvent;
+		
+		// Release override
+		public function releaseOverride():void{
+			var releaseOverrideEvent:ReleaseOverrideEvent = new ReleaseOverrideEvent(ReleaseOverrideEvent.RELEASE);
+			dispatchEvent(releaseOverrideEvent);
+		}
+		
+	]]>
+	</mx:Script>
+		
+	<mx:columns>
+		<mx:DataGridColumn headerText="Name" dataField="name" rendererIsEditor="true" sortable="false"/>
+		<mx:DataGridColumn headerText="Current Value" dataField="value" itemRenderer="com.cisco.nbm.globalsetpoints.widget.renderers.SetpointValueRenderer"
+			  sortable="false" editorDataField="currentvalue" rendererIsEditor="true"/>
+		<mx:DataGridColumn headerText="Priority" dataField="priority"
+                                         width="100" textAlign="center"
+                                         rendererIsEditor="true"  editorDataField="value"
+                                         itemRenderer="com.cisco.nbm.globalsetpoints.widget.renderers.NumericStepperRenderer" />
+       
+        <mx:DataGridColumn headerText="Override" width="75" editable="false"> 
+            <mx:itemRenderer>
+                <mx:Component>
+                    <mx:Box horizontalAlign="center" width="100%" verticalAlign="middle">
+						<mx:Button label="Release" width="65" height="17"
+                        	click="outerDocument.releaseOverride()" />
+                    </mx:Box>
+                </mx:Component>
+            </mx:itemRenderer>
+        </mx:DataGridColumn>
+        
+	</mx:columns>
+</mx:DataGrid>

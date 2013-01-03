@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" xmlns:ui="com.cisco.ui.*">
+<mx:Metadata>
+	[Event(name="timeUpdated", type="com.cisco.nbm.scheduler.ui.components.DailyEntryEditorEvent")]
+</mx:Metadata>
+<mx:Script>
+	<![CDATA[
+		import mx.utils.StringUtil;
+		import com.cisco.nbm.scheduler.EventMetaData;
+		import mx.collections.ArrayCollection;
+		import com.cisco.nbm.scheduler.ui.operations.UpdateEntryTimeOperation;
+		import com.cisco.app.core.operations.OperationHistory;
+		import mx.events.PropertyChangeEvent;
+		import com.cisco.nbm.scheduler.DailyEntry;
+		
+		private static const CLOCK_PERIOD:Array = ['AM', 'PM'];
+		
+		private var _entry:DailyEntry;
+		
+		private var _time:int;
+		
+		[Bindable]
+		private var canEdit:Boolean;
+		
+		[Bindable]
+		private var _eventMeta:ArrayCollection;
+		
+		public function get time():int
+		{
+			return _time;
+		}
+		
+		public function set eventMeta(value:ArrayCollection):void
+		{
+			if (value != _eventMeta)
+			{
+				_eventMeta = value;
+				
+				updateEditors();
+			}
+		}
+		
+		public function set entry(value:DailyEntry):void
+		{
+			if (value !== _entry)
+			{
+				if (_entry != null)
+				{
+					detachListeners(_entry);
+				}
+				
+				_entry = value;
+				
+				canEdit = _entry != null;
+				
+				if (_entry != null)
+				{
+					attachListeners(_entry);
+				}
+				
+				updateEditors();
+			}
+		}
+		
+		private function detachListeners(value:DailyEntry):void
+		{
+			value.removeEventListener(PropertyChangeEvent.PROPERTY_CHANGE, handleEntryChanged);
+		}
+		
+		private function attachListeners(value:DailyEntry):void
+		{
+			value.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, handleEntryChanged);
+		}
+		
+		private function handleEntryChanged(event:PropertyChangeEvent):void
+		{
+			updateEditors();
+		}
+		
+		public function get entry():DailyEntry
+		{
+			return _entry;
+		}
+		
+		private function updateEditors():void
+		{
+			if (_entry == null)
+			{
+				nsEntryHours.value = 12;
+				nsEntryMinutes.value = 0;
+				cbClockPeriod.selectedIndex = 0;
+				_time = 0;
+				return;
+			}				
+			
+			var hours:int = _entry.hours;
+			
+			if (hours > 12)
+			{
+				nsEntryHours.value = hours - 12;
+			}
+			else
+			{
+				nsEntryHours.value = hours;
+				
+				if (hours == 0)
+				{
+					nsEntryHours.value = 12;
+				} 
+			}
+			
+			nsEntryMinutes.value = _entry.minutes;
+			
+			if (hours >= 12)
+			{
+				cbClockPeriod.selectedIndex = 1;
+			}
+			else
+			{
+				cbClockPeriod.selectedIndex = 0;
+			} 
+			
+			var meta:EventMetaData = _entry.eventMeta;//findMetaForEntry();
+			
+			// If the meta is null then we probably have a raw value,
+			// so we have to display the raw value as the value of the box
+			// but not in the selection.
+			if (meta == null)
+			{
+				/*
+				if (_eventMeta.length > 0)
+				{
+					meta = _eventMeta.getItemAt(0) as EventMetaData;
+					//_entry.value = meta.name;
+					//_entry.eventMeta = meta;
+				}
+				else
+				{
+					//_entry.value = "";
+					//_entry.eventMeta = null;
+				}
+				*/
+				cbEventMeta.text = String(_entry.value);
+			} else {
+				cbEventMeta.selectedItem = meta;
+			}
+			
+			_time = _entry.time;
+		}
+		
+		private function findMetaForEntry():EventMetaData
+		{
+			for each (var meta:EventMetaData in _eventMeta)
+			{
+				if (meta.value == _entry.value)
+				{
+					return meta;
+				}
+			}
+			
+			return null;
+		}
+		
+		private function entryEditorUpdated():void
+		{
+			if (_entry == null)
+			{
+				return;
+			}
+			
+			var origTime:int = _entry.time
+			
+			// Calculate the hours into 24 hour format to compare with the time
+			var hours24:int = nsEntryHours.value;
+			var minutes:int = 0;
+			var am:Boolean = cbClockPeriod.selectedIndex == 0;
+			
+			// This is just for debugging
+			//var lastTime:int = _entry.time;
+			
+			if (am)
+			{
+				if (hours24 == 12)
+				{
+					hours24 = 0;
+				}
+			}
+			else
+			{
+				if (hours24 != 12)
+				{
+					hours24 += 12; 
+				}
+			}
+			
+			
+			minutes = nsEntryMinutes.value;
+			
+			_time = (hours24 * 60 * 60) + (minutes * 60);
+			
+			var selItem:Object = cbEventMeta.selectedItem;
+			var rawValue:String = null;
+			
+			// If the user has entered something into the text then it may 
+			// be a raw entry.  We get the raw value here.  
+			if (selItem == null) {
+				rawValue = StringUtil.trim(cbEventMeta.text);
+				
+				// Then we check if the raw value is one of the values in the
+				// drop down and convert.
+				
+				for each (var v:EventMetaData in _eventMeta) {
+					trace("comparing: " + v.name + " + to " + rawValue);
+					if (v.name == rawValue) {
+						selItem = v;
+						cbEventMeta.selectedItem = v;
+						rawValue = null;
+						trace("Found value that matches event meta, converting");
+						break;
+						
+					}
+				}
+			}
+			
+			
+			trace("selected item is: " + selItem + ", with rawValue='" + rawValue + "'");
+			
+			dispatchEvent(new DailyEntryEditorEvent(_time, cbEventMeta.selectedItem as EventMetaData, rawValue)); 
+			
+			/*
+			var operation:UpdateEntryTimeOperation = new UpdateEntryTimeOperation(_entry, hours24, minutes);
+			_operationHistory.execute(operation);
+			_operationHistory.closeUndoGroup();
+			*/
+						
+			/*
+			var operation:UpdateEntryTimeOperation = new UpdateEntryTimeOperation(_entry, origTime);
+			lastTime = -1;
+			
+			operationHistoryService.execute(operation);
+			operationHistoryService.closeUndoGroup();
+			*/
+		}
+		
+		private function minutesUpdated(update:Boolean=false):void
+		{
+			nsEntryMinutes.mx_internal::inputField.text = timeNumberFormatter.format(nsEntryMinutes.value);
+			
+			if (update)
+			{
+				entryEditorUpdated();
+			}
+		}
+		
+	]]>
+</mx:Script>
+	<ui:CiscoNumberFormatter id="timeNumberFormatter" leadingZeros="2" />
+
+	<mx:NumericStepper
+		width="40" 
+		id="nsEntryHours"
+		minimum="1" maximum="12" 
+		enabled="{canEdit}"
+		change="entryEditorUpdated()"
+		/>
+	<mx:Label text=":" />
+	<mx:NumericStepper
+		width="40"
+		id="nsEntryMinutes"
+		minimum="0" maximum="59"
+		change="minutesUpdated(true)"
+		enabled="{canEdit}" />
+	<mx:Spacer width="5" />
+	<mx:ComboBox 
+		id="cbClockPeriod"
+		enabled="{canEdit}"
+		change="entryEditorUpdated()"
+		dataProvider="{CLOCK_PERIOD}" />
+	<mx:ComboBox 
+		id="cbEventMeta"
+		editable="true"
+		enabled="{canEdit}"
+		change="entryEditorUpdated()"
+		dataProvider="{_eventMeta}" labelField="name"  />
+</mx:HBox>

@@ -1,0 +1,11 @@
+.. Used to generate local, relative, Hyperlink Databases.
+
+.. |NodeDef_Guidelines| replace:: `NodeDef Guidelines`_
+.. _`NodeDef Guidelines`: $(proot)/nodedef/NodeDefGuidelines.html
+
+.. |document_hldb_in| replace:: `document.hldb.in`_
+.. _`document.hldb.in`: $(psource)/doc/document.hldb.in
+
+.. emacs Local Variables:
+.. emacs mode: rst
+.. emacs End:

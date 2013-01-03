@@ -1,0 +1,214 @@
+<!--
+Copyright (C) 2009 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+	<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+	<html>
+	<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<link rel="stylesheet" href="/public/styles/page.css" type="text/css">
+	<link rel="stylesheet" href="/public/styles/tabs.css" type="text/css">
+	<link rel="stylesheet" href="/public/styles/tables.css" type="text/css">
+	<link rel="stylesheet" href="/public/styles/pagination.css" type="text/css">
+	<link rel="stylesheet" href="/public/styles/configuration.css" type="text/css">
+	<link rel="stylesheet" href="/public/styles/events.css" type="text/css">
+	<link rel="stylesheet" href="/public/styles/messageBox.css" type="text/css">
+	<link rel="stylesheet" type="text/css" href="/dojoroot/dojo/resources/dojo.css" />
+	<link rel="stylesheet" type="text/css" href="/dojoroot/dijit/themes/dijit.css" />
+	<link rel="stylesheet" type="text/css" href="/dojoroot/dijit/themes/tundra/tundra.css" />
+	<link rel="stylesheet" type="text/css" href="/cues/themes/kubrick/layout.css" />
+	<link rel="stylesheet" type="text/css" href="/cues/themes/kubrick/tabs.css" />
+	<link rel="stylesheet" href="/public/nbmweb/edit/themes/Node.css" type="text/css" />
+
+	<script type="text/javascript">
+	    djConfig = {
+	        isDebug: false,
+	        debugAtAllCosts: false,
+	        parseOnLoad: true,
+	        baseUrl: "/dojoroot/dojo/",
+	        modulePaths: {
+	            mpx: '/mpx',
+	            cues: '/cues',
+	            utils: '/public/utils'
+	        }
+	    };
+	</script>
+	<script type="text/javascript" src="/dojoroot/dojo/dojo.js"></script>
+	<!--<script type="text/javascript" src="/public/utils/debug.js"></script>-->
+	<!--<script type="text/javascript" src="/public/utils/style.js"></script>-->
+	<script type="text/javascript" src="/dojoroot/dojoconfig/mediator_layer.js"></script>
+	<script type="text/javascript">
+		dojo.require("utils.style");
+	    /*dojo.require("dojox.dtl._HtmlTemplated");
+	    dojo.require("dojo.parser");
+	    dojo.require("dijit.form.Button");
+	    dojo.require("dijit.layout.ContentPane");
+	    dojo.require("dojox.uuid.generateRandomUuid");*/
+	</script>
+	<script language="JavaScript" type="text/javascript" src="/public/utils/loader.js"></script>
+	<script language="JavaScript" type="text/javascript" src="/public/utils/formtools.js"></script>
+        <script type="text/javascript" src="public/nbmweb/trends/trendPreferences.js"></script>
+	<script language="JavaScript" type="text/javascript">
+	    function setup_actions() {
+	        setup_forms(dijit.byId("trendtable"));
+	    }
+	    loader.add_postload(setup_actions);
+	</script>
+	<SCRIPT LANGUAGE="JavaScript" ><!--
+
+	var objWin = null;
+	function open_node_selector(id){
+	    if (arguments.length == 0) {
+	        var id = this.getAttribute('name');
+	    }
+	    var w = '600';
+	    var h = '600';
+	    var features = "height=1,width=1,resizeable,scrollbars";
+	    var url = '';
+	    if (!objWin || objWin.closed) {
+	        url = "/webapi/nodeSelector.html?textid=" + id;
+	    }
+	    objWin = window.open(url,"nodeSelector",features);
+	    if (url.length == 0) {
+	        objWin.set_target(window, id);
+	    }
+
+            var id2 = 'point'+ id[4];
+            var val = 'point '+id[4];
+            document.getElementById(id2).value = val;
+	    var height = window.screen.availHeight;
+	    var width = window.screen.availWidth;
+	    var left_point = parseInt(width/2) - parseInt(w/2);
+	    var top_point =  parseInt(height/2) - parseInt(h/2);
+	    objWin.moveTo(left_point,top_point);
+	    objWin.resizeTo(w,h);
+	    objWin.focus();
+	}
+
+	//-->
+	</SCRIPT>
+	<SCRIPT LANGUAGE="JavaScript" ><!--
+
+	function update_point_name(src_id,dst_id) {
+	    src = document.getElementById(src_id);
+	    dst = document.getElementById(dst_id);
+	    point_name = dst.value.replace(/^\s+/, '').replace(/\s+$/, '');
+	    node_url = src.value;
+	    if (point_name == '') {
+	        node_components = node_url.split('/');
+	        basename = '';
+	        for (var i=node_components.length-1; i >= 0; i++) {
+	            basename = node_components[i];
+	            if (basename != '') {
+	                break;
+	            }
+	        }
+	        dst.value = basename;
+	    }
+	    return;
+	}
+
+	//-->
+	</SCRIPT>
+	<SCRIPT LANGUAGE="JavaScript" SRC="/webapi/js/ColorPicker2.js" ></SCRIPT>
+	<SCRIPT LANGUAGE="JavaScript" ><!--
+	window.ColorPicker_targetButton = null;
+	function pickColor(color) {
+	    ColorPicker_targetInput.value = color;
+	    ColorPicker_targetButton.style.backgroundColor = color;
+	    return;
+	}
+	var cp = new ColorPicker('window');
+	function open_color_selector(input_id, button_id) {
+	    var input = document.getElementById(input_id);
+	    var button = document.getElementById(button_id);
+	    window.ColorPicker_targetButton = button;
+	    cp.select(input, input_id);
+	    return;
+	}
+	function change_button_color(input_id, button_id) {
+	    var input = document.getElementById(input_id);
+	    var button = document.getElementById(button_id);
+	    var color = input.value;
+	    button.style.backgroundColor = color;
+	    return;
+	}
+	function openWindow(path, name) {
+	    var exp1 = new RegExp(/Microsoft/);
+	    var exp2 = new RegExp(/MSIE/);
+	    if(exp1.exec(navigator.appName) || exp2.exec(navigator.appName))
+	        name = '';
+	    window.open(path,name,'width=800,height=600,status=no,toolbar=no,location=no,menu=no,menubar=no,directories=no,scrollbars=no');
+	    return false;
+	}
+
+	//-->
+	</SCRIPT>
+	<title>Cisco Network Building Mediator</title>
+	</head>
+	    <body class="kubrick tundra">
+	        <div id="background">
+	            <img src="/public/images/pageBackground.jpg" />
+	        </div>
+	        <div id="header">
+	            <h1 class="title">Network Building Mediator</h1>
+	            <ul class="actions">
+	                <li><a href="">About</a></li>
+	                <li>
+	                    <a id="logout" href="/logout">
+	                        Logout
+	                    </a>
+	                </li>
+	            </ul>
+	        </div>
+	        <div id="primary-tabs"
+	            title=""
+	            class="primary-tabs"
+	            href="/public/templates/primary.html"
+	            extractContent="false"
+	            preventCache="false"
+	            dojoType="dijit.layout.ContentPane"
+	            onDownloadEnd="dojo.addClass('trends-tab-button', 'selected');" >
+	        </div>
+	        <div id="stage">
+	            <div id="contentarea" class="pane">
+	                <div id="trendtable"
+	                    title="Trends"
+	                    contentType="forms"
+	                    preventCache="true"
+	                    extractContent="true"
+	                    onDownloadEnd="setup_actions();"
+	                    href="/trendmanager"
+	                    dojoType="dijit.layout.ContentPane">
+	                </div>
+	            </div>
+	        </div>
+	    </body>
+	</html>

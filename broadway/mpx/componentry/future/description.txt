@@ -1,0 +1,5 @@
+This package contains the original, python 2.3 +, implementation of the componentry.
+It is being saved for use after a python upgrade takes place.
+
+mpx.componentry.__init__ fully replaces this module's purpose; this module is only
+to be used if and when an upgrade of the python version takes place.

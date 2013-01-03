@@ -1,0 +1,129 @@
+<!--
+Copyright (C) 2009 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="/msglog/includes/msglog.css">
+    <title>Setup</title>
+<script language="javascript">
+
+function send_form(){
+    var sort_order;
+    for(x=0;x<document.msglog.sort_order.length;x++){
+       
+       if(document.msglog.sort_order[x].checked){
+          sort_order = document.msglog.sort_order[x].value;
+        }
+
+    }
+    var location = "/msglog/msglog?start=-" + document.msglog.last.value;
+    location = location + '&type=' + document.msglog.type.value;
+    location = location + '&application=' + document.msglog.application.value;
+    location = location + '&sort_order=' + sort_order;
+    window.opener.parent.msglog.location = location;
+}
+
+</script>
+  </head>
+<body bgcolor="#FFFFFF">
+<form  name="msglog" >
+  <table width="325" border="0">
+    <tr align="center"> 
+      <td colspan="2" class="msglog_header">Message Log Setup</td>
+    </tr>
+    <tr>
+      <td align="right">&nbsp;</td>
+      <td align="right">&nbsp;</td>
+    </tr>
+    <tr> 
+      <td align="right">Type: </td>
+      <td align="left"> 
+        <select size="1" name="type">
+          <option selected>all</option>
+          <option>debug</option>
+          <option>exception</option>
+          <option>fatal</option>
+          <option>information</option>
+          <option>traceback</option>
+          <option>warning</option>
+        </select>
+      </td>
+    </tr>
+    <tr> 
+      <td align="right">Application:</td>
+      <td align="left"> 
+        <input type="text" name="application" value="all" size="15">
+      </td>
+    </tr>
+    <tr> 
+      <td align="right">Sort Order:</td>
+      <td align="left">
+        Descending&nbsp; 
+          <input type="radio" name="sort_order" value="descending" checked>
+        <br>
+        Ascending &nbsp;  
+          <input type="radio" name="sort_order" value="ascending">
+        
+      </td>
+    </tr>
+    <tr> 
+      <td align="right" height="2">last </td>
+      <td height="2" align="left"> 
+        <input type="text" name="last" size="5" value="25">
+        rows </td>
+    </tr>
+    <tr> 
+      <td align="right">&nbsp;</td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr> 
+      <table>
+	<tr>
+	  <td align="right"> 
+            <input type="button" value="Submit" name="send_form_button"  onClick="send_form()">
+	  </td>
+	  <td> 
+            <input type="reset" value="Reset" name="reset">
+	  </td>
+	  <td><button onclick="javascrip:window.close()">close window</button>
+	  </td>
+	</tr>
+      </table>
+    </tr>
+  </table>
+   <input type="hidden" name="start" >
+   <input type="hidden" name="column">
+    <input type="hidden" name="end" >
+</form>
+</body>
+
+</html>

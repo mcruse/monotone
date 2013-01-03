@@ -1,0 +1,159 @@
+<!--
+Copyright (C) 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>Login.html</title>
+
+<link rel="stylesheet" type="text/css" href="/stylesheets/main.css">
+<script language="javascript" src="/webapi/js/sdk.js"></script>
+<style type="text/css">
+td.login_row_color {
+  background:#c8cbc0;
+}
+</style>
+<script language="javascript">
+
+   var args = get_query_string_args();
+   var callback=null;
+   var get_mediator=null;
+   var mediator = null;
+
+   if(args['callback'] != null){
+      callback = args['callback'];
+   }
+   if(args['get_mediator'] != null){
+      get_mediator = args['get_mediator'];
+   }
+   mediator = eval('window.opener.' + get_mediator + '()')
+
+</script>
+  </head>
+<body bgcolor="#FFFFFF">
+<div id="login_panel"  width="400" height="250" style="display:block;visibility:visible">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td bgcolor="#FFFFFF">
+      <table width="100%" border="0" cellspacing="1" cellpadding="5">
+        <tr bgcolor="#FFFFFF">
+          <td colspan="2">Please enter the Username and Password for the Mediator.</td>
+        </tr>
+        <tr>
+          <td  align="right" class="login_row_color"><span style="color:#000000;font-size:18px">Username:</span></td>
+          <td  align="left"class="login_row_color">
+            <input type="text" id="username" value="" name="text">
+          </td>
+        </tr>
+        <tr>
+          <td  align="right"  class="login_row_color"><span style="color:#000000;font-size:18px">Password:</span></td>
+          <td  align="left"  class="login_row_color">
+            <input type="password" id="password" value="" name="password">
+          </td>
+        </tr>
+        <tr >
+          <td  class="login_row_color" align="right">
+          <td  class="login_row_color" align="left">
+            <input type="button" value="Cancel" onClick="javascript:window.close()" name="button">&nbsp;
+            <input type="button" value="Login" onClick="login()" name="button">
+          </td>
+          <tr>
+            <td align="left" class="login_row_color" colspan="2">
+                <input type="checkbox" id="cookie_check" value="yes">&nbsp;Store username and password in a cookie</td>
+        </table>
+    </td>
+  </tr>
+  <tr>
+    <td class="footer"><span class="footer">&copy;Envenergy</span>
+    </td>
+   </tr>
+</table>
+</div>
+<div id="status_panel"
+     style="width:400px;heigh:250px;display:none;visibility:hidden;text-align:center;font-weight:bold;font-size:24px;vertical-align:middle;">
+<span id="status_text">&nbsp;</span>
+</div>
+</body>
+<script language="javascript">
+var login_panel = document.getElementById("login_panel");
+var status_panel =  document.getElementById("status_panel");
+var status_text =  document.getElementById("status_text");
+function login(){
+  status_text.innerHTML ='Logging in';
+  login_panel.style.display='none';
+  login_panel.style.visibility='hidden';
+  status_panel.style.display = 'block';
+  status_panel.style.visibility = 'visible';
+  error = false;
+  try{
+     var session = mediator.login();
+     status_text.innerHTML =  '<span style="color:green">Login sucessful!</span>'
+     if(document.getElementById("cookie_check").checked == true){
+        set_cookie('username',u,null,'/');
+        set_cookie('password',p,null,'/');
+     }
+  }
+  catch(e){
+    error = true;
+    if (e.type != null && e.type == "activex"){
+         window.location = "/webapi/js/activex_redirect.html";
+         window.resizeTo(520,375);
+    }
+    else{
+        status_text.innerHTML =  '<span style="color:red">' + e.description + '</span>';
+        setTimeout('display_login_panel()',3000);
+    }
+  }
+  if (error == false){
+     if(callback != null){
+         eval('window.opener.' + callback + '( mediator)');
+     }
+     else{
+        alert('Callback function wasn\'t passed in!');
+     }
+     setTimeout("close_window()",1000);
+  }
+
+}
+
+function close_window(){
+   window.close();
+}
+function display_login_panel(){
+  status_panel.style.display = 'none';
+  status_panel.style.visibility = 'hidden';
+  login_panel.style.display='block';
+  login_panel.style.visibility='visible';
+  document.getElementById("username").focus();
+}
+
+</script>
+</html>

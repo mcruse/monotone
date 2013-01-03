@@ -1,0 +1,72 @@
+.widgetheader {
+	font-size: 12px;
+	font-weight: bold;
+	color: #FFFFFF;
+	background-color: #666666;
+	text-align: left;
+	vertical-align: middle;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	text-indent: 4px;
+	word-spacing: 4px;
+}
+
+.section {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #333333;
+	background-color: #CCCCCC;
+}
+.title{
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #333333;
+	background-color: #CCCCCC;
+   font-weight:bold;
+}
+
+.webexpressheader {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-weight: bold;
+	color: #FF9900;
+	background-color: #666666;
+	padding: 5px;
+}
+
+.copyright {
+	background-color: #666666;
+	padding: 5px;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	font-weight: normal;
+	color: #CCCCCC;
+}
+
+.spacer {
+	background-color: #CCCCCC;
+	height: 5px;
+	width: 100%;
+}
+
+.webexpressbutton {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #FF9900;
+	font-weight: bold;
+	background-color:#666666;
+	border: 1px solid #FFFFFF;
+    
+}
+
+.webexpressselect {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #333333;
+	background-color: #FFFFFF;
+}
+.webexpressinput {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #333333;
+	background-color: #FFFFFF;
+}

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width="300" 
+	label="Progress"
+	creationComplete="init()">
+	<mx:Script>
+		<![CDATA[
+			import mx.core.IFlexDisplayObject;
+			import mx.events.FlexEvent;
+			import mx.core.Application;
+			import mx.managers.ISystemManager;
+			import mx.controls.ProgressBarMode;
+			import mx.managers.PopUpManager;
+			import mx.logging.Log;
+			import mx.logging.ILogger;
+			
+			private var logger:ILogger = Log.getLogger("cisco.nbm.scheduler.ui.ProgressPopup");
+
+			[Bindable]
+			public var canCancel:Boolean = false;
+
+			protected function init():void
+			{
+				logger.debug("init()");
+			}
+			
+			public function start():void
+			{
+				progressBar.mode = ProgressBarMode.EVENT;
+			}
+			
+			public function close():void
+			{
+				handleComplete();
+			}
+			
+			private function handleCancel():void
+			{
+				logger.debug("handleCancel()");
+				closeSelf();
+				
+				dispatchEvent(new Event(Event.CANCEL));
+			}
+			
+			private function handleComplete():void
+			{
+				logger.debug("handleComplete()");
+				closeSelf();
+				
+				dispatchEvent(new Event(Event.COMPLETE));
+			}
+			
+			private function closeSelf():void
+			{
+				progressBar.mode = ProgressBarMode.MANUAL;
+				PopUpManager.removePopUp(this);
+			}
+			
+			public function destroy():void
+			{
+				logger.debug("destroy()");
+			}
+		]]>
+	</mx:Script>
+	<mx:GlowFilter id="glow" alpha="0.8" color="0x000000" blurX="12"  blurY="12" quality="3" strength="0.6" />
+	<mx:VBox width="100%" height="100%" paddingLeft="10" paddingRight="10"
+		paddingTop="10" paddingBottom="10" filters="{[glow]}" backgroundColor="#9ADBF7">
+		<mx:ProgressBar id="progressBar"
+			width="100%" 
+			indeterminate="true"  mode="polled" label="" barColor="0x8DB71F" borderColor="#000000" trackHeight="18" labelPlacement="top" textAlign="center" fontSize="11" fontStyle="normal" fontWeight="bold"/>
+	</mx:VBox>
+</mx:VBox>

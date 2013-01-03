@@ -1,0 +1,243 @@
+PANDUIT-APPS-POWER-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+		MODULE-IDENTITY,
+		OBJECT-IDENTITY,
+		OBJECT-TYPE,
+		NOTIFICATION-TYPE
+                                	FROM SNMPv2-SMI
+
+		MODULE-COMPLIANCE, 
+		OBJECT-GROUP,
+		NOTIFICATION-GROUP
+                                	FROM SNMPv2-CONF
+
+		DisplayString
+					FROM SNMPv2-TC
+
+		sysName 
+					FROM SNMPv2-MIB
+
+		pethMainPseUsageThreshold,
+		pethMainPseConsumptionPower
+					FROM POWER-ETHERNET-MIB
+
+		panduitApps
+					FROM PANDUIT-REG
+
+		PanduitPoEVoltageType  
+					FROM PANDUIT-TC
+
+		panduitIdentificationMAC
+					FROM PANDUIT-COMMON-MIB
+
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId
+					FROM PANDUIT-PRODUCTS-PANEL-COMMON-MIB;
+				
+
+--
+-- Managed Network Solutions contact information.
+--
+panduitAppsPower MODULE-IDENTITY
+        LAST-UPDATED    "200504290000Z"         
+        ORGANIZATION    "Panduit Corp."
+        CONTACT-INFO
+                "       Panduit Corp.
+                        Managed Network Solutions Group
+
+                Postal: Panduit Corp.
+                        17301 Ridgeland Avenue
+                        Tinley Park, IL 60477-3091
+                        USA
+
+                   Tel: +1 708 532-1800/888-506-5400
+
+                E-mail: info@panduit.com"
+
+        DESCRIPTION
+                        "MIB module to support managed objects for the DPoE Powered Panels."
+
+        REVISION        "200504290000Z"         
+
+        DESCRIPTION
+                        "Initial version of this MIB module."
+
+        ::= { panduitApps 3 }
+
+
+--
+--                      Power Objects
+--
+panduitPowerVoltage OBJECT-TYPE
+        SYNTAX PanduitPoEVoltageType 
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+                "Input voltage to the managed object."
+        ::= { panduitAppsPower 1 }
+
+panduitPowerVoltageA OBJECT-TYPE
+        SYNTAX PanduitPoEVoltageType 
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+                "Input voltage at Power connector A."
+        ::= { panduitAppsPower 2 }
+
+panduitPowerVoltageB OBJECT-TYPE
+        SYNTAX PanduitPoEVoltageType 
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+		"Input voltage at Power Connector B."
+        ::= { panduitAppsPower 3 }
+
+panduitPowerSourceName OBJECT-TYPE
+        SYNTAX DisplayString(SIZE(0..64))
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "The name of the device supplying power to the managed object."
+        ::= { panduitAppsPower 4 }
+
+
+--
+--		DPoE Notification Objects
+--
+panduitAppsPowerNotifications OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "DPoE Notifications."
+        ::= { panduitAppsPower 0 }
+
+panduitPowerAboveThreshold NOTIFICATION-TYPE
+	OBJECTS {	
+			panduitIdentificationMAC,
+			panduitProdPanelCommonRackId,
+			panduitProdPanelCommonRackPositionId,
+			sysName,
+			pethMainPseUsageThreshold,
+			pethMainPseConsumptionPower }
+	STATUS current
+        DESCRIPTION
+                "The Power consumption has gone above the user-defined
+		threshold, pethMainPseUsageThreshold."
+        ::= { panduitAppsPowerNotifications 1 }
+
+panduitPowerBelowThreshold NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName,
+		pethMainPseUsageThreshold,
+		pethMainPseConsumptionPower
+		}
+	STATUS current
+        DESCRIPTION
+                "The Power consumption has previously gone above the user-defined
+		threshold,pethMainPseUsageThreshold, and is now below the 
+		user-defined threshold."
+        ::= { panduitAppsPowerNotifications 2 }
+
+panduitPowerFailure NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName
+		}
+	STATUS current
+        DESCRIPTION
+                "The panel's port power fuse has blown and the
+		ports can no longer provide power to the atttached
+		PDs."
+        ::= { panduitAppsPowerNotifications 3 }
+
+panduitPowerLow NOTIFICATION-TYPE
+	OBJECTS {
+			panduitIdentificationMAC,
+			panduitProdPanelCommonRackId,
+			panduitProdPanelCommonRackPositionId,
+			sysName,
+			panduitPowerVoltage
+			}
+        STATUS current
+        DESCRIPTION
+		"The incoming voltage to the panel is below the valid 
+		range.  The event is sent once for each time the 
+		measured incoming voltage transitions below the 
+		valid range.  See manual for spec on acceptable range."
+        ::= { panduitAppsPowerNotifications 4 }
+
+panduitPowerHigh NOTIFICATION-TYPE
+	OBJECTS {
+			panduitIdentificationMAC,
+			panduitProdPanelCommonRackId,
+			panduitProdPanelCommonRackPositionId,
+			sysName,
+			panduitPowerVoltage
+			}
+        STATUS current
+        DESCRIPTION
+                "The incoming voltage to the panel is above the valid 
+		range.  The event is sent once for each time the 
+		measured incoming voltage transitions above the 
+		valid range.  See manual for spec on acceptable range."
+        ::= { panduitAppsPowerNotifications 5 }
+
+--
+--		Conformance Section 
+--
+
+panduitAppsPowerConformance OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of Compliance and Group information for MIB."
+	::= { panduitAppsPower 5 }
+
+panduitAppsPowerGroups OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of groups within MIB."
+	::= { panduitAppsPowerConformance 1 }
+
+panduitAppsPowerCompliances OBJECT-IDENTITY
+	STATUS current
+	DESCRIPTION "Compliance specifications for MIB."
+	::= { panduitAppsPowerConformance 2 }
+
+panduitAppsPowerGroup OBJECT-GROUP
+	OBJECTS {
+		panduitPowerVoltage,
+		panduitPowerVoltageA,
+		panduitPowerVoltageB,
+		panduitPowerSourceName 
+		}
+        STATUS current
+        DESCRIPTION "Panduit Power Objects."
+        ::= { panduitAppsPowerGroups 1 }
+
+panduitAppsPowerNotificationGroup NOTIFICATION-GROUP
+	NOTIFICATIONS {	
+		panduitPowerAboveThreshold,
+		panduitPowerBelowThreshold,
+		panduitPowerFailure,
+		panduitPowerLow,
+		panduitPowerHigh
+		}
+        STATUS current
+        DESCRIPTION	"DPoE Notification Objects."
+        ::= { panduitAppsPowerGroups 2 }
+
+panduitAppsPowerCompliance MODULE-COMPLIANCE
+	STATUS current
+	DESCRIPTION "Compliance requirements for the MIB."
+	MODULE
+		MANDATORY-GROUPS {
+			panduitAppsPowerGroup,
+			panduitAppsPowerNotificationGroup
+			}
+	::=	{ panduitAppsPowerCompliances 1 }
+
+		
+END				

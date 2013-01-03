@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE XServeConfig SYSTEM "./xserve_config.dtd">
+<XServeConfig>
+	<XFieldExtractor name="LightPoint Config - TouchPointMap IDs" order="3">
+		<XFields>
+			<XField name="amtype" byteoffset="2" length="1" type="uint8"/>
+			<XField name="firmware_id" byteoffset="7" length="2" type="uint16" specialtype="nodeid"/>
+			<XField name="parent" byteoffset="14" length="2" type="uint16" specialtype="parentid"/>
+			<XField name="group" byteoffset="3" length="1" type="uint8"/>
+			<XField name="socketid" byteoffset="11" length="1" type="uint8"/>
+			<XField name="board_id" byteoffset="12" length="1" type="uint8" specialtype="boardid"/>
+			<XField name="packet_id" byteoffset="13" length="1" type="uint8"/>
+			<XField name="elem1" byteoffset="16" length="1" type="uint8"/>
+			<XField name="elem2" byteoffset="16" length="1" type="uint8">
+				<XConversion function="x+1" returntype="int">
+					<XConvParam variablename="x" fieldname="elem2" type="uint8"/>					
+				</XConversion>			
+			</XField>
+			<XField name="totalElems" byteoffset="17" length="1" type="uint8"/>
+			
+			<XField name="id1" byteoffset="18" length="2" type="uint16"/>
+			<XField name="device1" byteoffset="20" length="2" type="uint16"/>
+			<XField name="button1" byteoffset="22" length="1" type="uint8"/>
+			<XField name="action1" byteoffset="23" length="1" type="uint8"/>
+
+			<XField name="id2" byteoffset="24" length="2" type="uint16"/>
+			<XField name="device2" byteoffset="26" length="2" type="uint16"/>
+			<XField name="button2" byteoffset="28" length="1" type="uint8"/>
+			<XField name="action2" byteoffset="29" length="1" type="uint8"/>
+		</XFields>
+		<XFilter>
+			<XCondAnd>
+			
+				<!--
+					Check if this is a sensor type packet...AMTYPE_MULTIHOP or AMTYPE_XDEBUG
+					The Byte offsets defined above assume that there is a multihop header
+				-->
+				<XCondOr>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="amtype"/>
+						<XFilterParam name="fieldvalue" value="0x31"/>
+					</XCond>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="amtype"/>
+						<XFilterParam name="fieldvalue" value="0x33"/>
+					</XCond>
+					<XCondAnd>
+						<XCondOr>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="socketid"/>
+								<XFilterParam name="fieldvalue" value="0x31"/>
+							</XCond>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="socketid"/>
+								<XFilterParam name="fieldvalue" value="0x33"/>
+							</XCond>
+						</XCondOr>
+						<XCondOr>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="amtype"/>
+								<XFilterParam name="fieldvalue" value="0x0B"/>
+							</XCond>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="amtype"/>
+								<XFilterParam name="fieldvalue" value="0x0D"/>
+							</XCond>
+						</XCondOr>										
+					</XCondAnd>
+				</XCondOr>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="board_id"/>
+						<XFilterParam name="fieldvalue" value="0x84"/>
+					</XCond>		
+					<XCondOr>
+						<XCond name="IsEqual">
+							<XFilterParam name="fieldname" value="packet_id"/>
+							<XFilterParam name="fieldvalue" value="0x6"/>
+						</XCond>				
+						<XCond name="IsEqual">
+							<XFilterParam name="fieldname" value="packet_id"/>
+							<XFilterParam name="fieldvalue" value="0x7"/>
+						</XCond>				
+						<XCond name="IsEqual">
+							<XFilterParam name="fieldname" value="packet_id"/>
+							<XFilterParam name="fieldvalue" value="0x8"/>
+						</XCond>				
+						<XCond name="IsEqual">
+							<XFilterParam name="fieldname" value="packet_id"/>
+							<XFilterParam name="fieldvalue" value="0x9"/>
+						</XCond>				
+				</XCondOr>
+			</XCondAnd>
+		</XFilter>
+		<XDataSinks>
+			<XDataSink name="Generic Print Datasink">
+				<XDSParam name="printstring" value=" \n TouchPointMap data %s of %s for node %s:\n   ID: %s \n   Device: %s \n   button: %s \n   action: %s \n TouchPointMap data %s of %s for node %s:\n   ID: %s \n   Device: %s \n   button: %s \n   action: %s"/>
+				<XDSParam name="printfields" value="elem1,totalElems,firmware_id,id1,device1,button1,action1,elem2,totalElems,nodeid,id2,device2,button2,action2"/>
+			</XDataSink>
+			<XDataSink name="Open Log Datasink">
+				<XDSParam name="tablename_1" value="fieldstate_touchpoints"/>
+				<XDSParam name="createsql_1" value="CREATE TABLE fieldstate_touchpoints ( id serial primary key, result_time timestamp without time zone, firmware_id integer, touch_point_id, relay_group_id integer, button_id integer, action integer, index integer )"/>
+				
+				<XDSParam name="deletesql_1" value="DELETE FROM fieldstate_touchpoints WHERE firmware_id = %i AND index = %i"/>
+				<XDSParam name="deletefields_1" value="firmware_id,elem1"/>
+				
+				<XDSParam name="insertsql_1" value="INSERT INTO fieldstate_touchpoints ( firmware_id,touchpoint_id,relay_group_id,button_id,action,index ) VALUES ( %i,%i,%i,%i,%i,%i)"/>
+				<XDSParam name="insertfields_1" value="firmware_id,id1,device1,button1,action1,elem1"/>
+				
+				<XDSParam name="insertsql_2" value="INSERT INTO fieldstate_touchpoints ( firmware_id,touchpoint_id,relay_group_id,button_id,action,index ) VALUES ( %i,%i,%i,%i,%i,%i)"/>
+				<XDSParam name="insertfields_2" value="firmware_id,id2,device2,button2,action2,elem1"/>
+			</XDataSink>
+		</XDataSinks>
+	</XFieldExtractor>
+	
+</XServeConfig>

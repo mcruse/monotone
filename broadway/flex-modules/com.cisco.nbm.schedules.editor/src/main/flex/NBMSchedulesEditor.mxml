@@ -1,0 +1,1848 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" 
+	creationComplete="init()"
+	xmlns:components="com.cisco.nbm.scheduler.ui.components.*" 
+	xmlns:components1="com.cisco.ui.components.*"
+	paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"
+	xmlns:spinner="com.cisco.nbm.ui.components.spinner.*" xmlns:spinner1="com.cisco.nbm.scheduler.ui.components.spinner.*" xmlns:view="com.cisco.ui.components.view.*">
+<mx:Style source="kubrick.css" />
+<mx:Style>
+
+	.scheduleName 
+	{
+		font-weight: bold;
+		font-size: 14;
+	}
+</mx:Style>
+<mx:Script>
+	<![CDATA[
+		import mx.managers.DragManager;
+		import mx.collections.ListCollectionView;
+		import mx.collections.ICollectionView;
+		import mx.collections.SortField;
+		import mx.collections.Sort;
+		import mx.utils.ArrayUtil;
+		import mx.controls.ProgressBarMode;
+		import com.cisco.nbm.scheduler.ScheduleHierarchyLoader;
+		import mx.controls.listClasses.IListItemRenderer;
+		import com.cisco.nbm.scheduler.BuildNumber;
+		import mx.events.PropertyChangeEvent;
+		import flash.net.navigateToURL;
+		import mx.controls.advancedDataGridClasses.AdvancedDataGridColumn;
+		import mx.events.CollectionEventKind;
+		import mx.events.CollectionEvent;
+		import com.cisco.ui.components.ErrorPanel;
+		import mx.events.CloseEvent;
+		import com.cisco.nbm.browserbridge.ui.connection.AuthenticationDialog;
+		import mx.utils.StringUtil;
+		import com.cisco.nbm.browserbridge.BrowserBridgeEvent;
+		import com.cisco.nbm.browserbridge.BrowserBridge;
+		import com.cisco.nbm.entities.EntityManager;
+		import mx.controls.Alert;
+		import com.cisco.ui.components.DialogCloseReason;
+		import com.cisco.ui.components.CiscoTreeEvent;
+		import com.cisco.nbm.scheduler.ui.components.ConfirmSavePopup;
+		import com.cisco.nbm.scheduler.ui.jobs.AddScheduleJob;
+		import com.cisco.nbm.scheduler.ui.jobs.ConfirmSaveScheduleJob;
+		import com.cisco.app.core.async.AsyncMethod;
+		import com.cisco.app.core.jobs.Job;
+		import com.cisco.nbm.scheduler.ui.components.ProgressPopup;
+		import com.cisco.nbm.scheduler.ui.operations.MoveScheduleOperation;
+		import mx.effects.Move;
+		import com.cisco.nbm.xmlrpc.v2.MediatorNodeCall;
+		import com.cisco.app.core.operations.OperationHistoryEvent;
+		import mx.events.ListEvent;
+		import mx.events.AdvancedDataGridEvent;
+		import com.cisco.nbm.scheduler.ScheduleDocument;
+		import com.cisco.app.core.operations.OperationHistory;
+		import com.cisco.app.core.operations.IOperationHistoryService;
+		import mx.logging.ILogger;
+		import com.cisco.app.core.commands.ICommandService;
+		import com.cisco.app.core.commands.CommandManager;
+		import mx.logging.targets.TraceTarget;
+		import mx.logging.ILoggingTarget;
+		import mx.logging.Log;
+		import com.cisco.nbm.xmlrpc.v2.IMediatorNode;
+		import com.cisco.nbm.xmlrpc.v2.MediatorNode;
+		import mx.events.DragEvent;
+		import com.cisco.nbm.scheduler.HierarchicalSchedule;
+		import com.cisco.nbm.scheduler.HierarchicalScheduleManager;
+		import mx.collections.HierarchicalData;
+		import com.cisco.nbm.scheduler.ui.components.AddSchedulePopup;
+		import mx.managers.PopUpManager;
+		import mx.collections.ArrayCollection;
+		import com.cisco.nbm.xmlrpc.v2.XMLRPCService;
+		
+		//private var debugIP:String = "192.168.1.5";
+		//private var debugIP:String = "10.64.78.170";
+		//private var debugIP:String = "72.163.202.23";//"10.95.73.5" // Scalability test
+		private var debugIP:String = "10.64.78.170"; // Query Manager Schedule Thing
+		//private var debugIP:String = "10.95.73.8"; // Shane's MM
+		//private var debugIP:String = "10.20.138.44"; // Fred's M with bacnet schedule
+		//private var debugIP:String = "127.0.0.1"
+//		private var debugIP:String = "72.163.203.225";
+		
+		//private var debugUsername:String = "";
+		private var debugUsername:String = "mpxadmin";
+		private var debugPassword:String = "mpxadmin";
+		// Shane's mediator set password
+		//private var debugPassword:String = "";
+		
+		private var serverProxy:XMLRPCService;
+		
+		[Bindable]
+		[Embed(source="assets/SortDown.gif")]
+		private var downIcon:Class;
+		
+		[Bindable]
+		[Embed(source="assets/SortUp.gif")]
+		private var upIcon:Class;
+		
+		[Bindable]
+		private var sortField:SortField = new SortField("name");
+		
+		[Bindable]
+		private var scheduleHolders:ArrayCollection;
+		
+		[Bindable]
+		private var hierarchicalScheduleManager:HierarchicalScheduleManager =new HierarchicalScheduleManager();
+		
+		[Bindable]
+		private var entityManager:EntityManager;
+		
+		private static const SCHEDULE_MANAGER_URI:String = "/services/Schedule Manager";
+		private static const DEFAULT_ENTITY_MANAGER_URI:String = "/services/Entity Manager";
+		
+		[Bindable]
+		private var operationHistory:OperationHistory;
+		
+		private var logger:ILogger = Log.getLogger("cisco.nbm.scheduler");
+		
+		[Bindable]
+		public var scheduleDocument:ScheduleDocument = new ScheduleDocument();
+		
+		private var browserBridge:BrowserBridge;
+		
+		private var embedded:Boolean = false;
+		
+		private var initialSelectedEntity:String;
+		
+		public var entityManagerURI:String;
+		
+		public var sourceItems:Array;
+		public var targetItem:Object;
+		
+		/**
+		 * @private
+		 * 
+		 * Root schedules found via query manager.
+		 * 
+		 */
+		[Bindable]
+		public var foundSchedules:ArrayCollection = new ArrayCollection();
+		
+		/**
+		 * Selecting an entity in a path is an asynchronous,
+		 * so this flag keeps track if a selection is in 
+		 * process.  If the user selects a different
+		 * schedule then the job ends.
+		 */
+		private var selectingEntity:Boolean = false;
+		
+		[Bindable]
+		private var cutEnabled:Boolean;
+		
+		[Bindable]
+		private var pasteEnabled:Boolean;
+		
+		private var cutItems:Array;
+		private var cutItem:Object;
+		
+		private var deletedItems:Array;
+				
+		private function init():void
+		{
+			setupContextMenu();
+			Application.application.addEventListener(ErrorEvent.ERROR, handleGeneralError);
+			initLogging();
+			initOperationHistoryService();
+			
+			browserBridge = new BrowserBridge();
+			
+			browserBridge.addEventListener(BrowserBridgeEvent.PRE_INIT, handleBrowserBridgePreInit);
+			browserBridge.addEventListener(BrowserBridgeEvent.READY, handleBrowserBridgeReady);
+			browserBridge.addEventListener(BrowserBridgeEvent.ERROR, handleBrowserBridgeError);
+				
+			// TODO Browser may be ready before args are parsed!
+			browserBridge.init();
+			
+			scheduleDocument.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, 
+				handleScheduleDocumentPropertyChange);
+				
+			spinner.stop();
+		}
+		
+		private function handleScheduleDocumentPropertyChange(event:PropertyChangeEvent):void
+		{
+			logger.debug("schedule property change");
+			
+			updateControls();
+		}
+		
+		private function setupContextMenu():void
+		{
+			var versionContextItem:ContextMenuItem = new ContextMenuItem("Version Information");
+			
+			versionContextItem.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, 
+				handleVersionContextMenuSelected);
+			
+			var contextMenu:ContextMenu = new ContextMenu();
+			contextMenu.customItems.push(versionContextItem);
+			Application.application.contextMenu = contextMenu;
+		}
+
+		private function handleVersionContextMenuSelected(event:ContextMenuEvent):void
+		{
+			displayVersionsDialog(); 
+		}
+		
+		private function displayVersionsDialog():void
+		{
+			Alert.show( 
+				"Version: " + BuildNumber.VERSION + "\n" +
+				"Build Number: " + BuildNumber.BUILD_NUMBER, 
+				"Version Information",
+				Alert.OK); 
+				
+		}
+		
+		private function handleBrowserBridgePreInit(event:BrowserBridgeEvent):void
+		{
+			//initBrowserDependencies();
+		}
+				
+		private function handleBrowserBridgeReady(event:BrowserBridgeEvent):void
+		{
+			logger.debug("browser bridge ready");
+			initBrowserDependencies();
+			
+		}
+		
+		private function handleBrowserBridgeError(event:BrowserBridgeEvent):void
+		{
+			logger.error("browser bridge error: {0}", event.message);
+			initBrowserDependencies();
+		}
+		
+		/**
+		 * Reads arguments from the application parameters and registers
+		 * any callbacks if the Browser Bridge is ready and available.
+		 * 
+		 * This is step 2 in the app initialization process.
+		 */
+		private function initBrowserDependencies():void
+		{
+			embedded = browserBridge.args['embedded'] == "1";
+			
+			if (browserBridge.args['entity'] != null)
+			{
+				initialSelectedEntity = StringUtil.trim(browserBridge.args['entity']);
+				
+				if (initialSelectedEntity.length != 0)
+				{
+					logger.debug("Showing entity: " + initialSelectedEntity);
+				}
+			}
+			
+			if (browserBridge.args['entity_manager_uri'] != null)
+			{
+				entityManagerURI = StringUtil.trim(browserBridge.args['entity_manager_uri']);
+				
+				if (entityManagerURI.length == 0)
+				{
+					Alert.show("Empty Entity Manager URI variable specified", "Critical Error");
+				}
+			}
+			else
+			{
+				entityManagerURI = DEFAULT_ENTITY_MANAGER_URI;
+			}
+			
+			logger.debug("Using entity manager uri: '{0}'", entityManagerURI);
+			
+			if (!embedded)
+			{
+				
+				// var debugIP:String = "192.168.20.20";
+				var authPanel:AuthenticationDialog = AuthenticationDialog.show(this,
+					debugUsername, debugPassword, debugIP, handleAuthDialogClose);
+			}
+			else
+			{
+				createService(null, null, null);
+			}
+		}
+		
+		private function handleAuthDialogClose(event:CloseEvent):void
+		{
+			if (event.detail == Alert.OK)
+			{
+				var panel:AuthenticationDialog = event.target as AuthenticationDialog;
+				var username:String = panel.username;
+				var password:String = panel.password;
+				var serverAddress:String = panel.serverAddress;
+				
+				createService(username, password, serverAddress, "http://");
+			}
+		}
+		
+		
+		private var queryManagerNode:MediatorNode;
+		
+		/**
+		 * @private
+		 * Fetches all the schedule names from the Query Manager
+		 */
+		private function fetchSchedules():void {
+			spinner.play();
+			var loader:ScheduleHierarchyLoader = new ScheduleHierarchyLoader(queryManagerNode, hierarchicalScheduleManager);
+			loader.load();
+			loader.addEventListener(Event.COMPLETE, handleFetchSchedulesComplete);
+			loader.addEventListener(ErrorEvent.ERROR, handleFetchSchedulesError);
+		}
+		
+		private function handleFetchSchedulesComplete(event:Event):void {
+			logger.debug("fetch schedules complete");
+			var loader:ScheduleHierarchyLoader = event.target as ScheduleHierarchyLoader;
+			
+			//foundSchedules = loader.schedules;
+			hierarchicalScheduleNavigator.enabled = true;
+			spinner.stop();
+			
+			loadingContainer.parent.removeChild(loadingContainer);
+		}
+		
+		private function handleFetchSchedulesError(event:ErrorEvent):void {
+			logger.error("Error while fetching schedules:" + event);
+		}
+		
+		/**
+		 * This is where the application is ready to be used.
+		 * 
+		 */
+		private function createService(username:String, password:String, serverAddress:String, protocol:String = null):void
+		{
+			var rootURI:String = "/XMLRPCv2/RNA";
+			
+			serverProxy = new XMLRPCService(serverAddress, rootURI, username, password, protocol);
+			serverProxy.addEventListener(ErrorEvent.ERROR, handleServerProxyError);
+			(serverProxy as XMLRPCService).timeout = 40 * 1000;
+			
+			entityManager = new EntityManager(serverProxy.getNode(entityManagerURI) as MediatorNode);
+			hierarchicalScheduleManager.init(serverProxy.getNode(SCHEDULE_MANAGER_URI));
+			hierarchicalScheduleManager.rootSchedules.addEventListener(CollectionEvent.COLLECTION_CHANGE, 
+				handleRootSchedulesChanged);
+			hierarchicalScheduleManager.addEventListener(ErrorEvent.ERROR, 
+				handleGeneralError);
+			hierarchicalScheduleManager.addEventListener(Event.COMPLETE,
+				handleScheduleManagerComplete);
+			//hierarchicalScheduleManager.addEventListener( /.. );
+			
+			// create query manager node here
+			queryManagerNode = serverProxy.getNode("/services/Query Manager") as MediatorNode;
+			
+			
+			if (initialSelectedEntity != null)
+			{
+				handleEntitySelected(initialSelectedEntity);
+			}
+		}
+		
+		private function handleScheduleManagerComplete(event:Event):void {
+			hierarchicalScheduleManager.removeEventListener(Event.COMPLETE, handleScheduleManagerComplete);
+			
+			logger.debug("schedule manager is online");
+			hierarchicalScheduleNavigator.enabled = false;
+			fetchSchedules();
+		}
+		
+		private function handleRootSchedulesChanged(event:CollectionEvent):void
+		{
+			selectFirstSchedule();
+		}
+		
+		private function selectFirstSchedule():void
+		{
+			if (hierarchicalScheduleManager.rootSchedules.length > 0)
+			{
+				hierarchicalScheduleManager.rootSchedules.removeEventListener(CollectionEvent.COLLECTION_CHANGE, 
+					handleRootSchedulesChanged);
+				// open item
+				hierarchicalScheduleNavigator.expandItem(hierarchicalScheduleManager, true, true);
+
+				changeSchedule( 
+					hierarchicalScheduleManager.rootSchedules.getItemAt(0) as HierarchicalSchedule);
+				enableOrDisableCutPaste();
+					
+			}
+			
+		}
+		
+		private function handleServerProxyError(event:ErrorEvent):void
+		{
+			// TODO Set interface into disabled state
+			var panel:ErrorPanel = ErrorPanel.show(this, 
+			"Error making network call: " + event.text, "Network Error",
+			event.text); 
+		}
+		
+		
+		private function handleEntitySelected(entityId:String):void
+		{
+			logger.debug("handleEntitySelected({0})", entityId);
+		}
+		
+		private function isRemoteRootSchedule(sched:HierarchicalSchedule):Boolean
+		{
+			if (sched == null) {
+				return false;
+			}
+			var idxStart:int = sched.name.indexOf("[");
+			var idxEnd:int = sched.name.indexOf("]");
+			
+			if (idxStart == -1)
+			{
+				return false;
+			}
+			
+			if (idxEnd == -1)
+			{
+				return false;
+			}
+			
+			if (idxStart < idxEnd)
+			{
+				return true;
+			}
+			
+			return false;
+		}
+		
+		private function extractScheduleServerName(name:String):String
+		{
+			var startIdx:int = name.indexOf("[") + 1;
+			var endIdx:int = name.indexOf("]");
+			
+			if (startIdx == -1 || endIdx == -1)
+			{
+				return null;
+			}
+			
+			if (startIdx < endIdx)
+			{
+				return name.substring(startIdx, endIdx);
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Returns the host name ( prefix enclosed in square brackets) of
+		 * <code>sched</code>.  If the schedule's hostname is the current
+		 * mediator then an empty string is returned.  
+		 * 
+		 * This function will go up the hierarchy to find the first 
+		 * mention of a hostname
+		 */
+		private function scheduleServerName(sched:HierarchicalSchedule):String
+		{
+			if (sched == null)
+			{
+				return null;
+			}
+			var hostname:String;
+			
+			/*
+			var hostname:String = extractScheduleServerName(sched.name);
+			
+			//logger.debug("\t1st: {0}", hostname);
+			
+			if (hostname != null)
+			{
+				return hostname;
+			}
+			*/
+			var parent:HierarchicalSchedule = sched.parent;
+			while (parent != null)
+			{
+				hostname = extractScheduleServerName(parent.name);
+				//logger.debug("\tinner: {0}", hostname);
+				if (hostname != null)
+				{
+					
+					return hostname;
+				}
+				
+				parent = parent.parent;
+			}
+			
+			return null;
+		}
+		
+		private function ancestorIsRemoteSchedule(sched:HierarchicalSchedule):Boolean {
+			return scheduleServerName(sched) != null;
+		}
+		
+		private function isRemoteSchedule(sched:HierarchicalSchedule):Boolean {
+			return ancestorIsRemoteSchedule(sched) || isRemoteRootSchedule(sched);
+		}
+		
+		/**
+		 * @private 
+		 * 
+		 * A schedule can only be moved into the manager or inside its own server.  
+		 * 
+		 * A schedule cannot be transfered across servers.
+		 * 
+		 */
+		private function canDropFunction(currentObject:Object, target:Object):Boolean
+		{
+			var sourceServerName:String = scheduleServerName(currentObject as HierarchicalSchedule);
+			var destinationServerName:String = scheduleServerName(target as HierarchicalSchedule);
+						
+			// If an ancestor of the schedule is a remote server, don't move.
+			if (currentObject is HierarchicalSchedule) {
+				var currSched:HierarchicalSchedule = currentObject as HierarchicalSchedule;
+				
+				if ( !currSched.online )
+					return false;
+				
+				if (currSched.isRemote && !currSched.isRemoteRoot) {
+					return false;
+				} 
+			}
+			
+			if (target is HierarchicalSchedule) {
+				if ((target as HierarchicalSchedule).isRemote) {
+					return false;
+				}
+			}
+
+			if (currentObject.parent == target)
+			{
+				return false;
+			}
+			
+			if (isAParentOf(currentObject as HierarchicalSchedule, target as HierarchicalSchedule))
+			{
+				return false;
+			}
+			
+			return true;
+		}
+		
+		private function isAParentOf(object:HierarchicalSchedule, target:HierarchicalSchedule):Boolean
+		{
+			if (target == null)
+			{
+				return false;
+			}
+			
+			var parent:HierarchicalSchedule = target.parent;
+			while (parent != null)
+			{
+				if (parent == object)
+				{
+					return true;
+				}
+				
+				parent = parent.parent;
+			}
+			
+			return false;
+		}
+		
+		private function initOperationHistoryService():void
+		{
+			operationHistory = new OperationHistory();
+			operationHistory.addEventListener(Event.COMPLETE, handleOperationHistoryComplete);
+		}
+		
+		private function clearOperationHistory():void
+		{
+			operationHistory.clear();
+		}
+		
+		private function handleOperationHistoryComplete(event:Event):void
+		{
+			logger.debug("Operation History Complete");
+			/*
+			buttonUndo.label = "Undo " + operationHistory.undoActionName;
+			buttonRedo.label = "Redo " + operationHistory.redoActionName;
+			buttonUndo.enabled = operationHistory.canUndo;
+			buttonRedo.enabled = operationHistory.canRedo;
+			*/
+		}
+
+		private function initLogging():void
+		{
+			var target:TraceTarget = new TraceTarget();
+			target.includeCategory = true;
+			target.includeLevel = true;
+			target.filters = ["*"];
+			
+			Log.addTarget(target);
+		}
+		
+		private function scheduleObjectSelectionChange():void
+		{
+			//var selection:HierarchicalSchedule = hierarchicalScheduleNavigator.selectedItem as HierarchicalSchedule;
+			var selection:Array = hierarchicalScheduleNavigator.selectedItems;
+			
+			if (selection == null || selection.length != 1) {
+				editSchedule(null);
+				return;
+			} 
+			
+			
+			var selectedItem:HierarchicalSchedule = selection[0] as HierarchicalSchedule
+			//selectedHierarchicalSchedule = selection;
+			//scheduleEditorView.schedule = selection;
+			
+			// expand all parents in case the schedule was closed
+			var parentNode:Object = hierarchicalScheduleNavigator.getParentItem(selectedItem);
+			
+			while(parentNode != null)
+			{
+				var next:Object = hierarchicalScheduleNavigator.getParentItem(parentNode);
+				
+				if (next == null)
+				{
+					break;
+				}
+				
+				parentNode = next;
+			} 
+			
+			if (parentNode != null)
+			{
+				hierarchicalScheduleNavigator.expandItem(parentNode, true, true);
+			}
+			
+			editSchedule(selectedItem);
+			//changeSchedule(selection);
+			
+			showScheduleEditor();
+		}
+		
+		private function showScheduleEditor():void
+		{
+			//editorStack.selectedChild = scheduleEditorView;
+		}
+		
+		private var addSchedulePopup:AddSchedulePopup;
+		
+		private function handleAddSchedule():void
+		{
+			addSchedulePopup = AddSchedulePopup.show(null, 
+					selectedHierarchicalSchedule, 
+					hierarchicalScheduleManager,
+					handleCreateSchedulePromptComplete);
+		}
+		
+		[Bindable]
+		private var selectedHierarchicalSchedule:HierarchicalSchedule;
+		
+		private function handleCreateSchedulePromptComplete(event:CloseEvent):void
+		{
+			if (event.detail == Alert.OK)
+			{
+				var newName:String = addSchedulePopup.newName;
+				
+				logger.debug("create schedule with name: " + newName);
+				
+				var job:ConfirmSaveScheduleJob = new ConfirmSaveScheduleJob("Add Schedule",
+					scheduleDocument, this, hierarchicalScheduleManager);
+				job.token = { root: scheduleDocument.schedule, name : newName };
+				job.addCallback(handleNewScheduleComplete, handleNewScheduleFail);
+				job.run(null);					
+			}
+
+			addSchedulePopup = null;
+		}
+		
+		private function handleNewScheduleComplete(method:ConfirmSaveScheduleJob, result:Object):void
+		{
+			var token:Object = method.token;
+			
+			if (method.reason == DialogCloseReason.CANCEL)
+			{
+				return;
+			}
+			
+			internalNewSchedule( token.root, token.name );
+			
+		}
+		
+		private function internalNewSchedule(parentSchedule:HierarchicalSchedule, newName:String):void
+		{
+			logger.debug("internalNewSchedule: Parent: {0} - Name: {1}", parentSchedule, newName);
+			
+			var job:AsyncMethod = hierarchicalScheduleManager.createSchedule(parentSchedule, newName);
+			job.token = { root : parentSchedule, name : newName };
+			job.addCallback(handleNewScheduleResult, handleNewScheduleFail);
+			 // TODO Run in update job
+			var progress:ProgressPopup = getProgressPopup();
+			//destroyProgressPopup(progress);
+			progress.title = "New Schedule";
+			progress.text = "Creating new schedule ...";
+			progress.canCancel = false;
+		}
+		
+		private function handleNewScheduleResult(method:AsyncMethod, result:Object):void
+		{
+			var progress:ProgressPopup = getProgressPopup();
+			destroyProgressPopup(progress); 
+			
+			var token:Object = method.token;
+			
+			hierarchicalScheduleNavigator.validateNow();
+			
+			if (token.root != null)
+			{
+				hierarchicalScheduleNavigator.expandItem(token.root, true, true, true);
+			}
+			
+			var name:String = token.name;
+			
+			// select from schedule manager
+			// This does not happen until after the children have been retrieved ...
+			// TODO The call should complete with all children retrieved 
+			var childScheds:ArrayCollection;
+			
+			if (token.root != null)
+			{
+				childScheds = token.root.children;
+			} 
+			else
+			{
+				childScheds = hierarchicalScheduleManager.rootSchedules;
+			}
+			
+			for each (var child:HierarchicalSchedule in childScheds)
+			{
+				if (child.name == name)
+				{
+					changeSchedule(child);
+				}
+			}
+			
+		}
+		
+		private function handleNewScheduleFail(method:AsyncMethod, error:Object):void
+		{
+			//throw new Error("Unable to move schedule: " + error);
+			var popup:ProgressPopup = getProgressPopup();
+			destroyProgressPopup(popup);
+			
+			//throw new Error("Unable to add new schedule: " + error);
+			ErrorPanel.show(null, "Error adding new schedule", 
+				"Add Schedule Error", error as String);
+		}
+		
+		private function handleCreateScheduleCancel(event:Event):void
+		{
+			logger.debug("cancel created schedule:");
+			
+			clearAddSchedulePopup();
+			PopUpManager.removePopUp(addSchedulePopup);
+			addSchedulePopup = null;
+		}
+		
+		private function clearAddSchedulePopup():void
+		{
+			//addSchedulePopup.removeEventListener(Event.COMPLETE, handleCreateSchedulePromptComplete);
+			//addSchedulePopup.removeEventListener(Event.CANCEL, handleCreateScheduleCancel);
+		}
+		
+		private function handleDeleteSelectedSchedule():void
+		{
+			var selection:Array = hierarchicalScheduleNavigator.selectedItems;
+			
+			var isReadOnly:Boolean  = false;
+			
+			for each (var schedule:HierarchicalSchedule in selection) {
+				if (schedule.readOnly) {
+					isReadOnly = true;
+					break;
+				}
+			}
+
+			// NOTE This test is temporarily disabled because 
+			// we can't retrieve the "immutable" status of a schedule
+			// until we perform a get_meta
+			isReadOnly = false;
+			
+			if (isReadOnly)
+			{
+				//var sched:HierarchicalSchedule = selectedHierarchicalSchedule;
+				var label:String = "";
+				var title:String = selection.length == 1 ? "" : "s";
+				
+				
+				if (selection.length == 1) {
+					label = "'" + (selection[0] as HierarchicalSchedule).name + "' is read-only";
+				} else {
+					label = "One or more of the selected schedules is read-only";
+				}
+				
+				
+				Alert.show(label,
+					"Unable to delete schedule" + title, Alert.OK);
+				return;
+			}
+			
+			if (selection.length > 0)
+			{
+				
+				var label:String = "";
+				var title:String = selection.length == 1 ? "" : "s";
+				
+				if (selection.length == 1) {
+					label = "Do you want to delete '" + (selection[0] as HierarchicalSchedule).name + "'?";
+				}  else {
+					label = "Do you want to delete " + selection.length + " schedule" + title + "?";
+				}
+				
+				var sched:HierarchicalSchedule = selectedHierarchicalSchedule;
+				Alert.show(label, 
+					"Delete Schedule" + title, Alert.YES | Alert.NO, null,
+					handleDeleteScheduleConfirmClose);
+			}
+		}
+		
+		private function handleDeleteScheduleConfirmClose(event:CloseEvent):void
+		{
+			if (event.detail == Alert.YES)
+			{
+				deleteSelectedSchedules();
+			}
+		}
+		
+		/**
+		 * Deletes the schedule without prompting user.  
+		 * This function is called by handleDeleteSelectedSchedule
+		 */
+		private function deleteSelectedSchedules():void
+		{
+			
+			var selection:Array = hierarchicalScheduleNavigator.selectedItems;
+			
+			var scheduleName:String = "";
+			
+			if (selection.length == 1) {
+				scheduleName = (selection[0] as HierarchicalSchedule).name;
+			} else {
+				scheduleName = selection.length + " schedules";
+			}
+			deletedItems = selection;
+			var call:AsyncMethod = hierarchicalScheduleManager.removeSchedule(selection);
+			
+			var popup:ProgressPopup = getProgressPopup();
+			popup.title = "Removing Schedule";
+			popup.text = "Removing schedule '" + scheduleName + "'";
+			popup.canCancel = false;
+			
+			
+			call.addCallback(handleDeleteComplete, handleDeleteError);
+		}
+		
+		private function handleDeleteComplete(method:AsyncMethod, result:Object=null):void
+		{
+			if ( cutItems != null && cutItems.length > 0 ) {
+				for each (var item:Object in cutItems ) {
+					if ( deletedItems.indexOf(item) != -1) {
+						cutItems = null;
+						enableOrDisableCutPaste();
+						break;
+					}
+				}
+			}
+			var progress:ProgressPopup = getProgressPopup();
+			destroyProgressPopup(progress);
+			
+			changeSchedule(null);
+			deletedItems = null;
+			buttonRemoveSchedule.enabled = false;
+		}
+		
+		private function handleDeleteError(method:AsyncMethod, result:Object=null):void
+		{
+			var progress:ProgressPopup = getProgressPopup();
+			destroyProgressPopup(progress);
+			
+			ErrorPanel.show(null, "Error deleting schedule", 
+				"Schedule Delete Error", result as String);
+		} 
+		
+		/**
+		 * Updates the selected schedule and sets up the editors for it
+		 */
+		private function editSchedule(schedule:HierarchicalSchedule):void
+		{
+			detachScheduleListeners();
+			
+			selectedHierarchicalSchedule = schedule;
+			
+			if (schedule != null)
+			{
+				var currentSelectedSchedule:Object = hierarchicalScheduleNavigator.selectedItem;
+				
+				if (currentSelectedSchedule != schedule) {
+					trace("\tSetting schedule on hnav");
+					hierarchicalScheduleNavigator.selectedItem = schedule;
+				}
+			}
+			
+			
+			scheduleDocument.setSchedule(schedule);
+			scheduleEditorView.scheduleDocument = scheduleDocument;
+			
+			attachScheduleListeners();
+			
+			updateControls();
+		}
+		
+		private function detachScheduleListeners():void
+		{
+			var scheduleItem:HierarchicalSchedule = scheduleDocument.schedule;
+			
+			if (scheduleItem != null)
+			{
+				scheduleItem.removeEventListener(PropertyChangeEvent.PROPERTY_CHANGE, handleSchedulePropertyChange);
+			}
+		}
+		
+		private function attachScheduleListeners():void
+		{
+			var scheduleItem:HierarchicalSchedule = scheduleDocument.schedule;
+			
+			if (scheduleItem != null)
+			{
+				scheduleItem.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, handleSchedulePropertyChange);
+			}
+		}
+		
+		private function handleSchedulePropertyChange(event:PropertyChangeEvent):void
+		{
+			updateControls();
+		}
+		
+		private function selectionHasReadOnlySchedules():Boolean {
+			var selection:Array = hierarchicalScheduleNavigator.selectedItems;
+					
+			if (selection != null) {
+				for each (var item:Object in selection) {
+					if (hasReadOnlySchedules(item)) {
+						return true;
+					}
+				}
+			}
+					
+			return false;
+		}
+		
+		private function hasReadOnlySchedules(item:Object):Boolean {
+			if ( item == null || item is HierarchicalScheduleManager || item.readOnly )
+				return true;
+			if (item is HierarchicalSchedule) {
+				for each ( var child:Object in item.children ) {
+					if ( hasReadOnlySchedules(child))
+						return true;
+				}
+			}
+			return false;
+		}
+		
+		private function selectionHasRemoteSchedules():Boolean {
+			var selection:Array = hierarchicalScheduleNavigator.selectedItems;
+					
+			if (selection != null) {
+				for each (var item:Object in selection) {
+					if (item is HierarchicalSchedule) {
+						if ((item as HierarchicalSchedule).isRemote) {
+							
+							return true;
+						}
+					} else {
+						return true;
+					}
+				}
+			}
+					
+			return false;
+		}
+		
+		private function selectionHasChildren():Boolean {
+			var selection:Array = hierarchicalScheduleNavigator.selectedItems;
+			
+			if (selection != null) {
+				for each (var item:Object in selection) {
+					if (item is HierarchicalSchedule) {
+						if ((item as HierarchicalSchedule).children.length > 0) {
+							return true;
+						}
+					}
+				}
+			}
+			
+			return false;
+		}
+		
+		private function updateControls():void
+		{
+			scheduleIsOverride = checkOverrideEnablement();
+			overrideButtonLabel = "Override";
+			
+			var selectionLength:int = 0;
+			
+			if (hierarchicalScheduleNavigator.selectedItems != null) {
+				selectionLength = hierarchicalScheduleNavigator.selectedItems.length;
+			}
+											
+			
+			if (scheduleDocument != null)
+			{
+				editorStack.visible = scheduleDocument.schedule != null;
+				
+				if (scheduleDocument.schedule != null)
+				{
+					var scheduleItem:HierarchicalSchedule = scheduleDocument.schedule;
+					var remote:Boolean = isRemoteSchedule(scheduleItem);
+					
+					overrideButtonLabel = scheduleItem.overrideStatus ? "Release" : "Override";
+					
+					buttonAddSchedule.enabled = scheduleItem.online && !remote && selectionLength == 1;
+					 
+					buttonSave.enabled = scheduleItem.online && scheduleDocument.dirty;
+					buttonRemoveSchedule.enabled = !scheduleItem.readOnly && !remote && scheduleItem.children.length == 0;
+					
+					scheduleEditorView.enabled = scheduleItem.online;
+					//editorStack.visible = scheduleItem.online;
+				}
+				else
+				{
+					var hasRemote:Boolean = selectionHasRemoteSchedules();
+					
+					var hasChildren:Boolean = selectionHasChildren();
+					var hasReadOnly:Boolean = selectionHasReadOnlySchedules();
+					
+					var canRemove:Boolean = true;
+					
+					// I know this is extra work, but it makes it clearer
+					if (hasChildren) {
+						canRemove = false;
+					}
+					
+					if (hasRemote) {
+						canRemove = false;
+					}
+
+					if (hasReadOnly) {
+						canRemove = false;
+					}
+
+					trace("has children? " + hasChildren);
+					var selection:Array = hierarchicalScheduleNavigator.selectedItems;
+					
+					if (selection != null && selection.length == 0) {
+						canRemove = false;
+					}
+					
+					buttonRemoveSchedule.enabled = canRemove;
+					buttonSave.enabled = false;
+					
+					editorStack.visible = false;
+					
+					
+					buttonAddSchedule.enabled = selectionLength == 1;
+					
+					var selectedObject:Object = hierarchicalScheduleNavigator.selectedItem;
+					
+					if (selectedObject == hierarchicalScheduleManager)
+					{
+						buttonAddSchedule.enabled = true;
+					}
+					
+				}
+				
+				
+			}
+			else
+			{
+				editorStack.visible = false;
+			}
+			
+			enableOrDisableCutPaste();
+		}
+		
+		/**
+		 * @private
+		 * 
+		 * Handle schedule item selection in the navigator.  
+		 * 
+		 * If the selection is of 1 item, then the selected schedule is loaded and edited
+		 * 
+		 * If the selection is 0 or more than one item, then the current document is set to null.
+		 * 
+		 */
+		private function handleHSChange(event:CiscoTreeEvent):void
+		{
+			logger.debug("handleHSChange");
+			
+			var selectionLength:int = hierarchicalScheduleNavigator.selectedItems.length;
+			
+			trace("length: " + selectionLength);
+			
+			if (selectionLength == 1) {		
+				var selectedObject:HierarchicalSchedule = hierarchicalScheduleNavigator.selectedItem as HierarchicalSchedule
+				
+				changeSchedule(selectedObject, false);
+				
+			} else {
+				// It doesn't matter if we're selecting 0 or 2+, we'll set the current schedule to null
+				changeSchedule(null, false);
+			}
+			
+			updateControls();
+		}
+		
+		/**
+		 * @private
+		 * 
+		 * Handle a click on the tree.  Intercept so that we can't move a new schedule if 
+		 * the currently edited schedule has been modified and not saved
+		 * 
+		 */
+		private function handleClick(event:Event):void {
+			trace("handle click: " + event);
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			
+		}
+		
+		private function handleChange(event:Event):void {
+			trace("handle change");
+		}
+		
+		private function handleHSChanging(event:CiscoTreeEvent):void
+		{
+			logger.debug("handleHSChanging");
+			
+			if (scheduleDocument.dirty)
+			{
+				event.preventDefault();
+				
+				var job:ConfirmSaveScheduleJob = new ConfirmSaveScheduleJob("Save Schedule", 
+					scheduleDocument, this, hierarchicalScheduleManager);
+				job.token = event.nextSelections;
+				job.addCallback(handleChangeResult, handleChangeFail);
+				
+				job.run(null);
+			}
+		} 
+		
+		private function handleChangeResult(method:ConfirmSaveScheduleJob, result:Object):void
+		{
+			if (method.reason == DialogCloseReason.OK)
+			{
+				var nextSelections:Array = method.token as Array;
+				
+				if (nextSelections == null || nextSelections.length != 1) {
+					changeSchedule(null, false);
+				} else {
+					
+					changeSchedule(nextSelections[0] as HierarchicalSchedule);
+				}
+				
+				//var nextSelection:HierarchicalSchedule = method.token as HierarchicalSchedule;
+				//changeSchedule(nextSelection);
+			}
+		}
+		
+		private function handleChangeFail(method:AsyncMethod, error:Object):void
+		{
+			throw new Error("Unable to save schedule so I will not change!");
+		}
+		
+		/**
+		 * @private
+		 * 
+		 * 
+		 * 
+		 * @param nextSchedule the next schedule to select
+		 * @param updateSelection if the navigator should be selected
+		 * 
+		 */
+		private function changeSchedule(nextSchedule:HierarchicalSchedule, updateSelection:Boolean=true):void
+		{
+			logger.debug("changeSchedule(nextSchedule={0}, updateSelection={1}", nextSchedule, updateSelection);
+			
+			if (updateSelection) {
+				if (nextSchedule == null)
+				{
+					// TODO Took this off earlier.
+					
+					hierarchicalScheduleNavigator.selectedItems = [hierarchicalScheduleManager];
+				}
+				else
+				{
+					hierarchicalScheduleNavigator.selectedItems = [nextSchedule];
+				}
+			}
+						
+			selectedHierarchicalSchedule = nextSchedule
+			
+			if (selectedHierarchicalSchedule == null)
+			{
+				scheduleObjectSelectionChange();
+				
+				return;
+			}
+			
+			// NOTE Forcing update so that override children get values from 
+			// parent if parent was modified ...
+			if (selectedHierarchicalSchedule.needUpdating)
+			{
+				selectedHierarchicalSchedule.update();
+			}
+			
+			scheduleObjectSelectionChange();
+			
+			updateControls();
+		}
+		
+		private function handleConfirmClose(event:Event):void
+		{
+			/*
+			logger.debug("Confirm close: " + event.type);
+			
+			var popup:ConfirmScheduleChangeWindow = event.target as ConfirmScheduleChangeWindow;  
+			
+			var nextSchedule:HierarchicalSchedule = popup.nextSchedule;
+			var currentSchedule:HierarchicalSchedule = popup.currentSchedule;
+			
+			PopUpManager.removePopUp(popup);
+			
+			
+			if (event.type == Event.COMPLETE)
+			{
+				logger.debug("would have saved, then selected new schedule");
+				hierarchicalScheduleManager.save(currentSchedule);
+				
+				scheduleDocument.schedule = nextSchedule;
+			}
+			else
+			{
+				return;
+			}
+		}
+		*/
+		
+		}
+		
+		private function updateScheduleDocument(schedule:HierarchicalSchedule):void
+		{
+			logger.debug("updating schedule document with new schedule: " + schedule);
+			scheduleDocument.setSchedule(schedule);
+			updateControls();
+		}
+		
+		private function save():void
+		{
+			// TODO DO not enable save if not modified
+			clearOperationHistory();
+			
+			var popup:ProgressPopup = getProgressPopup();
+			var job:Job = hierarchicalScheduleManager.save(selectedHierarchicalSchedule);
+			job.addCallback(handleSaveComplete, handleSaveError);
+			popup.title = "Saving  ...";
+			// set popup job
+			popup.start();
+			
+			job.run(popup.monitor);
+		}
+		
+		private function handleSaveComplete(job:Job, result:Object):void
+		{
+			var popup:ProgressPopup = getProgressPopup();
+			
+			scheduleDocument.dirty = false;
+			
+			destroyProgressPopup(popup);
+		}
+		
+		private function handleSaveError(job:Job, error:Object):void
+		{
+			var popup:ProgressPopup = getProgressPopup();
+			
+			destroyProgressPopup(popup);
+			logger.error("Error saving schedule: " + (error as String));
+			
+			var panel:ErrorPanel = ErrorPanel.show(this, 
+			"Unable to save Schedule", "Error Saving Schedule",
+			(error as String));
+		}
+		
+		private function handleGeneralError(event:ErrorEvent):void
+		{
+			logger.error("error!: " + event);
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			
+			var panel:ErrorPanel = ErrorPanel.show(this, 
+			"Error: " + event.text, "Error",
+			event.text); 
+		}
+		
+		private function displayDuplicateNameAlert(parentName:String, sourceName:String):void
+		{
+			Alert.show("Unable to move the schedule because a schedule with the name " + sourceName + " already exists in the schedule " + parentName, 
+				"Error: Name Conflict");
+		}
+		
+		private function handleDragComplete(event:DragEvent):void
+		{
+			event.preventDefault();
+			
+			logger.debug("handle drag complete: {0}", event);
+			
+			var items:Array = event.dragSource.dataForFormat("treeItems") as Array;
+			
+			
+			
+			
+//			for each (var draggedItem:Object in event.dragSource.dataForFormat("treeItems") as Array) {
+//				items.push(draggedItem);
+//			}
+			
+			if (items.length == 0) {
+				return;
+			}
+			
+			// obj might be null if the user has dropped over the container
+			var targetItem:Object = hierarchicalScheduleManager;
+			
+			var dropIndex:int = hierarchicalScheduleNavigator.calculateDropIndex(event);
+			var obj:Object = hierarchicalScheduleNavigator.indexToItemRenderer(dropIndex);
+			
+			if (obj != null)
+			{
+				targetItem = obj.data;
+			}
+			
+			trace("Dropping drops: " + items);
+			
+			var allowPaste:Boolean = false;
+			for each ( var item:Object in items ) {
+				if (! canDrop(item,targetItem)) {
+					allowPaste = false;
+					break;
+				} else {
+					allowPaste = true;
+				}
+			}
+			
+			if ( allowPaste ) {
+				sourceItems = items;
+				this.targetItem = targetItem;
+				Alert.show("Do you want to continue this drag operation?","Confirm",Alert.YES|Alert.NO,this,confirmHandler,null,Alert.YES);
+			} else {
+				DragManager.showFeedback(DragManager.NONE);
+			}
+
+		}
+		
+		private function confirmHandler(event:CloseEvent):void {
+			if ( event.detail == Alert.YES ) {
+				if ( sourceItems != null && targetItem != null )
+					handleDrop(sourceItems,targetItem);
+			}
+			sourceItems = null;
+			targetItem = null;
+		}
+		
+		private function handleDrop(sourceItems:Array,targetItem:Object):void {
+			
+			for each ( var item:Object in sourceItems ) {
+				var sourceItem:HierarchicalSchedule = item as HierarchicalSchedule;
+				
+				
+				// Do not allow drop into schedule that has items with the same name
+				for each (var child:HierarchicalSchedule in targetItem.children)
+				{
+					if (child.name == sourceItem.name)//scheduleDocument.schedule.name)
+					{
+						var parentName:String = "Schedule Manager";
+						
+						if (targetItem != hierarchicalScheduleManager) {
+							parentName = targetItem.name; 
+						} 
+						
+						displayDuplicateNameAlert(parentName, child.name);
+						
+						return;
+					}
+				}
+			}
+			
+			// NOTE Turned off for now
+			var job:ConfirmSaveScheduleJob = new ConfirmSaveScheduleJob("Move Schedule",
+				scheduleDocument, this, hierarchicalScheduleManager);
+			job.token = { sourceSchedules : sourceItems, targetItem : targetItem };
+				
+			job.addCallback(handleMoveConfirmResult, handleMoveConfirmFail);
+			job.run(null);
+		}
+		
+		
+		private function handleMoveConfirmResult(method:ConfirmSaveScheduleJob, result:Object):void
+		{
+			var token:Object = method.token;
+			
+			if (method.reason == DialogCloseReason.OK)
+			{
+				trace("will move schedules: " + token.sourceSchedules);
+				internalMoveSchedule( token.sourceSchedules, token.targetItem );
+			}
+		}
+		
+		/**
+		 * @private
+		 * 
+		 * Move the schedules in <code>sourceSchedules</code> into <code>targetItem</code>.
+		 * 
+		 * Executes a job in the background that eventually calls <code>handleMoveResult</code>
+		 * or <code>handleMoveFail</code>.
+		 * 
+		 * @param sourceSchedules an array of schedule items to move
+		 * @param targetItem The target that the schedules will be moved to.
+		 */
+		private function internalMoveSchedule(sourceSchedules:Array /* of HierarchicalSchedule */, targetItem:Object):void
+		{ 
+			operationHistory.clear();
+			
+			var popup:ProgressPopup = getProgressPopup();
+			var text:String = "Moving Schedule";
+			
+			if (sourceSchedules.length > 1) {
+				text += "s";
+			}
+			
+			popup.title = text;
+			popup.text = text;
+			
+			var job:MediatorNodeCall = hierarchicalScheduleManager.move(sourceSchedules, targetItem);
+			job.addCallback(handleMoveResult, handleMoveFail);	
+			var progress:ProgressPopup = getProgressPopup();
+			progress.title = text;
+			progress.text = "Moving ...";
+			progress.canCancel = false;		
+		}
+
+		private function handleMoveResult(method:AsyncMethod, result:Object):void
+		{
+			var popup:ProgressPopup = getProgressPopup();
+			destroyProgressPopup(popup);
+			
+			var destination:HierarchicalSchedule = method.token.destination as HierarchicalSchedule;
+			var sourceSchedules:Array /* of HierarchicalSchedule */ = method.token.original;
+			
+			// update selection
+			hierarchicalScheduleNavigator.validateNow();
+			
+			callLater(expandAndSelect, [destination]);
+		}
+		
+		private function expandAndSelect(schedule:HierarchicalSchedule):void
+		{
+			if ( schedule == null )	return;
+			var parent:HierarchicalSchedule = schedule.parent;
+			
+			while (parent != null)
+			{
+				if (!hierarchicalScheduleNavigator.isItemOpen(parent))
+				{
+					hierarchicalScheduleNavigator.expandItem(parent, true, true);					
+				}
+				parent = parent.parent;
+			}
+			
+			if (!hierarchicalScheduleNavigator.isItemOpen(hierarchicalScheduleManager))
+			{
+				hierarchicalScheduleNavigator.expandItem(hierarchicalScheduleManager, true, true);	
+			}
+			//callLater(changeSchedule, [sourceSchedule]);
+			changeSchedule(schedule);
+			
+			hierarchicalScheduleNavigator.scrollToIndex(hierarchicalScheduleNavigator.selectedIndex);
+		}
+
+		private function handleMoveFail(method:AsyncMethod, error:Object):void
+		{
+			//throw new Error("Unable to move schedule: " + error);
+			var popup:ProgressPopup = getProgressPopup();
+			destroyProgressPopup(popup);
+			
+			ErrorPanel.show(null, "Unable to move schedule",
+				"Error moving schedule", error as String);
+				
+		}
+
+		private function handleMoveConfirmFail(method:ConfirmSaveScheduleJob, error:Object):void
+		{
+			var popup:ProgressPopup = getProgressPopup();
+			destroyProgressPopup(popup);
+			ErrorPanel.show(null, "Unable to move schedule because it could not be saved",
+				"Error moving schedule", error as String);
+			//throw new Error("Unable to move schedule because I couldn't save it: " + error);
+		}
+		
+		private function moveComplete(result:Object):void
+		{
+			logger.debug("move complete: " + result);
+			var popup:ProgressPopup = getProgressPopup();
+			destroyProgressPopup(popup);
+
+		}
+		
+		private function moveError(error:Object):void
+		{
+			logger.error("Error moving: "  + error);
+
+			var popup:ProgressPopup = getProgressPopup();
+			destroyProgressPopup(popup);
+			ErrorPanel.show(null, "Error moving schedule",
+				"Error moving schedule", error as String);
+		}
+		
+		private function handleOverride():void
+		{
+			logger.debug("update override");
+		}
+		
+		private function updateOverrideStatus(value:Boolean):void
+		{
+			selectedHierarchicalSchedule.overrideStatus = value;
+			selectedHierarchicalSchedule.updateOverrideStatus();
+			
+			// If the document was released, then we set the document to not dirty
+			if (value != true)
+			{
+				scheduleDocument.dirty = false;
+				operationHistory.clear();
+			}
+			
+			updateControls();
+		}
+		
+		private var progressPanel:ProgressPopup;
+		
+		private function getProgressPopup():ProgressPopup
+		{
+			if (progressPanel == null)
+			{
+				//progressPanel = PopUpManager.createPopUp(this, ProgressPopup, true) as ProgressPopup;
+				progressPanel = ProgressPopup.show();		
+			}
+			
+			return progressPanel;
+		}
+		
+		private function destroyProgressPopup(popup:ProgressPopup):void
+		{
+			PopUpManager.removePopUp(popup);
+			popup.destroy();
+			
+			this.progressPanel = null;
+		}
+		
+		private function checkOverrideEnablement():Boolean
+		{
+			if (scheduleDocument == null)
+			{
+				return false;
+			}
+			
+			if (scheduleDocument.schedule == null)
+			{
+				return false;
+			}
+			
+			if (hierarchicalScheduleManager == null)
+			{
+				return false;
+			}
+			
+			if (hierarchicalScheduleManager.rootSchedules.source.indexOf(scheduleDocument.schedule) != -1)
+			{
+				return false;
+			}
+			
+			return true;			
+		}
+		
+		[Bindable]
+		private var overrideButtonLabel:String = "Override";
+		
+		[Bindable]
+		private var scheduleIsOverride:Boolean = false;
+		
+		private function showPopup():void
+		{
+			var pop:ProgressPopup = getProgressPopup();
+			pop.text = "Working ...";
+			pop.canCancel = false;
+		}
+		
+		private function scheduleLabelFunction(item:Object,
+			column:AdvancedDataGridColumn=null):String
+		{
+			if (item is HierarchicalScheduleManager)
+			{
+				return "Schedules";
+			}
+			
+			var scheduleItem:HierarchicalSchedule = item as HierarchicalSchedule;
+			
+			var name:String = scheduleItem.name;
+			
+			if (!scheduleItem.online)
+			{
+				name += " (offline)";
+			}
+			
+			//name += "r="+scheduleItem.isRemote+", rr="+scheduleItem.isRemoteRoot+",o="+scheduleItem.overrideStatus+",ro="+scheduleItem.readOnly;
+			
+			return name;
+		}
+		
+		/**
+		 * @private
+		 * 
+		 * Prevent dragging under certain conditions.  Not enabled now
+		 */
+		private function handleDragStart(event:Event):void {
+			//var hasChildren:Boolean = selectionHasChildren();
+			//event.preventDefault();
+		}
+		
+		private function sortSchedules():void {
+			
+			var collection:ICollectionView = (hierarchicalScheduleNavigator.dataProvider as ICollectionView);
+			var sort:Sort;
+			if ( collection.sort == null ) {
+				sort = new Sort();
+				sort.compareFunction = scheduleSortCompareFunction;
+				//sort.fields = [sortField];
+				//sortField.compareFunction = scheduleSortCompareFunction;
+				collection.sort = sort;
+			}
+			sort = collection.sort;
+			sortField.descending = !sortField.descending;
+			var openItems:Object = hierarchicalScheduleNavigator.openItems;
+
+			collection.refresh();
+			
+			for each ( var item:Object in openItems ) {
+				var children:ICollectionView = hierarchicalScheduleNavigator.dataDescriptor.getChildren(item);
+				children.sort = sort;
+				children.refresh();
+			}
+			//hierarchicalScheduleManager.rootSchedules.refresh();
+			hierarchicalScheduleNavigator.dataProvider = hierarchicalScheduleNavigator.dataProvider;
+			hierarchicalScheduleNavigator.openItems = openItems;
+			hierarchicalScheduleNavigator.invalidateProperties();
+			
+			/* var refreshEvent:CollectionEvent =
+                new CollectionEvent(CollectionEvent.COLLECTION_CHANGE);
+            refreshEvent.kind = CollectionEventKind.REFRESH;
+            hierarchicalScheduleManager.dispatchEvent(refreshEvent); */
+		}
+		
+		private function scheduleSortCompareFunction(item1:Object,item2:Object,fields:Object=null):int {
+			var label1:String = hierarchicalScheduleNavigator.itemToLabel(item1);
+			var label2:String = hierarchicalScheduleNavigator.itemToLabel(item2);
+			var anIndex:int = label1.localeCompare(label2);
+			if ( anIndex < 0 ) {
+				anIndex = -1;
+			} else if ( anIndex > 0 ) {
+				anIndex = 1;
+			}
+			if (sortField.descending)
+           		anIndex *= -1;
+			return anIndex;
+		}
+		
+		private function enableOrDisableCutPaste():void {
+			cutEnabled = false;
+			pasteEnabled = false;
+			if ( hierarchicalScheduleNavigator.selectedItem != null ) {
+				/* if ( cutItems == null || cutItems.length == 0 ) {
+					cutEnabled = true;
+				} else {
+					cutEnabled = cutItems.indexOf(hierarchicalScheduleNavigator.selectedItem) == -1;
+				} */
+				cutEnabled = true;
+				for each ( var item:Object in hierarchicalScheduleNavigator.selectedItems ) {
+					if ( item is HierarchicalSchedule ) {
+						if ( !(item as HierarchicalSchedule).online ) {
+							cutEnabled = false;
+							break;
+						}
+					}
+				}
+				
+				if ( cutItems != null ) {
+					for each ( var item:Object in cutItems ) {
+						if (! canDrop(item,hierarchicalScheduleNavigator.selectedItem)) {
+							pasteEnabled = false;
+							return;
+						}
+					}
+					pasteEnabled = true;
+				}
+			}
+		}
+		
+		private function canDrop(source:Object,target:Object):Boolean {
+			if ( source == null || target == null )	return false;
+			if ( source == target )	return false;
+			return canDropFunction(source,target);
+		}
+		
+		private function cut():void {
+			if ( hierarchicalScheduleNavigator.selectedItem != null ) {
+				if ( hierarchicalScheduleNavigator.selectedItems.length > 50 ) {
+					Alert.show("You can not move more than 50 schedules.\n Please select a maximum of 50 schedules and try again.","Error in Selection");
+					return;
+				} 
+				cutItems = hierarchicalScheduleNavigator.selectedItems;
+			}
+			enableOrDisableCutPaste();
+		}
+		
+		private function paste():void {
+			var allowPaste:Boolean = false;
+			for each ( var item:Object in cutItems ) {
+				if (! canDrop(item,hierarchicalScheduleNavigator.selectedItem)) {
+					allowPaste = false;
+					break;
+				} else {
+					allowPaste = true;
+				}
+			}
+			
+			if ( allowPaste ) {
+				handleDrop(cutItems,hierarchicalScheduleNavigator.selectedItem);
+			}
+			
+			cutItems = null;
+			enableOrDisableCutPaste();
+			//pasteEnabled = false;
+		}
+		
+	]]>
+</mx:Script>
+	<mx:VBox width="100%" height="100%">
+		<mx:HDividedBox width="100%" height="100%">
+			<mx:VBox width="300" height="100%">
+				<mx:HBox width="100%">
+					<mx:Button label="Add Schedule" click="handleAddSchedule()"
+						enabled="false"
+						id="buttonAddSchedule" 
+						
+						/>
+					<mx:Button label="Remove Schedule" 
+						click="handleDeleteSelectedSchedule()"
+						id="buttonRemoveSchedule"
+						enabled="false"
+						/>
+					<!-- enabled="{selectedHierarchicalSchedule != null}" -->
+				</mx:HBox>
+				<mx:HBox width="100%">
+					<mx:Button label="Save" click="save()" 
+						enabled="false"
+						id="buttonSave"
+						/>
+					<!-- enabled="{scheduleDocument.dirty}" --> 	
+					<mx:Button label="{overrideButtonLabel}"
+						enabled="{scheduleIsOverride}"
+						click="updateOverrideStatus(!scheduleDocument.schedule.overrideStatus)"
+						
+							/>
+							<!-- 
+								selected="{scheduleDocument.schedule.overrideStatus}"
+								toggle="true"  
+							-->
+					<mx:Button label="Select" click="cut()" enabled="{cutEnabled}"/>
+					<mx:Button label="Move" click="paste()" enabled="{pasteEnabled}"/>
+				</mx:HBox>
+				<mx:VBox width="100%" height="100%">
+					<mx:HBox width="100%" id="loadingContainer" verticalAlign="middle"
+						paddingLeft="5" paddingRight="5" >
+						<mx:Label text="Loading schedules ..." />
+						<spinner1:Spinner id="spinner" size="18" tickWidth="2" />
+					</mx:HBox>
+					<mx:VBox width="100%" height="100%" horizontalGap="0" verticalGap="0" verticalAlign="middle">
+						<view:Header width="100%" height="20" paddingRight="5">
+							<mx:Label text="Name"/>
+							<mx:Spacer width="100%"/>
+							<mx:LinkButton id="sortButton" width="12" rollOverColor="0xffffff" 
+								click="sortSchedules()" icon="{sortField.descending?downIcon:upIcon}"/>
+						</view:Header>
+						<components1:CiscoUITree dataProvider="{hierarchicalScheduleManager}"
+							id="hierarchicalScheduleNavigator"
+							width="100%" height="100%"
+							dragMoveEnabled="true"
+							dropEnabled="true"
+							dragEnabled="true"
+							dragDrop="handleDragComplete(event)"
+							dragStart="handleDragStart(event)"
+							changing="handleHSChanging(event)"
+							changed="handleHSChange(event)"
+							allowMultipleSelection="true"
+							canDropFunction="canDropFunction"
+							labelFunction="scheduleLabelFunction"
+							labelField="name"
+							dropIndicatorSkin="com.cisco.ui.components.skins.TreeDropIndicator"
+							/>
+							<!--<components1:dataProvider>
+								<mx:HierarchicalData source="{hierarchicalScheduleManager}"  />
+							</components1:dataProvider>
+							<components1:columns>
+								<mx:AdvancedDataGridColumn headerText="Name" dataField="name" />
+							</components1:columns>
+						</components1:CiscoTree>-->
+					</mx:VBox>
+					
+					
+				</mx:VBox>
+							
+			</mx:VBox>
+			<mx:VBox width="100%" height="100%">
+			
+				<mx:ViewStack id="editorStack" width="100%" height="100%"
+					visible="false">
+					<components:ScheduleEditor id="scheduleEditorView"
+						enabled="false"
+						entityManager="{entityManager}"
+						scheduleManager="{hierarchicalScheduleManager}"
+						operationHistoryService="{operationHistory}" 
+						width="100%" height="100%" />
+					
+				</mx:ViewStack>
+			</mx:VBox>
+		</mx:HDividedBox>
+	</mx:VBox>
+</mx:Application>

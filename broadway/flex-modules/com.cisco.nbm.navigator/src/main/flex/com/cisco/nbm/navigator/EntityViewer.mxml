@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%"
+	creationComplete="init()">
+<mx:Script>
+	<![CDATA[
+		import com.cisco.nbm.entities.EntityPropertyChangeEvent;
+		import mx.events.CollectionEvent;
+		import com.cisco.nbm.entities.EntityProperty;
+		import mx.states.RemoveChild;
+		import mx.collections.ArrayCollection;
+		import com.cisco.nbm.entities.Entity;
+	
+		private var inited:Boolean = false;
+	
+		private var _entity:Entity;
+		
+		private var propertyEditors:ArrayCollection = new ArrayCollection();
+	
+		private function init():void
+		{
+			inited = true;
+			
+			updateEditors();
+		}
+		
+		public function set entity(value:Entity):void
+		{
+			if (value != _entity)
+			{
+				if (_entity != null)
+				{
+					_entity.properties.removeEventListener(CollectionEvent.COLLECTION_CHANGE, handlePropertyChange);
+					_entity.removeEventListener(EntityPropertyChangeEvent.ENTITY_PROPERTY_CHANGE, handleEntityPropertyChange);
+					//_entity.stopPoll();
+				}
+				
+				_entity = value;
+				
+				if (_entity != null)
+				{
+					_entity.properties.addEventListener(CollectionEvent.COLLECTION_CHANGE, handlePropertyChange);
+					_entity.addEventListener(EntityPropertyChangeEvent.ENTITY_PROPERTY_CHANGE, handleEntityPropertyChange);
+					if (inited)
+					{
+						updateEditors();
+					}
+					
+					//_entity.startPoll();
+				}
+			}
+		}
+		
+		private function handleEntityPropertyChange(event:EntityPropertyChangeEvent):void
+		{
+			for each (var editor:PropertyEditor in propertyEditors)
+			{
+				//editor.setValue( event.va
+				if (editor.property.name == event.property.name)
+				{
+					editor.setValue( event.value );
+				}
+			}
+		}
+		
+		private function handlePropertyChange(event:CollectionEvent):void
+		{
+			updateEditors();
+		}
+		
+		private function updateEditors():void
+		{
+			removePropertyEditors();
+			
+			if (_entity != null)
+			{
+				enabled = true;
+				tiLabel.text = _entity.label;
+				gridProperties.dataProvider = _entity.properties;
+				
+				createPropertyEditors();
+			}
+			else
+			{
+				enabled = false;
+			}
+		}
+	
+		private function createPropertyEditors():void
+		{
+			for each (var property:EntityProperty in _entity.properties)
+			{
+				
+				var editor:PropertyEditor = new PropertyEditor(property);
+				propertyEditors.addItem(editor);
+				editor.createControl();
+				//controlPanel.addChild(editor.control);
+			}
+			
+			for each (var editor:PropertyEditor in propertyEditors)
+			{
+				controlPanel.addChild(editor.control);
+			}
+		}
+			
+		private function removePropertyEditors():void
+		{
+			for each (var editor:PropertyEditor in propertyEditors)
+			{
+				if (editor.control.parent != null)
+				{
+					controlPanel.removeChild(editor.control);
+				}
+			}
+			
+			propertyEditors.removeAll();
+			
+			controlPanel.verticalScrollPosition = 0;
+		}
+	]]>
+</mx:Script>
+	<mx:Form>
+		<mx:FormItem label="Name">
+			<mx:TextInput id="tiLabel" width="200"  /> 
+		</mx:FormItem>
+	</mx:Form>
+	<mx:VDividedBox width="100%" height="100%">
+		<mx:VBox id="controlPanel" width="100%" height="100%" paddingLeft="10" paddingRight="10">
+			
+		</mx:VBox>
+		<mx:AdvancedDataGrid width="100%" height="300"
+			id="gridProperties" >
+			<mx:columns>
+				<mx:AdvancedDataGridColumn headerText="Name" dataField="name" />
+				<mx:AdvancedDataGridColumn headerText="Description" dataField="description" />
+				<mx:AdvancedDataGridColumn headerText="Type" dataField="type" />
+				<mx:AdvancedDataGridColumn headerText="Label" dataField="label" />
+			</mx:columns>
+		</mx:AdvancedDataGrid>
+	</mx:VDividedBox>
+</mx:VBox>

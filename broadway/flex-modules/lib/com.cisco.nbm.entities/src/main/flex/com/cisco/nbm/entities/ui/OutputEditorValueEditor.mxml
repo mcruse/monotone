@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	minWidth="200"
+	creationComplete="init()">
+	<mx:Script>
+		<![CDATA[
+
+			private var _value:OutputEditorModelEntry;
+
+			public function init():void
+			{
+				updateEditor();
+			}
+
+			override public function set data(v:Object):void
+			{
+				if (!(v is OutputEditorModelEntry))
+				{
+					throw new Error("Editor can only handle OutputEditorModelEntry types");
+				}
+
+				if (_value != v)
+				{
+					_value = v as OutputEditorModelEntry;
+					updateEditor();
+				}
+			}
+
+
+			public function get value():OutputEditorModelEntry
+			{
+				return _value;
+			}
+
+			private function updateEditor():void
+			{
+				if (initialized && _value != null)
+				{
+					tiValue.text = new String(_value.value);
+				}
+			}
+		]]>
+	</mx:Script>
+
+	<mx:TextInput id="tiValue" width="100%" />
+</mx:HBox>

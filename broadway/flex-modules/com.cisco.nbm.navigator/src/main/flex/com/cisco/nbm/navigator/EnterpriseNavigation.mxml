@@ -1,0 +1,1379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:components="com.cisco.ui.components.*"
+		xmlns:ui="com.cisco.nbm.entities.ui.*"
+		xmlns:navigator="com.cisco.nbm.navigator.*"
+		creationComplete="init()"
+		width="100%" height="100%"
+		paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+	<mx:states>
+		<mx:State name="advSearch">
+			<mx:AddChild  relativeTo="{searchControlContainer}" position="after">
+			<mx:HBox width="100%" id="advSearchCanvas"  backgroundColor="#9BABC1"
+				horizontalScrollPolicy="off">
+				<mx:CheckBox
+					id="searchContextChkBox"
+					paddingLeft="5"
+					label="Search from currently selected item"
+					width="100%" />
+				</mx:HBox>
+			</mx:AddChild>
+			<mx:SetStyle target="{searchTxtInput}" name="fontStyle" value="normal"/>
+			<mx:SetStyle target="{searchTxtInput}" name="fontWeight" value="normal"/>
+			<mx:SetStyle target="{searchAndTreeBox}" name="left" value="0"/>
+			<mx:SetStyle target="{treeNavigation}" name="left" value="0"/>
+		</mx:State>
+
+		<mx:State name="searchMin">
+			<mx:AddChild  relativeTo="{searchAndTreeBox}" position="firstChild">
+			<mx:VBox width="100%" borderStyle="none" id="vbox1" backgroundColor="#9BABC1" paddingBottom="5">
+				<mx:Canvas id="searchMinCanvas" width="100%" >
+					<mx:Text id="searchResultLbl" textAlign="left" fontWeight="bold" fontSize="12" visible="false" left="5" top="5" width="93%"/>
+					<mx:ProgressBar id="searchProgressBar" themeColor="#65879D" indeterminate="true" labelPlacement="center" label="Searching....."  visible="true" left="5" top="5" fontSize="12" fontStyle="bold" right="33"/>
+					<mx:Button label="X" click="closeSearch()" width="25" fontWeight="bold" fontSize="12" right="0" top="0" height="22" icon="@Embed(source='/assets/Close16T.gif')" toolTip="Close Search"/>
+				</mx:Canvas>
+			</mx:VBox>
+			</mx:AddChild>
+		</mx:State>
+		<mx:State name="searchMax" basedOn="searchMin" >
+
+			<mx:SetProperty target="{vbox1}" name="height" value="50%"/>
+			<mx:AddChild relativeTo="{vbox1}" position="lastChild">
+				<mx:List width="100%"
+						id="listSearchResults"
+						dataProvider="{searchResults}"
+						variableRowHeight="true"
+						itemRenderer="com.cisco.nbm.navigator.components.EntityButtonRenderer"
+						labelFunction="getSeatrchResultLabel"
+						itemClick="{handleSearchResultClicked()}"
+						rowCount="{getRowCount(searchResults.length)}" height="100%">
+				</mx:List>
+			</mx:AddChild>
+			<mx:SetProperty target="{treeNavigation}" name="height" value="50%"/>
+			<mx:SetProperty target="{searchProgressBar}" name="width" value="20%"/>
+			<mx:SetStyle target="{searchProgressBar}" name="left"/>
+			<mx:SetProperty target="{searchProgressBar}" name="height"/>
+			<mx:SetProperty target="{searchResultLbl}" name="width" value="72%"/>
+			<mx:SetStyle target="{searchResultLbl}" name="right"/>
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition id="advSearchTransition"
+                fromState="*"
+                toState='advSearch'>
+            <mx:WipeDown target="{advSearchCanvas}" duration="500"/>
+        </mx:Transition>
+        <mx:Transition id="searchMinTransition"
+                fromState="*"
+                toState='searchMin'>
+            <mx:WipeDown target="{searchMinCanvas}" duration="500"/>
+        </mx:Transition>
+        <mx:Transition id="searchMaxTransition"
+                fromState="*"
+                toState='searchMax'>
+            <mx:WipeDown target="{listSearchResults}" duration="500"/>
+        </mx:Transition>
+    </mx:transitions>
+<mx:Script>
+	<![CDATA[
+		import mx.collections.IHierarchicalCollectionView;
+		import com.cisco.collections.HierarchicalCollectionView;
+		import mx.utils.URLUtil;
+		import com.cisco.cisco_internal;
+	
+		import mx.utils.ObjectUtil;
+		import mx.managers.CursorManagerPriority;
+		import mx.managers.CursorManager;
+		import mx.controls.Button;
+		import com.cisco.nbm.search.SearchJob;
+		import com.cisco.nbm.search.SearchService;
+		import com.cisco.nbm.navigator.components.EntityTreeItemrenderer;
+		import com.cisco.nbm.entities.EntityProperty;
+		import mx.controls.ToolTip;
+		import mx.core.IToolTip;
+		import mx.managers.ToolTipManager;
+		import mx.events.ListEvent;
+		import com.cisco.nbm.navigator.components.EntityToolTip;
+		import mx.events.ToolTipEvent;
+		import com.cisco.nbm.navigator.BuildNumber;
+		import mx.events.CollectionEvent;
+		import com.cisco.nbm.entities.EntityStatus;
+		import mx.controls.advancedDataGridClasses.AdvancedDataGridColumn;
+		import mx.controls.AdvancedDataGrid;
+		import mx.collections.SortField;
+		import mx.collections.Sort;
+		import mx.controls.listClasses.IListItemRenderer;
+		import com.cisco.nbm.entities.EntityEvent;
+		import mx.controls.Alert;
+		import mx.events.CloseEvent;
+		import com.cisco.nbm.browserbridge.ui.connection.AuthenticationDialog;
+		import com.cisco.nbm.browserbridge.BrowserBridgeEvent;
+		import com.cisco.nbm.browserbridge.BrowserBridge;
+		import com.cisco.nbm.entities.Entity;
+		import mx.utils.StringUtil;
+		import com.cisco.nbm.entities.EntityManager;
+		import mx.logging.LogEventLevel;
+		import mx.logging.targets.TraceTarget;
+		import mx.logging.ILoggingTarget;
+		import mx.collections.HierarchicalData;
+		import com.cisco.nbm.xmlrpc.v2.IMediatorNode;
+		import com.cisco.nbm.xmlrpc.v2.MediatorNode;
+		import com.cisco.nbm.xmlrpc.v2.XMLRPCService;
+		import mx.logging.Log;
+		import mx.logging.ILogger;
+		import mx.collections.ArrayCollection;
+		import mx.effects.easing.Bounce;
+
+        import flash.external.ExternalInterface;
+        import flash.utils.Dictionary;
+
+		//Biswamit
+		private var debugIP:String = "";//"10.64.78.170";//"72.163.203.116";
+ 
+		[Bindable]
+		private var locationHierarchy:ArrayCollection = new ArrayCollection();
+
+		private var logger:ILogger = Log.getLogger("cisco.nbm.navigator");
+
+		private var service:XMLRPCService;
+
+		[Bindable]
+		private var entityManager:EntityManager;
+
+		[Bindable]
+		private var canConnect:Boolean = true;
+
+		[Bindable]
+		private var connected:Boolean = false;
+
+		private var browserBridge:BrowserBridge;
+
+		private var embedded:Boolean = false;
+
+		public static const PUBLISH_TOPIC:String = "/topic";
+
+		public var topic:String = PUBLISH_TOPIC;
+
+		public var urlSelectedEntityFlag:Boolean;
+
+		[Bindable]
+		private var canExpandAll:Boolean = false;
+
+		//Commented as per suggestion by Robert
+		/*[Bindable]
+		private var canExpandItem:Boolean = false;
+
+		[Bindable]
+		private var canCollapseItem:Boolean = false;*/
+
+		[Bindable]
+		private var entities:ArrayCollection;
+
+		public var debug:Boolean =false;
+
+		[Bindable]
+		private var canSearch:Boolean = false;
+
+		private static const DEFAULT_ENTITY_MANAGER_URI:String = "/services/Entity Manager";
+		//private static const DEFAULT_ENTITY_MANAGER_URI:String = "/aliases/Device Manager";
+
+		private static const SEARCH_SERVICE_URL:String = "/services/Query Manager";
+
+		public var entityManagerURI:String = DEFAULT_ENTITY_MANAGER_URI;
+
+		[Bindable]
+		public var searchResults:ArrayCollection = new ArrayCollection();
+
+		private var searchService:SearchService;
+
+		private static const  ALIASES_NODE:String = "/aliases";
+
+		[Bindable]
+		private var previousState:String;
+
+		[Embed(source="/assets/up_disclosure_arrow.png")]
+        public static const NORMAL_SEARCH_ICON:Class;
+
+        [Embed(source="/assets/down_disclosure_arrow.png")]
+        public static const ADV_SEARCH_ICON:Class;
+
+        public var authPanel:AuthenticationDialog;
+
+		private function loadNavigation():void
+		{
+			logger.debug("loadNavigation()");
+
+			entityManager = new EntityManager(service.getNode(entityManagerURI) as MediatorNode);
+
+			entities = new ArrayCollection();
+			entities.list = entityManager.entities;
+
+			entities.addEventListener(CollectionEvent.COLLECTION_CHANGE,
+				handleEntitiesCollectionChange);
+
+			treeNavigation.dataProvider = new HierarchicalCollectionView(new HierarchicalData(entities));
+			treeNavigation.validateNow(); // Must call so that adding a sort doesn't throw an exception
+			var field:SortField  = new SortField("label")
+			treeNavigation.dataProvider.sort = new Sort();
+			treeNavigation.dataProvider.sort.fields = [ field ];
+			treeNavigation.dataProvider.refresh();
+			
+			entityManager.startPoll();
+		}
+
+		private function setupContextMenu():void
+		{
+			var versionContextItem:ContextMenuItem = new ContextMenuItem("Version Information");
+
+			versionContextItem.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,
+				handleVersionContextMenuSelected);
+
+			var contextMenu:ContextMenu = new ContextMenu();
+			contextMenu.customItems.push(versionContextItem);
+			this.contextMenu = contextMenu;
+		}
+
+		private function handleVersionContextMenuSelected(event:ContextMenuEvent):void
+		{
+			displayVersionsDialog();
+		}
+
+		private function displayVersionsDialog():void
+		{ 
+			Alert.show("Build Number: " + BuildNumber.BUILD_NUMBER,
+				"Build Number",
+				Alert.OK);
+
+
+		}
+
+		private function handleEntitiesCollectionChange(event:CollectionEvent):void
+		{
+			if (entities.length > 0)
+			{
+				entities.removeEventListener(CollectionEvent.COLLECTION_CHANGE, handleEntitiesCollectionChange);
+				// select initial entity
+				var firstEntity:Entity = entities.getItemAt(0) as Entity;
+
+				
+				if ( !urlSelectedEntityFlag ) {
+					treeNavigation.selectedItem = firstEntity;
+					handleChange();
+				}
+
+				//entities.addEventListener(CollectionEvent.COLLECTION_CHANGE, handleEntitiesCollectionChange2);
+			}
+		}
+		
+		private function handleEntitiesCollectionChange2(event:CollectionEvent=null):void {
+			trace("new collection change: " + scrollLocked + ", entiyy=" + selectedEntity);
+			
+			if ( urlSelectedEntityFlag ) {
+				treeNavigation.selectedItem = selectedEntity;
+				urlSelectedEntityFlag = false;
+			}
+
+			if (scrollLocked && selectedEntity != null) {
+				if (!treeNavigation.isItemVisible(selectedEntity))
+					treeNavigation.firstVisibleItem = selectedEntity;
+			}
+		}
+
+		private function createService(username:String, password:String, serverAddress:String, protocol:String=null):void
+		{
+			var rootURI:String = "/XMLRPCv2/RNA";
+
+			service = new XMLRPCService(serverAddress, rootURI, username, password, protocol);
+			service.timeout = 60000;
+			loadNavigation();
+			createSearchService();
+		}
+
+		private function createSearchService():void
+		{
+			searchService = new SearchService(service.getNode(SEARCH_SERVICE_URL) as MediatorNode);
+			var searchJob:SearchJob = searchService.checkStatus();
+			searchJob.addEventListener("RUNNING", handleQueryManagerActive);
+			searchJob.addEventListener(ErrorEvent.ERROR, handleQueryManagerError);
+			searchJob.checkRunningStatus();
+		}
+
+		private function handleQueryManagerActive(event:Event):void
+		{
+			logger.debug("Query Manager Service is running");
+		}
+
+		private function handleQueryManagerError(event:ErrorEvent):void
+		{
+			searchControlContainer.parent.removeChild(searchControlContainer);
+			if (event != null)
+				logger.debug("Please check Query Manager Service : " + event.text);
+
+		}
+
+		private function init():void
+		{
+			// Add the following property below to change the L&F of the icons
+			// onlineColor: 0xff0000, onlineFontStyle: 'bold' ;
+			setupContextMenu();
+			initLogging();
+			browserBridge = new BrowserBridge();
+			browserBridge.addEventListener(BrowserBridgeEvent.READY, handleBrowserBridgeReady);
+			browserBridge.addEventListener(BrowserBridgeEvent.ERROR, handleBrowserBridgeError);
+
+			browserBridge.init();
+
+			embedded = browserBridge.args['embedded'] == "1";
+
+			if (!embedded)
+			{
+				authPanel = AuthenticationDialog.show(this,
+					"mpxadmin", "mpxadmin", debugIP, handleAuthDialogClose);
+			}
+			else
+			{
+				createService(null, null, null);
+			}
+
+			if (browserBridge.args['topic'] != null)
+			{
+				topic = browserBridge.args['topic'];
+			}
+
+			if (browserBridge.args['entity_manager_uri'] != null)
+			{
+				entityManagerURI = StringUtil.trim(browserBridge.args['entity_manager_uri']);
+
+				if (entityManagerURI.length == 0)
+				{
+					return;
+				}
+			}
+			else
+			{
+				entityManagerURI = DEFAULT_ENTITY_MANAGER_URI;
+			}
+
+			logger.debug("using entity manager uri: {0}", entityManagerURI);
+			logger.debug("Using topic to publish: " + topic);
+			if(embedded)
+			selectNode();
+		}
+
+
+		private function handleAuthDialogClose(event:CloseEvent):void
+		{
+			if (event.detail == Alert.OK)
+			{
+				var panel:AuthenticationDialog = event.target as AuthenticationDialog;
+				var username:String = panel.username;
+				var password:String = panel.password;
+				var serverAddress:String = panel.serverAddress;
+
+				createService(username, password, serverAddress, "http://");
+			}
+			selectNode();
+		}
+
+		private function handleBrowserBridgeReady(event:BrowserBridgeEvent):void
+		{
+			logger.debug("browser bridge ready");
+
+
+		}
+
+		private function handleBrowserBridgeError(event:BrowserBridgeEvent):void
+		{
+			logger.debug("browser bridge error: " + event.message);
+			Alert.show("Unable to connect to the browser bridge", "Error");
+		}
+
+		private function initLogging():void
+		{
+			var target:TraceTarget = new TraceTarget();
+			target.level = LogEventLevel.ALL;
+			target.includeLevel = true;
+			target.includeCategory = true;
+
+			Log.addTarget(target);
+		}
+
+		private var selectedEntity:Entity;
+
+		private function handlePropertiesLoaded(event:EntityEvent):void
+		{
+			if (selectedEntity == event.target)
+			{
+				dispatchEntitySelected();
+			}
+			selectNode();
+		}
+
+		private function handleTreeSelection(entitySelected:Entity):void
+		{
+			if (selectedEntity != null)
+			{
+				selectedEntity.removeEventListener(EntityEvent.DISPLAY_LOADED, handlePropertiesLoaded);
+				selectedEntity.removeEventListener(EntityEvent.CHILDREN_LOADED, handleEntitiesChildrenLoaded);
+			}
+			if (selectedEntity.displayLoaded)
+			{
+				dispatchEntitySelected();
+			}
+			else
+			{
+				selectedEntity.addEventListener(EntityEvent.DISPLAY_LOADED, handlePropertiesLoaded);
+				selectedEntity.loadDisplay();
+			}
+
+			//updateControls();
+		}
+		
+		//use namespace cisco_internal;
+		
+		private function handleChange():void
+		{
+			logger.debug("selection change");
+			clearScrollLock();
+			
+			if (selectedEntity != null)
+			{
+				selectedEntity.removeEventListener(EntityEvent.DISPLAY_LOADED, handlePropertiesLoaded);
+				selectedEntity.removeEventListener(EntityEvent.CHILDREN_LOADED, handleEntitiesChildrenLoaded);
+			}
+
+			selectedEntity = treeNavigation.selectedItem as Entity;
+			//entityViewer.entity = selectedEntity;
+
+			if (selectedEntity == null)
+			{
+				return;
+			}
+
+			if (selectedEntity.childrenLoaded)
+			{
+				updateControls();
+			}
+			else
+			{
+				
+				selectedEntity.loadChildren();
+				//selectedEntity.children; // /call it
+				selectedEntity.addEventListener(EntityEvent.CHILDREN_LOADED, handleEntitiesChildrenLoaded);
+
+			}
+
+			if (selectedEntity.displayLoaded)
+			{
+				dispatchEntitySelected();
+			}
+			else
+			{
+				selectedEntity.addEventListener(EntityEvent.DISPLAY_LOADED, handlePropertiesLoaded);
+				selectedEntity.loadDisplay();
+			}
+
+			updateControls();
+			//Update Hint if context based search is selected
+			if(((currentState == null) || (currentState == "")) && (searchContextChkBox != null) && (searchContextChkBox.selected == true))
+			searchTxtInput.text = getSearchHint(selectedEntity.path)
+		}
+
+		private function handleEntitiesChildrenLoaded(event:EntityEvent):void
+		{
+			logger.debug("children loaded");
+			updateControls();
+		}
+
+		private function dispatchEntitySelected():void
+		{
+			logger.debug("dispatching entity selected event: {0}", selectedEntity.path);
+			if (browserBridge.isReady)
+			{
+				browserBridge.publish(topic, { 'entity' : selectedEntity.path,
+					'display' : selectedEntity.display });
+			}
+			else
+			{
+				logger.debug("Not ready to publish to browser");
+			}
+		}
+
+		private function updateControls():void
+		{
+			//Commented canExpand and canCollapse as per suggestion by Robert
+			if (selectedEntity == null)
+			{
+
+				//canExpandItem = false;
+				//canCollapseItem = false;
+			}
+			else
+			{
+				if (treeNavigation.isItemOpen(selectedEntity))
+				{
+					//canExpandItem = false;
+					//canCollapseItem = true;
+				}
+				else
+				{
+					//canExpandItem = true;
+					//canCollapseItem = false;
+				}
+
+				if (selectedEntity.children == null || selectedEntity.children.length == 0)
+				{
+					//canExpandItem = false;
+					//canCollapseItem = false;
+				}
+			}
+
+			if (entityManager.entities.length == 0)
+			{
+				canExpandAll = false;
+			}
+			else
+			{
+				canExpandAll = true;
+			}
+
+			validateQuery();
+		}
+
+		private function showInvalidQueryTerm(errorString:String):void
+		{
+			searchTxtInput.errorString = errorString;
+		}
+
+		private function clearInvalidQueryTerm():void
+		{
+			searchTxtInput.errorString = "";
+		}
+
+		private function validateQuery():void
+		{
+			clearInvalidQueryTerm();
+			canSearch = true;
+
+			var proposedQuery:String = searchTxtInput.text;
+			proposedQuery = StringUtil.trim(proposedQuery);
+
+			if (proposedQuery.length  > 0)
+			{
+				canSearch = true;
+			}
+			else
+			{
+				canSearch = false;
+			}
+
+			if (proposedQuery.indexOf("/") != -1)
+			{
+				showInvalidQueryTerm("Do not use /");
+				canSearch = false;
+			}
+
+			// Find out if all charactders are just *'s and nothing in between
+			// Count the number of consecutive characters
+			if (proposedQuery.indexOf("*") != -1 )
+			{
+				var c:int = 0;
+
+				for (var i:int = 0; i < proposedQuery.length; i++)
+				{
+					if (proposedQuery.charAt(i) == "*")
+					{
+						c++;
+					}
+				}
+
+				if (c == proposedQuery.length)
+				{
+					canSearch = false;
+					showInvalidQueryTerm("Wildcard-only searches are not allowed");
+				}
+			}
+
+			// Find out if all charactders are just "" or '' 's and nothing in between
+			// Count the number of consecutive characters
+			if ((proposedQuery.indexOf("\"") != -1 ) || (proposedQuery.indexOf("'") != -1 ))
+			{
+				if (proposedQuery.indexOf("\"") != -1 )
+				{
+					var doubleQuotes:int = 0;
+
+					for (var i:int = 0; i < proposedQuery.length; i++)
+					{
+						if (proposedQuery.charAt(i) == "\"")
+						{
+							doubleQuotes++;
+						}
+					}
+
+					if (doubleQuotes == proposedQuery.length)
+					{
+						canSearch = false;
+						showInvalidQueryTerm("Only double quotes searches are not allowed");
+					}
+				}
+				else if(proposedQuery.indexOf("'") != -1 )
+				{
+					var singleQuotes:int = 0;
+
+					for (var i:int = 0; i < proposedQuery.length; i++)
+					{
+						if (proposedQuery.charAt(i) == "'")
+						{
+							singleQuotes++;
+						}
+					}
+
+					if (singleQuotes == proposedQuery.length)
+					{
+						canSearch = false;
+						showInvalidQueryTerm("Only single quotes searches are not allowed");
+					}
+				}
+
+			}
+
+		}
+
+		private function handleExpandItem():void
+		{
+			treeNavigation.expandItem(selectedEntity, true, true, true);
+
+		}
+
+		private function handleExpandAll():void
+		{
+			treeNavigation.expandAll();
+		}
+
+		private function handleCollapseItem():void
+		{
+			treeNavigation.expandItem(selectedEntity, false, true, true);
+		}
+
+		private function handleItemOpenClosed():void
+		{
+			return;
+			
+			if (selectedEntity != null)
+			{
+				//treeNavigation.ensu
+				var itemRenderer:IListItemRenderer = treeNavigation.itemToItemRenderer(selectedEntity);
+
+				treeNavigation.firstVisibleItem = selectedEntity;
+
+
+			}
+
+			updateControls();
+		}
+
+		private function getLabelFunction(item:Entity,
+		column:AdvancedDataGridColumn):String
+		{
+			if (item.status == EntityStatus.NETWORK_OFF || item.status == EntityStatus.FRAMEWORK_OFF)
+			{
+				return item.label + " (offline)";
+			}
+			return item.label;
+		}
+
+		private function dataTipFunction(item:Object):String
+		{
+			trace("data tip: " + item);
+			if (item is Entity)
+			{
+				var entity:Entity = item as Entity;
+
+				return "Fpp: " + entity.label;
+			}
+
+			return "";
+			//return "Descr: " + item
+		}
+
+		private function createCustomToolTip(event:ToolTipEvent):void
+		{
+			trace("******** create custom tool tip");
+			var entityToolTip:EntityToolTip = new EntityToolTip();
+			event.toolTip = entityToolTip;
+
+		}
+
+		private function positionToolTip(event:ToolTipEvent):void
+		{
+			//toolTipShow="positionToolTip(event)"
+		}
+
+		var customToolTip:IToolTip;
+
+		private function handleItemRollOver(event:ListEvent):void
+		{
+			var item:Entity = event.itemRenderer.data as Entity;
+			var itemX:int = event.itemRenderer.x;
+			var itemY:int = event.itemRenderer.y;
+			var point:Point = event.currentTarget.localToGlobal(new Point(mouseX,
+
+				itemY + (event.itemRenderer.height/2)));
+
+			if (event.target.toolTip != item.label)
+			{
+
+				var property:EntityProperty = item.getPropertyByName("description");
+
+				if (property == null)
+				{
+					event.target.toolTip = null;
+					return;
+				}
+
+				var description:String = StringUtil.trim(property.value as String);
+
+				if (description.length == 0)
+				{
+					event.target.toolTip = null;
+					return;
+				}
+
+				event.target.toolTip = item.label;
+
+				var newPoint:Point = new Point(point.x + 15, point.y);
+
+				if (ToolTipManager.currentToolTip != null)
+				{
+					if (ToolTipManager.currentToolTip is EntityToolTip)
+					{
+
+						EntityToolTip(ToolTipManager.currentToolTip).entity = item;
+					}
+
+					ToolTipManager.currentToolTip.move(newPoint.x, newPoint.y);
+					//ToolTipManager.currentToolTip
+					//ToolTipManager.currentToolTip.move(newPoint.x, newPoint.y);
+				}
+			}
+		}
+
+		private function handleItemRollOut(event:ListEvent):void
+		{
+			if (event.target.toolTip != null)
+			{
+				event.target.toolTip = null;
+			}
+		}
+
+		/**
+		 * Load entity from parent to children.
+		 * 
+		 * This is used when the user clicks on a search item.
+		 * We have to expand the branch but there's some weird behavior
+		 * that happens when additional items on the parent of the 
+		 * leaf node starts adding new children.  As children get added
+		 * the selected node may get pushed down and away from the view.
+		 * 
+		 * To fix this, we add a listener to the parent of the leaf node
+		 * if it has a parent node and set a flag.  The listener is removed
+		 * once the user clicks on another item.
+		 * 
+		 */
+		private function loadBranch(branchPath:String):Entity
+		{
+			var leaf:Entity = entityManager.getEntity(branchPath);
+			
+			// split the path into segments and open each one in turn, validate on each one
+			var path:String = leaf.path.substring(1);
+
+			var segments:Array = path.split("/");
+			
+			/*if (!treeNavigation.isItemOpen(entities)) {
+				treeNavigation.expandItem(entities, true);
+				treeNavigation.validateNow();
+			}*/	
+			
+			var subpath:String = "";
+			for each (var segment:String in segments)
+			{
+				subpath += "/" + segment;
+				
+				var entity:Entity = entityManager.getEntity(subpath);
+				
+				if (!treeNavigation.isItemOpen(entity)) {
+					treeNavigation.expandItem(entity, true, false, false);
+				}
+			}
+			
+			// Need to refresh here otherwise the view shows duplicates while scrolling
+			var view : IHierarchicalCollectionView = treeNavigation.dataProvider as IHierarchicalCollectionView;
+			
+			if (view) {
+				view.refresh();
+			}
+			
+			return leaf;
+		} 
+
+        private function expandParents(node:Entity):void {
+            if (node!= null && node && !treeNavigation.isItemOpen(node))
+            {
+                treeNavigation.expandItem(node, true);
+                var lastIndx:int = node.path.lastIndexOf("/");
+                if(lastIndx != -1 && lastIndx != 0)
+				var path:String = node.path.substring(0,lastIndx);
+				else
+				path = null;
+				if(path !=  null)
+				var parentNode:Entity = entityManager.getEntity(path);
+				else
+				parentNode = null;
+                expandParents(parentNode);
+            }
+        }
+
+		private function validateInput():Boolean
+		{
+			if (searchTxtInput.text.length == 0)
+			{
+				Alert.show("Please put a search string for search", "Search Error");
+			return false;
+			}
+			else if((searchTxtInput.text == "*") || (searchTxtInput.text == "/"))
+			{
+			Alert.show("Please put a more specific search string for search", "Search Error");
+			return false;
+			}
+			else
+			{
+			return true;
+			}
+		}
+
+		private function search():void
+		{
+			//if (validateInput())
+			//{
+			canSearch = false;
+			searchTxtInput.enabled = false;
+			currentState = "searchMin";
+			if(searchProgressBar.visible == false)
+				searchProgressBar.visible = true;
+			if(searchResultLbl.visible == true)
+				searchResultLbl.visible = false;
+
+			//Prepare Search Job
+			var searchContext:String;
+			var searchQuery:String
+			if((searchContextChkBox != null) && (searchContextChkBox.selected == true) && (selectedEntity != null))
+				searchContext = createSearchContext(selectedEntity.path);
+			else
+				searchContext = null;
+			searchQuery = createQuery(searchTxtInput.text);
+			var searchJob:SearchJob = searchService.search(searchQuery,searchContext);
+			searchJob.addEventListener(Event.CHANGE, handleSearchAdded);
+			searchJob.addEventListener(Event.COMPLETE, handleSearchComplete);
+			searchJob.addEventListener(ErrorEvent.ERROR, handleSearchError);
+			searchJob.execute();
+			searchResults.removeAll();
+			//}
+
+
+		}
+
+		private function createSearchContext(searchContext:String):String
+		{
+			return "/aliases" + searchContext;
+		}
+
+		private function createQuery(queryStr:String):String
+		{
+			//If query string has * or ? return as it is
+			if ((queryStr.indexOf("*") != -1) || (queryStr.indexOf("?") != -1))
+			return queryStr;
+			//If query string starts and endswith " return as it is making it a exact search
+			if( (startsWith(queryStr,"\"")) && (endsWith(queryStr,"\"")) )
+			return removeQuotes(queryStr);
+			//If query string starts and endswith ' return as it is making it a exact search
+			if( (startsWith(queryStr,"'")) && (endsWith(queryStr,"'")) )
+			return removeQuotes(queryStr);
+			if (!(startsWith(queryStr,"*")))
+			queryStr = "*" + queryStr;
+			if (!(endsWith(queryStr,"*")))
+			queryStr = queryStr + "*";
+			return queryStr;
+		}
+
+		private function removeQuotes(queryStr:String):String
+		{
+			queryStr = queryStr.substring(1,queryStr.length);
+			queryStr = queryStr.substring(0,queryStr.length-1);
+			return queryStr;
+		}
+
+		private function startsWith(string:String, pattern:String):Boolean
+		{
+			string  = string.toLowerCase();
+		    pattern = pattern.toLowerCase();
+		    return pattern == string.substr( 0, pattern.length );
+
+		}
+
+		private function endsWith(string:String, pattern:String):Boolean
+		{
+			string  = string.toLowerCase();
+		    pattern = pattern.toLowerCase();
+		    return pattern == string.substr( string.length - pattern.length, pattern.length );
+
+		}
+
+		private function getRowCount(searchResltLength:int):int
+		{
+			var rowCount:int;
+			if(searchResltLength < 3)
+			rowCount = searchResltLength;
+			else
+			rowCount = 3;
+			return rowCount;
+		}
+
+		private function handleSearchAdded(event:Event):void
+		{
+			var searchJob:SearchJob = event.target as SearchJob;
+
+			for each (var item:Object in searchJob.chunkResults)
+			{
+				searchResults.addItem(item)
+			}
+			changeState(event);
+
+		}
+
+		private function handleSearchComplete(event:Event):void
+		{
+			var searchJob:SearchJob = event.target as SearchJob;
+			cleanupSearch(searchJob);
+			
+			var jobResults:ArrayCollection;
+			 
+			
+			if(searchJob.chunkResults.length == 0) {
+				jobResults = searchJob.results;
+			}
+			else {
+				jobResults = searchJob.chunkResults;
+			}
+
+			for each (var item:Object in jobResults)
+			{
+				// TODO Currently results are returned with url encoded such as Test%20Result
+				// We need to move the unescaping behavior to the searchJob class but this
+				// change will make the least impact here. 
+				// Also, we should pass back a string
+				
+				searchResults.addItem(unescape(item as String));
+			}
+
+
+			//Sort Search Result alphabetically based on Entity name
+			var entitySort:Sort = new Sort();
+            entitySort.compareFunction = compareEntityName;
+            searchResults.sort = entitySort;
+			searchResults.refresh();
+			changeState(event);
+
+		}
+
+		private function getEntityName(item:Object):String
+		{
+			var entityName:String;
+			var itemStr:String = item as String;
+			if(itemStr.indexOf("/") != -1)
+			{
+			var lastIndx:int = itemStr.lastIndexOf("/");
+			var entityStr:String = itemStr.substr(lastIndx+1,itemStr.length);
+			entityName = entityStr;
+			}
+			else
+			entityName = itemStr;
+			return entityName;
+		}
+
+		private function compareEntityName(a:Object, b:Object, fields:Array=null):int
+		{
+			var aEnttityName:String = getEntityName(a);
+			var bEnttityName:String = getEntityName(b);
+			return ObjectUtil.stringCompare(aEnttityName, bEnttityName);
+		}
+
+		private function handleSearchError(event:ErrorEvent):void
+		{
+			changeState(event);
+			Alert.show("Unable to complete search: " + event.text, "Search Error");
+		}
+
+		private function changeState(event:Event):void {
+			if(event is ErrorEvent)
+			{
+				searchResultLbl.text = "No results found";
+				cleanupSearch(event.target as SearchJob);
+				canSearch = true;
+
+				// disable vdivided box
+
+			}
+			else
+			{
+				if(searchResults.length > 0)
+				{
+					currentState = "searchMax";
+					searchAndTreeBox.getDividerAt(0).visible = true;
+				}
+
+				searchResultLbl.text= updateSearchCount();
+
+			}
+			if((advSearchBtn.getStyle("icon") == NORMAL_SEARCH_ICON))
+			{
+			advSearchBtn.setStyle("icon",ADV_SEARCH_ICON);
+			advSearchBtn.toolTip = "Open Advanced Search";
+			}
+			if(event.type != Event.CHANGE)
+			{
+			if(searchProgressBar.visible == true)
+				searchProgressBar.visible = false;
+			}
+			if(searchResultLbl.visible == false)
+				searchResultLbl.visible = true;
+			canSearch = true;
+			searchTxtInput.enabled = true;
+			advSearchBtn.enabled = true;
+		}
+
+
+		private function cleanupSearch(searchJob:SearchJob):void
+		{
+			searchJob.removeEventListener(Event.COMPLETE, handleSearchComplete);
+			searchJob.removeEventListener(ErrorEvent.ERROR, handleSearchError);
+		}
+
+		private function closeSearch():void
+		{
+			previousState = "";
+			currentState = "";
+			searchTxtInput.text = "";
+			searchResults.removeAll();
+			updateControls();
+		}
+
+		private function showBusyCursorInSearch():void
+		{
+			//CursorManager.setCursor(StyleManager.getStyleDeclaration("CursorManager").getStyle("busyCursor"),CursorManagerPriority.HIGH)
+			CursorManager.setBusyCursor();
+
+		}
+
+		private function removeBusyCursorInSearch():void
+		{
+			CursorManager.removeBusyCursor();
+		}
+
+
+        private function selectNode() : void {
+
+            var selectedEntityResult:String;
+            var urlParams:Dictionary = new Dictionary();
+            var fullUrl:String = ExternalInterface.call("eval", "document.location.href");
+
+            var paramStr:String = fullUrl.split("?")[1];
+            if (paramStr != null){
+                var params:Array = paramStr.split("&");
+                for (var i:int = 0; i < params.length; i++) {
+                    var kv:Array = params[i].split("=");
+                    urlParams[kv[0]] = kv[1];
+                }
+            }
+
+            selectedEntityResult = urlParams["selectedNode"];
+
+            if ( selectedEntityResult == null) {
+                var cookieValue:* = ExternalInterface.call("function(){return document.cookie;}");
+
+                var cookieStartPosition:int = cookieValue.indexOf("selectedNode=");
+
+                if ( cookieStartPosition == -1 ) {
+                    return;
+                }
+
+                var cookieEndPosition:int = cookieValue.indexOf(";", cookieStartPosition);
+                selectedEntityResult = cookieValue.substr(cookieStartPosition, (cookieEndPosition - cookieStartPosition));
+                
+            }
+            selectedEntityResult = decodeURI(selectedEntityResult);
+
+            clearScrollLock();
+
+            selectedEntityResult = selectedEntityResult.replace(/::/g, "/");
+            
+            var leafNode:String = selectedEntityResult.substr(selectedEntityResult.lastIndexOf("/") + 1);
+            urlSelectedEntityFlag = true; 
+			selectedEntity = loadBranch(selectedEntityResult);
+			handleTreeSelection(selectedEntity);
+			if (treeNavigation.selectedItem != selectedEntity) {
+				treeNavigation.selectedItem = selectedEntity;
+			}
+
+			//if (!treeNavigation.isItemVisible(selectedEntity)) {
+			//	treeNavigation.firstVisibleItem = selectedEntity;
+			//}
+
+			scrollLocked = true;
+
+			var parentEntity:Entity = treeNavigation.getParentItem(selectedEntity) as Entity;
+
+			if (parentEntity != null) {
+				parentEntity.children.addEventListener(CollectionEvent.COLLECTION_CHANGE, handleEntitiesCollectionChange2);
+			}
+
+			ExternalInterface.call("function(){var d = new Date(); document.cookie = 'selectedNode=1;expires=' + d.toGMTString() + ';' + ';';}");
+        }
+
+		private function handleSearchResultClicked():void
+		{
+			clearScrollLock();
+			//TODO
+			//showBusyCursorInSearch();
+			listSearchResults.enabled = false;
+			var aliasesLength:int = ALIASES_NODE.length
+			var selectedResult:String = listSearchResults.selectedItem as String;
+			var selectedEntityResult:String = selectedResult.substr(aliasesLength,selectedResult.length);
+			selectedEntity = loadBranch(selectedEntityResult);
+			
+			
+			// TODO For now return
+			listSearchResults.enabled = true;
+			
+			handleTreeSelection(selectedEntity);
+
+			if (treeNavigation.selectedItem != selectedEntity) {
+				treeNavigation.selectedItem = selectedEntity;
+            }
+			
+			if (!treeNavigation.isItemVisible(selectedEntity)) {
+				treeNavigation.firstVisibleItem = selectedEntity;
+			}
+			//treeNavigation.invalidateDisplayList();
+			//treeNavigation.validateDisplayList();
+			listSearchResults.enabled = true;
+			//removeBusyCursorInSearch();
+			
+			scrollLocked = true;
+			
+			var parentEntity:Entity = treeNavigation.getParentItem(selectedEntity) as Entity;
+			
+			if (parentEntity != null) {
+				parentEntity.children.addEventListener(CollectionEvent.COLLECTION_CHANGE, handleEntitiesCollectionChange2);
+			}
+
+		}
+
+		private function getSeatrchResultLabel(item:Object):String
+		{
+			var btnLabel:String;
+			var itemStr:String = item as String;
+			if(itemStr.indexOf("/") != -1)
+			{
+			var lastIndx:int = itemStr.lastIndexOf("/");
+			var labelStr:String = itemStr.substr(lastIndx+1,itemStr.length);
+			btnLabel = labelStr + "\n" + itemStr;
+			}
+			else
+			btnLabel = itemStr;
+			return btnLabel;
+		}
+
+
+
+		private function updateSearchCount():String
+		{
+			var searchCount:String;
+			if((searchContextChkBox == null) || (searchContextChkBox.selected == false))
+			{
+			if(searchResults.length == 1)
+			searchCount= searchResults.length + " result found";
+			else
+			searchCount= searchResults.length + " results found";
+			}
+			else
+			{
+			if(searchResults.length == 1)
+			searchCount= searchResults.length + " result found at " + selectedEntity.path;
+			else
+			{
+				if(selectedEntity != null)
+			searchCount= searchResults.length + " results found at " + selectedEntity.path;
+			else
+				searchCount = searchResults.length + " results found";
+			}
+			}
+			return searchCount;
+		}
+
+		private function getDefaultContext(entitiesLen:int):String
+		{
+			var entity: Entity = entities.getItemAt(0) as Entity
+			return entity.path;
+		}
+
+		private function handleAdvSearch():void
+		{
+			if((currentState == null) || (currentState == ""))
+			{
+				currentState = "advSearch";
+				advSearchBtn.setStyle("icon",NORMAL_SEARCH_ICON);
+				advSearchBtn.toolTip = "Close Advanced Search";
+			}
+			else if(currentState == "advSearch")
+			{
+				if(currentState == previousState)
+				{
+				currentState = "";
+				if((searchContextChkBox.selected == true) && (selectedEntity != null))
+					searchTxtInput.text = getSearchHint(selectedEntity.path);
+				else
+					searchTxtInput.text = "";
+				}
+				else
+				{
+				currentState = previousState;
+				if((searchContextChkBox.selected == true) && (selectedEntity != null))
+					searchTxtInput.text = getSearchHint(selectedEntity.path);
+				else
+					searchTxtInput.text = "";
+				if((currentState == "searchMin") || (currentState == "searchMax"))
+				advSearchBtn.enabled = true;
+				}
+				advSearchBtn.setStyle("icon",ADV_SEARCH_ICON);
+				advSearchBtn.toolTip = "Open Advanced Search";
+			}
+			else if((currentState == "searchMin") || (currentState == "searchMax"))
+			{
+				previousState = currentState;
+				currentState = "advSearch";
+				advSearchBtn.setStyle("icon",NORMAL_SEARCH_ICON);
+				advSearchBtn.toolTip = "Close Advanced Search";
+			}
+
+		}
+
+		private function getSearchHint(selectedEntity:String):String
+		{
+			if(selectedEntity.indexOf("/") != -1)
+			{
+			var lastIndx:int = selectedEntity.lastIndexOf("/");
+			var labelStr:String = "Search from " + selectedEntity.substr(lastIndx+1,selectedEntity.length);
+			return labelStr;
+			}
+			else
+			return "Search from " + selectedEntity;
+		}
+
+		private function removeHintIfAny():void
+		{
+			var patternHint:String = "Search from ";
+			var searchHint:String = searchTxtInput.text;
+			searchHint  = searchHint.toLowerCase();
+		    patternHint = patternHint.toLowerCase();
+		    if(patternHint == searchHint.substr( 0, patternHint.length ))
+		    searchTxtInput.text = "";
+		}
+
+		private function handleSearchKeyUp(event:KeyboardEvent):void
+		{
+
+			if (event.keyCode == Keyboard.ENTER && canSearch)
+			{
+				search();
+			}
+		}
+		
+		private var scrollLocked:Boolean = false;
+		
+		private function handleScroll():void {
+			if (scrollLocked) {
+				logger.debug("resetting scroll lock");
+				clearScrollLock();	
+			}
+		}
+		
+		private function clearScrollLock():void {
+			if (scrollLocked == true) {
+				// get parent item and remove listener
+				if (selectedEntity != null) {
+					var parentEntity:Entity = treeNavigation.getParentItem(selectedEntity);
+					if (parentEntity != null) {
+						parentEntity.children.removeEventListener(CollectionEvent.COLLECTION_CHANGE, handleEntitiesCollectionChange2);
+					}
+				}
+				
+				scrollLocked = false;
+			}
+		}
+
+		private var treeGroupItemRenderer:ClassFactory = new ClassFactory(EntityTreeItemrenderer);
+	]]>
+</mx:Script>
+<mx:VBox width="100%" height="100%">
+
+	<mx:VBox id="searchContainer"
+		width="100%"
+		backgroundColor="#9BABC1"
+		verticalGap="0"
+		paddingTop="0">
+		<mx:HBox id="searchControlContainer"
+			width="100%"
+			borderStyle="none" paddingTop="2"
+			horizontalGap="2"
+			verticalAlign="middle">
+			<mx:TextInput id="searchTxtInput"
+				width="100%"
+				keyUp="handleSearchKeyUp(event)"
+				change="updateControls()" click="removeHintIfAny()" restrict="^\"/>
+			<mx:Button id="searchBtn"
+				click="search()"
+				enabled="{canSearch}"
+				width="25"
+				icon="@Embed(source='/assets/search_1068_16.png')" toolTip="Search"  />
+			<mx:Button id="advSearchBtn"
+				icon="@Embed(source='/assets/down_disclosure_arrow.png')"
+				click="handleAdvSearch()" width="22" height="22" toolTip="Open Advanced Search"/>
+		</mx:HBox>
+	</mx:VBox>
+
+
+	<mx:VDividedBox width="100%" height="100%" id="searchAndTreeBox" >
+		<components:CiscoTree width="100%"
+			id="treeNavigation"
+			change="handleChange()"
+			itemOpen="handleItemOpenClosed()"
+			itemClose="handleItemOpenClosed()"
+			showHeaders="false"
+			toolTipCreate="createCustomToolTip(event)"
+			alternatingItemColors="[0xffffff, 0xffffff]"
+			itemRollOver="handleItemRollOver(event)"
+			itemRollOut="handleItemRollOut(event)"
+			groupItemRenderer="{treeGroupItemRenderer}"
+			scroll="handleScroll()"
+			 height="100%">
+			<components:columns>
+				<mx:AdvancedDataGridColumn
+					sortDescending="true"
+					headerText="Name" dataField="label"
+					labelFunction="getLabelFunction" />
+			</components:columns>
+			
+		</components:CiscoTree>
+	</mx:VDividedBox>
+</mx:VBox>
+
+</mx:Canvas>

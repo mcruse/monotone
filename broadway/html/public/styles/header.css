@@ -1,0 +1,43 @@
+@CHARSET "UTF-8";
+
+div#header {
+    padding: 0;
+    height: 36px;
+    color: #FFFFFF;
+    margin: 15px;
+}
+
+div#header img.logo {
+    float: left;
+    margin-right: 15px;
+}
+
+div#header h1.title {
+    float: left;
+    margin: 16px 0 0 0;
+    font-size: 22px;
+    font-weight: normal;
+}
+
+div#header ul.actions {
+    float: right;
+    margin: 0 11px 0 0;
+    font-size: 11px;
+    list-style: none;
+}
+
+div#header ul.actions li {
+    font-weight: bold;
+    display: inline;
+    margin-left: 15px;
+}
+
+div#header ul.actions li a {
+    color: #FFFFFF;
+    text-decoration: none;
+}
+
+div#header ul.actions li a:hover {
+    text-decoration: underline;
+}
+

@@ -1,0 +1,147 @@
+#!/bin/bash
+
+README="\
+$0:  broadway/tools command locater and loader.
+
+A simple script to support locating the correct broadway/tools commands to
+use.  It does this by assuming the current directory is the in correct
+broadway tree.  This script should be copied to a directory in your shells
+search path.  Then in the same \"bin\" directory, create a link to ./dev_stub,
+naming the link the same as the command script that you want automatically
+located.  If the file has a .py, or .pyc extension you can leave that of
+the name and the load will figure it out.
+
+NOTE:  This script also implements the ./tools/proot command to avoid
+       code duplication and inconsistent behaviors.
+
+Example:
+
+"
+
+COMMAND=$(basename "$0")
+CMD_TAB="" # Will be as many spaces as ${#COMMAND}
+i=${#COMMAND}
+while ((i > 0))
+do
+    CMD_TAB="${CMD_TAB} "
+    i=$((i - 1))
+done
+
+error_exit () {
+    echo "$@" >&2
+    exit 64
+}
+
+is_readable_file () {
+    test -d "$1" && return 1 # Directories don't count
+    test -r "$1"
+    return $?
+}
+
+is_executable_file () {
+    test -d "$1" && return 1 # Directories don't count
+    test -x "$1"
+    return $?
+}
+
+pushd . >/dev/null 2>&1 # Save the current directory.
+
+#
+# Support both the pre 1.4.dev "child of broadway" and the post
+# 1.4.dev ".proot" bread crumb.
+#
+while [ ! -f ".proot" ] && [ ! -f ".psource" ] && \
+      [ "$(basename $(pwd))" != "broadway" ] # (for backwards compatibility)
+do
+    cd ..
+    if [ "$(pwd)" == "/" ]
+    then
+	error_exit "\
+$COMMAND:  Must be run from inside a Broadway build directory,
+$CMD_TAB   a Broadway source tree, or a sub-directory of
+$CMD_TAB   either one."
+    fi
+done
+PROOT=$(pwd)
+if [ "$COMMAND" == "proot" ]
+then
+    # Hack to avoid duplicate code in determining the BUILD directory.
+    if [ -f .psource_only ] && [ ! -f .proot ]
+    then
+	error_exit "\
+$COMMAND:  The 1.4 build model does not allow the working
+$CMD_TAB   source tree to act as the PROOT.  Only build
+$CMD_TAB   directories are valid in the 1.4 build system."
+    fi
+    echo $PROOT
+    exit 0
+fi
+if [ "$COMMAND" == "psource" ]
+then
+    # Hack to avoid duplicate code in determining the SOURCE directory.
+    if [ -f .proot ]
+    then
+	echo $(cat .proot)
+	exit 0
+    fi
+    if [ -f .psource ]
+    then
+	echo "$PROOT"
+	exit 0
+    fi
+    if [ "$(basename $(pwd))" == "broadway" ]
+    then
+	echo "$(pwd)"
+	exit 0
+    fi
+    error_exit "\
+$COMMAND:  Must be run from inside a Broadway build directory,
+$CMD_TAB   a Broadway source tree, or a sub-directory of
+$CMD_TAB   either one."
+fi
+
+test -f ${PROOT}/tools/penvironment.rc && source ${PROOT}/tools/penvironment.rc
+[ -z "${PYTHON_VIA_ENV}" ] && PYTHON_VIA_ENV="$(which python-mpx 2>/dev/null)"
+[ -z "${PYTHON_VIA_ENV}" ] && PYTHON_VIA_ENV="exec /usr/bin/env python2"
+
+export PYTHONPATH=$PROOT
+cd ./tools || error_exit "\
+$COMMAND:  Could not locate the appropriate broadway/tools directory."
+TARGET_BASE="$(pwd)/$COMMAND" # Target without any extensions.
+TARGET_PY="$TARGET_BASE"
+[ "$TARGET_PY::3" == ".py" ] || TARGET_PY="${TARGET_PY}.py"
+TARGET_PYC="${TARGET_PY}c"
+
+popd >/dev/null 2>&1 # Return to the correct current directory.
+
+# @fixme DEVSTUB_PYTHON is completely bogus as far as I can tell for the 1.5
+#                       source tree.  We should remove it if it is not used
+#                       in the 1.4 build (or when we drop 1.4 support).
+[ -z "$DEVSTUB_PYTHON" ] && DEVSTUB_PYTHON=python2.2
+
+# If there is a tools/"command".pyc file, and it is newer than the
+# tools/"command".py file, then it has precedence over tools/"command".py
+# and any existing tools/"command" file.
+if [ $TARGET_PYC -nt $TARGET_PY ] && is_readable_file $TARGET_PYC
+then
+    $PYTHON_VIA_ENV $TARGET_PYC "$@"
+    exit $?
+fi
+# If there is a tools/"command".py file, then it has precedence over 
+# any existing tools/"command" file.
+if is_readable_file $TARGET_PY
+then
+    $PYTHON_VIA_ENV $TARGET_PY "$@"
+    exit $?
+fi
+# There was no tools/"command".pyc nor a tools/"command".py.  Try
+# tools/"command".
+is_executable_file $TARGET_BASE && \
+    exec $TARGET_BASE "$@"
+error_exit "\
+$COMMAND:  Could not locate any usable files in broadway/tools.  Attempted:
+$CMD_TAB       $TARGET_BASE
+$CMD_TAB       $PYTHON_VIA_ENV $TARGET_PY
+$CMD_TAB       $PYTHON_VIA_ENV $TARGET_PYC
+
+           But failed miserably..."

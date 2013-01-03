@@ -1,0 +1,135 @@
+#-*-Shell-Script-*- Hint to [X]Emacs on colorization, etc...
+# vim: syntax=sh ts=8 noexpandtab
+#
+# NOT INTENDED TO BE SOURCED FROM A SHELL PROFILE OR RC FILE.
+# Resource file for establishing the build environment.
+
+_P_ERR_TEXT='
+        ERROR CODE DECOMPOSITION:
+          Upon completion, a non-zero exit status ($?) is the ORed
+          result of all the failures that occurred.
+
+          0x40 (64) Indicates that the ROOT directory could not
+                    be located.
+          0x20 (32) Indicates failure to create $(proot)/var/mpx/log.
+          0x10 (16) Indicates failure to create $(proot)/tmp.
+          0x08 ( 8) Indicates an attempt to source this file
+                    in the source directory, instead of in a
+                    valid build directory.
+'
+
+# Eliminate any potential property overrides (we want
+# a highly controlled environment).
+
+# Remove any overriding PYTHON*, BROADWAY* and JAVA* environment variables.
+for _P_VAR in $(
+    export |
+    grep ' PYTHON\| BROADWAY\| JAVA' |
+    sed 's/\(declare -x \|export \)\(.*\)=.*/\2/g'
+    )
+do
+    unset $_P_VAR
+done
+
+unset _P_VAR
+
+# Remove overriding ANT environment variables.
+unset ANT_OPTS
+unset ANT_ARGS
+_P_ROOT="@BUILD_DIR@"
+_P_ERR=0
+if [ ! -d ${_P_ROOT}/CVS ] || [ -f ${_P_ROOT}/.proot ]
+then
+    _P_ENVIRONMENT="$_P_ROOT/penvironment.d"
+    mkdir -p "${_P_ENVIRONMENT}/bin"
+    mkdir -p "${_P_ENVIRONMENT}/etc/cisco.d"
+    mkdir -p "${_P_ENVIRONMENT}/sbin"
+    mkdir -p "${_P_ENVIRONMENT}/tmp"
+    mkdir -p "${_P_ENVIRONMENT}/usr/bin"
+    mkdir -p "${_P_ENVIRONMENT}/usr/lib"
+    mkdir -p "${_P_ENVIRONMENT}/usr/sbin"
+    mkdir -p "${_P_ENVIRONMENT}/var/mpx/config/persistent"
+    mkdir -p "${_P_ENVIRONMENT}/var/mpx/log"
+    mkdir -p "${_P_ENVIRONMENT}/var/mpx/www/http"
+    mkdir -p "${_P_ENVIRONMENT}/var/mpx/www/https"
+    mkdir -p "${_P_ENVIRONMENT}/var/run"
+    touch "${_P_ENVIRONMENT}/var/mpx/log/msglog.log.1"
+
+    cat >"${_P_ENVIRONMENT}/README" <<EOF
+This is the mpx.properties.TARGET_ROOT directory setup by the "p" build
+tools.
+EOF
+    # Ensure that all property targets are rooted to the penvironment.d
+    # scratch directory.
+    export BROADWAY_TARGET_ROOT=${_P_ENVIRONMENT}
+
+    unset _P_ENVIRONMENT
+else
+    _P_ERR=$(expr $_P_ERR + 8)
+fi
+
+# Used to verify that the latest penvironment.rc has been sourced.
+export PENVIRONMENT_RC_MD5=$(md5sum @BUILD_DIR@/tools/penvironment.rc)
+
+unset _P_ROOT
+
+first_in_path () {
+    local path=$1
+    local token=""
+    echo -n $path
+    echo -e $(echo $PATH | sed 's/:/\\n/g') |
+	grep -x -v "${path}" | while read token
+	do
+	    echo -n :"$token"
+	done
+    echo
+}
+
+# Establish the "official" build tools
+export ENVENERGY_DT_HOME='@ENVENERGY_DT_HOME@'
+export JAVACMD='@JAVACMD@'
+export JAVA_HOME='@JAVA_HOME@'
+export FLEX_HOME='@FLEX_HOME@'
+export PYTHON="@PYTHON@"
+export RANLIB='@RANLIB@'
+
+export NATIVE_CC=/usr/bin/gcc
+
+function realpath () {
+    # Don't set environment's PYTHONHOME as that will break running vanilla
+    # python which can cause a great deal of grief.
+    PYTHONHOME="@PYTHON_PREFIX@:@PYTHON_EXEC_PREFIX@" \
+	$PYTHON -c "from sys import argv
+from os.path import realpath
+assert len(argv) in (1,2)
+path = '.'
+if len(argv) is 2:
+    path = argv[1]
+
+print realpath(path)" $1
+}
+export -f realpath
+
+# Simplify running "locally" on the developer's machine.
+export BROADWAY_MPX_UID=$(id -u)
+export BROADWAY_MPX_GID=$(id -g)
+export BROADWAY_HTTP_PORT=8080
+export BROADWAY_HTTPS_PORT=8443
+export BROADWAY_PAM_ENABLE=0 # Use penvironment.d/etc/passwd, not PAM.
+export BROADWAY_TRACEBACKS=1
+
+# TEMP_DIR change is to work around issues creating named pipes in shared
+#          folders of a build VM.
+export BROADWAY_TEMP_DIR="/tmp/$(basename $(proot).$(realpath $(proot) | \
+                              md5sum | cut -d ' ' -f 1))"
+mkdir -p "${BROADWAY_TEMP_DIR}"
+
+# If $_P_ERR is non-zero, force an error code...
+# NOTE:  There has got to be a better way to force an error code in
+#        a resource file...
+[ $_P_ERR == 0 ] || bash -c "
+echo 'ERROR:  Could not establish a valid environment.'
+echo '        ERROR CODE $_P_ERR.'
+echo '$_P_ERR_TEXT'
+exit $_P_ERR
+"

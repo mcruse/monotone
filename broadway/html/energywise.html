@@ -1,0 +1,197 @@
+<!--
+Copyright (C) 2009 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="/public/styles/page.css" type="text/css">
+<link rel="stylesheet" href="/public/styles/tabs.css" type="text/css">
+<link rel="stylesheet" href="/public/styles/tables.css" type="text/css">
+<link rel="stylesheet" href="/public/styles/pagination.css" type="text/css">
+<link rel="stylesheet" href="/public/styles/events.css" type="text/css">
+<link rel="stylesheet" href="/public/styles/configuration.css" type="text/css">
+<link rel="stylesheet" href="/public/styles/messageBox.css" type="text/css">
+<link rel="stylesheet" type="text/css" href="/dojoroot/dojo/resources/dojo.css" />
+<link rel="stylesheet" type="text/css" href="/dojoroot/dijit/themes/dijit.css" />
+<link rel="stylesheet" type="text/css" href="/dojoroot/dijit/themes/tundra/tundra.css" />
+<link rel="stylesheet" type="text/css" href="/cues/themes/kubrick/layout.css" />
+<link rel="stylesheet" type="text/css" href="/cues/themes/kubrick/tabs.css" />
+<script type="text/javascript">
+    djConfig = {
+        isDebug: false,
+        debugAtAllCosts: false,
+        parseOnLoad: true,
+        baseUrl: "/dojoroot/dojo/",
+        modulePaths: {
+            mpx: '/mpx',
+            cues: '/cues',
+            utils: '/public/utils'
+        }
+    };
+</script>
+<script type="text/javascript" src="dojoroot/dojo/dojo.js"></script>
+<script type="text/javascript" src="dojoroot/dojoconfig/mediator_layer.js"></script>
+<!--<script type="text/javascript" src="/public/utils/debug.js"></script>-->
+<!--<script type="text/javascript" src="/public/utils/style.js"></script>-->
+<script type="text/javascript">
+	dojo.require("utils.style");
+</script>
+<script language="JavaScript" type="text/javascript" src="/public/utils/loader.js"></script>
+<script language="JavaScript" type="text/javascript" src="/public/utils/formtools.js"></script>
+<script language="JavaScript" type="text/javascript">
+</script>
+
+<script>
+function getEnergywiseTrendConfig() {
+    var filename = "/omega/nrgyzMgr/trendview.psp?time=" + Math.random().toString();
+    var myWindow = window.open(filename, "TrendConfig", "width=350,height=250,scrollbars=1");
+
+    while(myWindow.document.body == null) {
+        setTimeout('return;',10000);
+    }
+    myWindow.focus();
+}
+
+function addRow(tableId) {
+    document.getElementById("saveTrend").style.display="inline";
+    var tableRef = document.getElementById(tableId);
+    var newRow = tableRef.insertRow(1);
+    var newcell1 = newRow.insertCell(0);
+    var newcell2 = newRow.insertCell(1);
+    var newcell3 = newRow.insertCell(2);
+    var input = document.createElement("input");
+    var input1 = document.createElement("input");
+    var browse = document.createElement("input");
+    var numRows = tableRef.rows.length;
+
+    if(numRows % 2) {
+        newRow.setAttribute("class", "light");
+    }else{
+        newRow.setAttribute("class", "dark");
+    }
+
+	browse.type="button";
+	browse.value="...";
+    input.type = "text";
+    input1.type = "text";
+	input1.id=numRows;
+    newcell1.appendChild(input);
+    newcell2.appendChild(input1);
+  	newcell2.appendChild(browse);
+	browse.onclick = function() {
+        openNodeSelector(input1.id);
+    }
+}
+
+function switchframe() {
+    var graphdomain = document.getElementById("graphdomain");
+    if(graphdomain.value){
+        var target = "/omega/nrgyzMgr/energy/Energygraph.html?domain="+graphdomain.value;
+        var myWindow = window.open(target, "Energywise", "width=550,height=450");
+        myWindow.focus();
+    }
+    else{
+        alert('Empty domain value given');
+    }
+}
+
+function populateHiddenField() {
+    var hiddenfield = document.getElementById("graphtrend");
+    var domainfield = document.getElementById("graphdomain");
+
+    hiddenfield.value = domainfield.value;
+}
+
+function graph_page(domain) {
+    parent.document.getElementById('bottomFrame').src = "/omega/nrgyzMgr/energy/Energygraph.html?domain="+domain;
+}
+
+function openNodeSelector(id) {
+	window.open("/webapi/nodeSelector.html?textid=" + id, "nodeSelector");
+}
+
+</script>
+
+<title>Cisco Network Building Mediator</title>
+</head>
+    <body class="kubrick tundra">
+        <div id="background">
+            <img src="/public/images/pageBackground.jpg" />
+        </div>
+        <div id="header">
+            <h1 class="title">Network Building Mediator</h1>
+            <ul class="actions">
+                <li><a href="">About</a></li>
+                <li>
+                    <a id="logout" href="/logout">
+                        Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div id="primary-tabs"
+            title=""
+            class="primary-tabs"
+            href="/public/templates/primary.html"
+            extractContent="false"
+            preventCache="false"
+            dojoType="dijit.layout.ContentPane"
+            onDownloadEnd="dojo.addClass('energywise-tab-button', 'selected');" >
+        </div>
+        <div id="stage">
+            <div id="contentarea" class="pane">
+                <div id="mainTabContainer"
+                    persist="true"
+                    dojoType="dijit.layout.TabContainer"
+                    style="width: 100%; height: 100%;">
+                    <div id="configure"
+                        title="Configure"
+                        executeScripts="true"
+                        contentType="forms"
+                        preventCache="true"
+                        extractContent="true"
+                        href="/omega/nrgyzMgr/config_trend.psp"
+                        dojoType="dojox.layout.ContentPane">
+                    </div>
+                    <div id="report" title="Report" executeScripts="true"
+                        dojoType="dojox.layout.ContentPane">
+                        Energywise Domain
+                        <input type="text"  value=""  id="graphdomain">
+                        <input type="button" value="..." onclick="openNodeSelector('graphdomain')" >
+                        <input type="submit" value="GenerateGraph" onclick="switchframe()">
+                        <input type="hidden" name="graphtrend" id = "graphtrend" value = "">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

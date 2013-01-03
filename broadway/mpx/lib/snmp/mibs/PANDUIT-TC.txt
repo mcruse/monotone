@@ -1,0 +1,204 @@
+--
+-- **********************************************************************
+-- *        Panduit Corp. Shared Textual Conventions		      	*
+-- *                                                               	*
+-- *        January 2005, Robert Wilcox					*
+-- *                                                               	*
+-- *        Copyright (c) 2005, Panduit Corp.                      	*
+-- *        All Rights Reserved.                                   	*
+-- *        Panduit Corp., Tinley Park, IL 60477-3091              	*
+-- **********************************************************************
+--
+
+PANDUIT-TC DEFINITIONS ::= BEGIN
+
+IMPORTS
+
+	Integer32	
+			FROM SNMPv2-SMI	
+
+        TEXTUAL-CONVENTION
+			FROM SNMPv2-TC;
+
+PanduitLongDisplayString ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT	"1024a"
+    	STATUS		current
+    	DESCRIPTION
+		"An ASCII string of 1024 bytes."
+    	SYNTAX     OCTET STRING(SIZE(0..1024))
+
+
+PanduitLedColor ::= TEXTUAL-CONVENTION
+	STATUS	current
+    	DESCRIPTION
+		"Color of the LED.
+		'off'	
+		'green'	
+		'red'
+		'amber'"	
+    	SYNTAX	INTEGER{
+			off(1),
+			green(2),
+			red(3),
+			amber(4)
+			}
+
+PanduitBlinkState ::= TEXTUAL-CONVENTION
+	STATUS	current
+    	DESCRIPTION
+		"Blink state of an LED.
+		'Blink'	 - The LED will blink.	
+		'Steady' - The LED will not blink."
+
+	SYNTAX	INTEGER{
+			blink(1),
+			steady(2)
+			}
+
+PanduitOverride ::= TEXTUAL-CONVENTION
+	STATUS	current
+	DESCRIPTION
+		"Override control.
+		'normal'	- Normal functionality.	
+		'override' 	- Override normal functionality."
+
+	SYNTAX	INTEGER{
+			normal(1),
+			override(2)
+			}
+
+PanduitDuration ::= TEXTUAL-CONVENTION
+	STATUS	current
+	DESCRIPTION
+		"Length of time for an operation.  This time is half 
+		the period.  so, a value of 500ms means that
+		the operation will last for 500ms and
+		have a period of 1000ms.
+
+		'dur_0ms'		- NO duration.	
+		'dur_500ms' 	- 500ms duration.
+		'dur_1000ms' 	- 1000ms duration.
+		'dur_1500ms' 	- 1500ms duration.
+		'dur_2000ms' 	- 2000ms duration.
+		'dur_2500ms' 	- 2500ms duration.
+		'dur_3000ms' 	- 3000ms duration.
+		'dur_3500ms' 	- 3500ms duration.
+		'dur_4000ms' 	- 4000ms duration.
+		'dur_4500ms' 	- 4500ms duration.
+		'dur_5000ms' 	- 5000ms duration."
+
+    	SYNTAX	INTEGER{
+			dur_0ms(1),
+			dur_500ms(2),
+			dur_1000ms(3),
+			dur_1500ms(4),
+			dur_2000ms(5),
+			dur_2500ms(6),
+			dur_3000ms(7),
+			dur_3500ms(8),
+			dur_4000ms(9),
+			dur_4500ms(10),
+			dur_5000ms(11)
+			}
+
+PanduitPoEForcePowerType ::= TEXTUAL-CONVENTION
+	STATUS	current
+    	DESCRIPTION
+		"Values for controlling when power will be applied.
+
+		'none'			-	Power is not forced.
+		'forcedDeviceCheck'	-	Power is forced if 
+				a powered device can be detected.  This 
+				may work for some non-802.3af devices. 
+		'forced'		-	Power is forced without
+				checking for a powered device.  If no valid
+				powered device is detected after powering, the
+				Power is removed per 802.3af specification.
+				This will result in numerous traps."
+
+    	SYNTAX	INTEGER{
+			none(1),
+			forcedDeviceCheck(2),
+			forced(3)
+			}
+
+PanduitPoEDetectType ::= TEXTUAL-CONVENTION
+	STATUS	current
+	DESCRIPTION
+		"PD Detection Types.  This value is used to determine
+		what PD types the device will power.
+
+		'802.3afandlegacy'	-	PSE will detect and power 802.3af and legacy PDs.
+		'802.3af'		-	PSE will detect and power 802.3af PDs only. 
+		'legacy'		-	PSE will detect and power legacy PDs only.
+
+		Legacy PDs must have a specific power signature in order to be detected."
+
+	SYNTAX	INTEGER{
+			legacy_and_802_3af(1),
+			only802_3af(2),
+			onlylegacy(3)
+			}
+
+PanduitPoEMPSType ::= TEXTUAL-CONVENTION
+   	STATUS	current
+    	DESCRIPTION
+		"PoE Maintain Power Signature Type that PSE will use to determine if 
+		the PD has been removed.
+
+		'DC'	-	Monitor only DC MPS component.
+		'AC'	-	Monitor only AC MPS component.	
+		'AC/DC'	-	Monitor AC and DC MPS component."
+
+    	SYNTAX	INTEGER{
+			dc(1),
+			ac(2),
+			ac_dc(3)
+			}
+
+PanduitPoELegacyDelay ::= TEXTUAL-CONVENTION
+	STATUS	current
+    	DESCRIPTION
+		"Time for detecting a legacy PD."
+
+    	SYNTAX	INTEGER{
+			delay_10ms(1),
+			delay_20ms(2),
+			delay_30ms(3),
+			delay_40ms(4),
+			delay_50ms(5)
+			}
+
+PanduitPoEVoltageType ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT	"d-2"		-- i.e. 3200 =32.00
+   	STATUS	current
+   	DESCRIPTION
+		"Textual convention for Voltage Type."
+
+    	SYNTAX	Integer32
+
+
+PanduitAccessLevel ::= TEXTUAL-CONVENTION
+	STATUS	current
+    	DESCRIPTION
+		"Read Only and Read-write access."
+
+    	SYNTAX	INTEGER{
+			readOnly(1),
+			readWrite(2)
+			}
+
+PanduitEnable ::= TEXTUAL-CONVENTION
+	STATUS	current
+    	DESCRIPTION
+		"Enable/Disable"
+
+    	SYNTAX	INTEGER{
+			enabled(1),
+			disabled(2)
+			}
+
+		
+
+
+END	--PANDUIT-TC

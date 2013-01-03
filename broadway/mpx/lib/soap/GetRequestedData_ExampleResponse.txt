@@ -1,0 +1,13 @@
+HTTP/1.1 100 Continue
+Server: Microsoft-IIS/5.0
+Date: Tue, 25 Mar 2003 17:24:49 GMT
+
+HTTP/1.1 200 OK
+Server: Microsoft-IIS/5.0
+Date: Tue, 25 Mar 2003 17:24:49 GMT
+Cache-Control: private, max-age=0
+Content-Type: text/xml; charset=utf-8
+Content-Length: 1071
+
+<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><GetRequestedDataResponse xmlns="http://RCKServices.com/"><GetRequestedDataResult><SimData xmlns="http://RCKServices.com/CHWData.xsd"><PointData><Name>Trane Forbidden Reef Differential Pressure</Name><Type>analog</Type><Value>9.05844</Value><Address>0</Address><Channel>8</Channel><ScaledZero>0</ScaledZero><ScaledFull>15</ScaledFull></PointData><PointData><Name>Trane Tide Pool Differential Pressure</Name><Type>analog</Type><Value>8.2422</Value><Address>23</Address><Channel>6</Channel><ScaledZero>0</ScaledZero><ScaledFull>15</ScaledFull></PointData><PointData><Name>Trane Wild Arctic Differential Pressure</Name><Type>analog</Type><Value>10.5234</Value><Address>27</Address><Channel>8</Channel><ScaledZero>0</ScaledZero><ScaledFull>15</ScaledFull></PointData></SimData></GetRequestedDataResult></GetRe
+questedDataResponse></soap:Body></soap:Envelope>

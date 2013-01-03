@@ -1,0 +1,12 @@
+Currently this spell checker is fairly incomplete.
+
+A few possible enhancements to consider:
+
+- Preprocess master.script to get rid of stuff we don't care about.
+- Check node names separately from other text because node names have
+  abbreviations which probably we don't want elsewhere and seem
+  to typically have different capitalization rules than elsewhere.
+- Keep track of the number of occurences of exceptions, for example 
+  KYZDV in one place is an expected exceptional spelling, but if it
+  suddenly appears more than once, we might have a typo/misspelling
+  on our hands.

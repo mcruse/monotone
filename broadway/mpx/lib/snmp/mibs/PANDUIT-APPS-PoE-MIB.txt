@@ -1,0 +1,451 @@
+PANDUIT-APPS-PoE-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+		MODULE-IDENTITY,
+		OBJECT-IDENTITY,
+		OBJECT-TYPE,
+		Unsigned32,
+		NOTIFICATION-TYPE
+                                			FROM SNMPv2-SMI
+
+		MODULE-COMPLIANCE, 
+		OBJECT-GROUP,
+		NOTIFICATION-GROUP
+                                			FROM SNMPv2-CONF
+
+		sysName 
+							FROM SNMPv2-MIB
+
+		TEXTUAL-CONVENTION
+							FROM SNMPv2-TC
+
+
+		pethPsePortPowerClassifications,
+		pethPsePortType
+							FROM POWER-ETHERNET-MIB
+
+		panduitApps 
+							FROM PANDUIT-REG
+
+		PanduitPoEForcePowerType,
+		PanduitPoEDetectType,
+		PanduitPoEMPSType,
+		PanduitPoELegacyDelay,
+		PanduitEnable
+							FROM PANDUIT-TC
+
+		panduitIdentificationMAC,
+		panduitCommonNotifyPortNumber,
+		panduitIdentificationLocation 
+							FROM PANDUIT-COMMON-MIB
+
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId
+							FROM PANDUIT-PRODUCTS-PANEL-COMMON-MIB;
+				
+
+--
+-- Managed Network Solutions contact information.
+--
+panduitAppsPoE MODULE-IDENTITY
+        LAST-UPDATED    "200605090000Z"         
+        ORGANIZATION    "Panduit Corp."
+        CONTACT-INFO
+                "       Panduit Corp.
+                        Managed Network Solutions Group
+
+                Postal: Panduit Corp.
+                        17301 Ridgeland Avenue
+                        Tinley Park, IL 60477-3091
+                        USA
+
+                   Tel: +1 708 532-1800/888-506-5400
+
+                E-mail: info@panduit.com"
+
+        DESCRIPTION
+                        "MIB module to support Panduit's Power Over Ethernet
+			(PoE) application management objects."
+
+        REVISION        "200504280000Z"         
+
+        DESCRIPTION
+                        "Initial version of this MIB module."
+
+        REVISION        "200511210000Z"         
+
+        DESCRIPTION
+                        "Correction in panduitPoEPortPDDetectionFault OID. Was 10, changed to 4"
+
+        REVISION        "200605090000Z"         
+
+        DESCRIPTION
+                        "- Correction in the description of panduitPoEPoEEntry 
+				 - Add support for PoE Plus
+				 - Added panduitAppsPoEPoEPlusGroup
+				 - Deprecated panduitAppsPoECompliance in favor of panduitAppsPoECompliance2"
+
+        ::= { panduitApps 1 }
+
+
+--
+--			Textual Conventions
+--
+
+PanduitPoEPlusOperMode ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+            "PoE Plus operational modes:
+
+            'off' 		- The managed object will not supply
+					PoE Plus power.
+            'manual'		-- The managed object will apply PoE Plus power
+					and the maximum power per port must be set 
+					in the panduitPoeHPPortPwrMaxPower.
+			'auto'		-- The managed object will apply PoE Plus power
+					and the maximum power per port will be automatically
+					determined by classification."
+ 
+     SYNTAX     INTEGER {
+			off(1),
+			manual(2),
+			auto(3)
+			}
+
+
+--
+--			Panduit PoE Objects
+--
+
+panduitPoEPoETable OBJECT-TYPE
+        SYNTAX SEQUENCE OF PanduitPoEPoEEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "PoE information by Port."
+        ::= { panduitAppsPoE 1 }
+
+panduitPoEPoEEntry OBJECT-TYPE
+        SYNTAX PanduitPoEPoEEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "A row in the PoE Table."
+	INDEX	{ panduitPoEPoEIndex }
+        ::= { panduitPoEPoETable 1 }
+
+	PanduitPoEPoEEntry ::= SEQUENCE{
+		panduitPoEPoEIndex 	Unsigned32,
+		panduitPoEPoEForcePwr	PanduitPoEForcePowerType,
+		panduitPoEPoEDetectControl	PanduitPoEDetectType,
+		panduitPoEPoEMPSType	PanduitPoEMPSType
+		}
+
+panduitPoEPoEIndex OBJECT-TYPE
+        SYNTAX Unsigned32(1..2147483647)
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "Table Index."
+        ::= { panduitPoEPoEEntry 1 }
+
+
+panduitPoEPoEForcePwr OBJECT-TYPE
+        SYNTAX PanduitPoEForcePowerType
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "Allows power to be forced for PDs that can not be 
+				detected by PSE.  Not all PDs may be supported."
+
+        ::= { panduitPoEPoEEntry 2 }
+
+panduitPoEPoEDetectControl OBJECT-TYPE
+        SYNTAX PanduitPoEDetectType
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "Determines what PD types will be detected."
+        ::= { panduitPoEPoEEntry 3 }
+
+panduitPoEPoEMPSType OBJECT-TYPE
+        SYNTAX PanduitPoEMPSType
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "The Maintain Power Signature component(s) monitored by the PSE."
+        ::= { panduitPoEPoEEntry 4 }
+
+panduitPoELegacyDelay OBJECT-TYPE
+        SYNTAX PanduitPoELegacyDelay
+        MAX-ACCESS read-write
+        STATUS deprecated
+        DESCRIPTION
+                "Length of time to detect a legacy PD."
+        ::= { panduitAppsPoE 2 }
+
+
+--
+--	Panduit PoE Plus Objects
+--
+
+panduitPoEPlus OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Subtree for Panduit's Poe Plus Objects."
+        ::= { panduitAppsPoE 3 }
+
+panduitPoEPlusScalarObjects OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Scalar Objects."
+        ::= { panduitPoEPlus 1 }
+
+panduitPoEPlusTabularObjects OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Tabular Objects."
+        ::= { panduitPoEPlus 2 }
+
+panduitPoEPlusHiPwrEnable OBJECT-TYPE
+        SYNTAX PanduitPoEPlusOperMode 
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "Enables PoE plus for the managed object
+			and controls whether max power is 
+			determined automatically."
+
+        ::= { panduitPoEPlusScalarObjects  1 }
+
+panduitPoePlusPDPowerMonEnable OBJECT-TYPE
+        SYNTAX PanduitEnable
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "Enables PD Class Power Monitoring.
+			PDs drawing more power than
+			determined by classification
+			are shutdown."
+
+        ::= { panduitPoEPlusScalarObjects  3 }
+
+panduitPoePlusBackoffEnable OBJECT-TYPE
+        SYNTAX PanduitEnable
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "Enables cadence timing per the 
+			IEE 802.3af specification."  
+
+        ::= { panduitPoEPlusScalarObjects   4 }
+
+panduitPoePlusPortPowerTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF PanduitPoePlusPortPowerEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "PoE Plus Power information by Port."
+
+        ::= { panduitPoEPlusTabularObjects 1 }
+
+panduitPoePlusPortPowerEntry OBJECT-TYPE
+        SYNTAX PanduitPoePlusPortPowerEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "A row in the Trap Receiver Table."
+        INDEX	{ panduitPoePlusPortPwrIndex }
+ 
+        ::= { panduitPoePlusPortPowerTable 1 }
+
+	PanduitPoePlusPortPowerEntry::= SEQUENCE{
+		panduitPoePlusPortPwrIndex 		Unsigned32,
+		panduitPoePlusPortPwrMaxPower 	INTEGER,
+		panduitPoePlusPortPwrActPower 		Unsigned32
+		}
+
+panduitPoePlusPortPwrIndex OBJECT-TYPE
+        SYNTAX Unsigned32(1..2147483647)
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "Table Index."
+        ::= { panduitPoePlusPortPowerEntry 1 }
+
+panduitPoePlusPortPwrMaxPower OBJECT-TYPE
+        SYNTAX INTEGER(4|6|13|19|23|26)
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "Table Index."
+        ::= { panduitPoePlusPortPowerEntry 2 }
+
+panduitPoePlusPortPwrActPower OBJECT-TYPE
+        SYNTAX Unsigned32
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+                "Table Index."
+        ::= { panduitPoePlusPortPowerEntry 3 }
+
+
+--
+--		PoE Notification Objects
+--
+
+panduitAppsPoENotifications OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "PoE Notifications."
+        ::= { panduitAppsPoE 0 }
+
+
+panduitPoEPortPowerStatusOn NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName,
+		panduitCommonNotifyPortNumber,
+		pethPsePortPowerClassifications,
+		panduitIdentificationLocation }
+        STATUS current
+        DESCRIPTION
+		"The PSE has detected and powered a PD.  All columnar
+		objects refer to the port connected to the PD."
+        ::= { panduitAppsPoENotifications 1}
+
+panduitPoEPortPowerStatusOff NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName,
+		panduitCommonNotifyPortNumber,
+		pethPsePortPowerClassifications,
+		panduitIdentificationLocation }
+        STATUS current
+        DESCRIPTION
+                "The PSE has detected and powered a PD at a port.  All columnar
+		objects refer to the port connected to the PD."
+        ::= { panduitAppsPoENotifications 2 }
+
+panduitPoEPortPowerStatusFault NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName,
+		panduitCommonNotifyPortNumber,
+		pethPsePortPowerClassifications,
+		panduitIdentificationLocation }
+        STATUS current
+        DESCRIPTION
+                "The PSE has detected a overcurrent fault."
+        ::= { panduitAppsPoENotifications 3 }
+
+panduitPoEPortPDDetectionFault NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName,
+		panduitCommonNotifyPortNumber,
+		pethPsePortType,
+		panduitIdentificationLocation }
+        STATUS current
+        DESCRIPTION
+		"The PSE has detected a device attached to a port,
+		but could not classify the PD or has encountered an
+		error in the power detection algorithm.  All columnar
+		objects refer to the port connected to the PD."
+        ::= { panduitAppsPoENotifications 4 }
+
+--
+--		PoE Conformance Section 
+--
+
+panduitAppsPoEConformance OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of Compliance and Group information for MIB."
+	::= { panduitAppsPoE 4 }
+
+panduitAppsPoEGroups OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of groups within MIB."
+	::= { panduitAppsPoEConformance 1 }
+
+panduitAppsPoECompliances OBJECT-IDENTITY
+	STATUS current
+	DESCRIPTION "Compliance specifications for MIB."
+	::= { panduitAppsPoEConformance 2 }
+
+panduitAppsPoEGeneralGroup OBJECT-GROUP
+	OBJECTS {
+		panduitPoEPoEForcePwr,
+		panduitPoEPoEDetectControl,
+		panduitPoEPoEMPSType
+		}
+        STATUS current
+        DESCRIPTION "Panduit PoE Objects."
+        ::= { panduitAppsPoEGroups 1 }
+
+panduitAppsPoENotificationGroup NOTIFICATION-GROUP
+	NOTIFICATIONS {	
+		panduitPoEPortPowerStatusOn,
+		panduitPoEPortPowerStatusOff,
+		panduitPoEPortPowerStatusFault,
+		panduitPoEPortPDDetectionFault
+		}
+        STATUS current
+        DESCRIPTION	"PoE Notification Objects."
+        ::= { panduitAppsPoEGroups 2 }
+
+panduitAppsPoEDeprecatedGroup OBJECT-GROUP
+	OBJECTS { panduitPoELegacyDelay }
+        STATUS deprecated
+        DESCRIPTION "Deprecated Objects."
+        ::= { panduitAppsPoEGroups 3 }
+
+panduitAppsPoEPoEPlusGroup OBJECT-GROUP
+	OBJECTS {
+		panduitPoEPlusHiPwrEnable,
+		panduitPoePlusPDPowerMonEnable,
+		panduitPoePlusBackoffEnable,
+		panduitPoePlusPortPwrMaxPower,
+		panduitPoePlusPortPwrActPower
+		}
+        STATUS current
+        DESCRIPTION "Panduit PoE Objects."
+        ::= { panduitAppsPoEGroups 4 }
+
+panduitAppsPoECompliance MODULE-COMPLIANCE
+	STATUS deprecated
+	DESCRIPTION "Compliance requirements for the MIB."
+	MODULE
+		MANDATORY-GROUPS {
+			panduitAppsPoEGeneralGroup,
+			panduitAppsPoENotificationGroup
+			}
+	::=	{ panduitAppsPoECompliances 1 }
+
+panduitAppsPoECompliance2 MODULE-COMPLIANCE
+	STATUS current
+	DESCRIPTION "Compliance requirements for the MIB."
+	MODULE
+		MANDATORY-GROUPS {
+			panduitAppsPoEGeneralGroup,
+			panduitAppsPoENotificationGroup
+			}
+
+		GROUP panduitAppsPoEPoEPlusGroup 
+			DESCRIPTION
+				"This group is mandatory for managed objects that support PoE Plus."
+
+	::=	{ panduitAppsPoECompliances 2 }
+
+
+
+					
+END				

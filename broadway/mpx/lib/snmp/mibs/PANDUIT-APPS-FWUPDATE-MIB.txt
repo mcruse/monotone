@@ -1,0 +1,288 @@
+PANDUIT-APPS-FWUPDATE-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    	MODULE-IDENTITY,
+	OBJECT-IDENTITY,
+    	OBJECT-TYPE,
+	IpAddress,
+	Integer32,
+	TimeTicks,
+	NOTIFICATION-TYPE
+                                FROM SNMPv2-SMI
+
+        MODULE-COMPLIANCE, 
+	NOTIFICATION-GROUP, 
+        OBJECT-GROUP
+                                FROM SNMPv2-CONF
+
+        TEXTUAL-CONVENTION,
+	DisplayString
+                                FROM SNMPv2-TC
+
+	panduitApps
+				FROM PANDUIT-REG
+
+	panduitIdentificationMAC
+				FROM PANDUIT-COMMON-MIB;
+
+--
+-- Managed Network Solutions contact information.
+--
+panduitAppsFWUpdate MODULE-IDENTITY
+        LAST-UPDATED    "200606230000Z"
+        ORGANIZATION    "Panduit Corp."
+        CONTACT-INFO
+                "       Panduit Corp.
+                        Managed Network Solutions Group
+
+                Postal: Panduit Corp.
+                        17301 Ridgeland Avenue
+                        Tinley Park, IL 60477-3091
+                        USA
+
+                   Tel: +1 708 532-1800/888-506-5400
+
+                E-mail: info@panduit.com"
+
+        DESCRIPTION
+                        "MIB module to support Firmware Update
+			objects."
+
+        REVISION        "200605120000Z"
+
+        DESCRIPTION
+                        "Initial version of this MIB module."
+
+        REVISION        "200606230000Z"
+
+        DESCRIPTION
+                        "Obsolete panFWUpdateLogFile and replace with
+			panFWUpdateErrLogFile "
+
+        ::= { panduitApps 8 }
+
+PanFirmwareUpdateStatus ::= TEXTUAL-CONVENTION
+	STATUS	current
+	DESCRIPTION	
+		"This data type is used to indicate the current status of a
+		firmware update on the managed object.  Note that some managed objects
+		may need to stop the SNMP agent in order to update the firmware and 
+		will not be able to respond to SNMP requests.
+
+		'pending'   	-	A Firmware update is pending.
+		'done' 		-	Firmware Update has completed and is
+					no longer running.
+		'started'   	-	The firmware update process has begun.
+		'verifying' 	- 	The filename and server IP are being verified.
+		'download'  	-	The firmware update file is being downloaded.
+		'error'	    	-	An error has occured and the firmware update
+					has been aborted."
+
+	SYNTAX	INTEGER{
+			inactive(1),
+			done(2),
+			verify(3),
+			download(4),
+			error(5)
+		}
+
+panFWUpdateFileName	OBJECT-TYPE
+        SYNTAX DisplayString
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "The name of the firmware update file."
+        ::= { panduitAppsFWUpdate 1 }
+
+panFWUpdateServerIP	OBJECT-TYPE
+        SYNTAX IpAddress
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "IP Address of the TFTP Server."
+        ::= { panduitAppsFWUpdate 2 }
+
+panFWUpdateStatus	OBJECT-TYPE
+        SYNTAX PanFirmwareUpdateStatus 
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "The current status of Firmware Update."
+        ::= { panduitAppsFWUpdate 3 }
+
+panFWUpdateDelay	OBJECT-TYPE
+        SYNTAX TimeTicks
+	MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "Time to wait before starting the firmware update.
+		  Valid Range 0..90000"
+	DEFVAL { 0 }        
+        ::= { panduitAppsFWUpdate 4 }
+
+panFWUpdatErrCode	OBJECT-TYPE
+        SYNTAX Integer32
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+                "An application-specific error code set when
+		a firmware update fails."
+        ::= { panduitAppsFWUpdate 5 }
+
+panFWUpdateRetryinterval OBJECT-TYPE
+        SYNTAX TimeTicks
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "Time to wait, when a firmware update
+		fails, before trying again.
+		Valid range 0..90000 "
+	DEFVAL { 30000 } -- 5 minutes
+        ::= { panduitAppsFWUpdate 6 }
+
+panFWUpdateMaxRetry OBJECT-TYPE
+        SYNTAX INTEGER ( 1..8)
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "Number of times to retry
+		updating the firmware."
+	DEFVAL { 4} 
+        ::= { panduitAppsFWUpdate 7 }
+
+panFWUpdateLogFile OBJECT-TYPE
+        SYNTAX DisplayString
+        MAX-ACCESS read-write
+        STATUS obsolete
+        DESCRIPTION
+                "A file written to the TFTP server if a 
+		firmware update fails."
+        ::= { panduitAppsFWUpdate 8 }
+
+panFWUpdateCmd OBJECT-TYPE
+        SYNTAX INTEGER {
+		start(1),
+		cancel(2)
+		}
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "Starts or stops the firmware update 
+		process.  start(1) is only allowed
+		when panFWUpdateStatus is done(2)
+		or error(5)."
+        ::= { panduitAppsFWUpdate 9 }
+
+panFWUpdateErrLogFile OBJECT-TYPE
+        SYNTAX DisplayString
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+                "A file written to the TFTP server if a 
+		firmware update fails."
+        ::= { panduitAppsFWUpdate 11 }
+
+
+--
+--		Notification Objects 
+--
+
+panFWUpdateNotifications OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Firmware Update Notifications."
+        ::= { panduitAppsFWUpdate 0 }
+
+panFWUpdateStatusChange NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panFWUpdateStatus,
+		panFWUpdatErrCode
+		}
+        STATUS current
+        DESCRIPTION
+		"The Firmware Update Status has changed."
+        ::= { panFWUpdateNotifications 1 }
+
+
+--
+--		Conformance Section 
+--
+
+panduitAppsFWUpdateConformance OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of Compliance and Group information for MIB."
+	::= { panduitAppsFWUpdate 10 }
+
+panduitAppsFWUpdateGroups OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of groups within MIB."
+	::= { panduitAppsFWUpdateConformance 1 }
+
+panduitAppsFWUpdateCompliances OBJECT-IDENTITY
+	STATUS current
+	DESCRIPTION "Compliance specifications for MIB."
+	::= { panduitAppsFWUpdateConformance 2 }
+
+panduitAppsFWUpdateGeneralGroup OBJECT-GROUP
+	OBJECTS {
+		panFWUpdateFileName,
+		panFWUpdateServerIP,
+		panFWUpdateStatus,
+		panFWUpdateDelay,
+		panFWUpdatErrCode,
+		panFWUpdateRetryinterval,
+		panFWUpdateMaxRetry,
+		panFWUpdateLogFile,
+		panFWUpdateCmd
+		}
+        STATUS obsolete
+        DESCRIPTION "Common objects in the MIB."
+        ::= { panduitAppsFWUpdateGroups 1 }
+
+panduitAppsFWUpdateNotificationGroup NOTIFICATION-GROUP
+	NOTIFICATIONS {	
+		panFWUpdateStatusChange 
+		}
+        STATUS current
+        DESCRIPTION	"Firmware Update Notification Objects."
+        ::= { panduitAppsFWUpdateGroups 2 }
+
+panduitAppsFWUpdateGeneral2Group OBJECT-GROUP
+	OBJECTS {
+		panFWUpdateFileName,
+		panFWUpdateServerIP,
+		panFWUpdateStatus,
+		panFWUpdateDelay,
+		panFWUpdatErrCode,
+		panFWUpdateRetryinterval,
+		panFWUpdateMaxRetry,
+		panFWUpdateCmd,
+		panFWUpdateErrLogFile
+		}
+        STATUS current
+        DESCRIPTION "Common objects in the MIB."
+        ::= { panduitAppsFWUpdateGroups 3 }
+
+panduitAppsFWUpdateCompliance MODULE-COMPLIANCE
+	STATUS obsolete
+	DESCRIPTION "Compliance requirements for the MIB."
+	MODULE
+		MANDATORY-GROUPS {
+				panduitAppsFWUpdateGeneralGroup,
+				panduitAppsFWUpdateNotificationGroup 
+				}
+	::=	{ panduitAppsFWUpdateCompliances 1 }
+
+panduitAppsFWUpdateCompliance2 MODULE-COMPLIANCE
+	STATUS current
+	DESCRIPTION "Compliance requirements for the MIB."
+	MODULE
+		MANDATORY-GROUPS {
+				panduitAppsFWUpdateGeneral2Group,
+				panduitAppsFWUpdateNotificationGroup 
+				}
+	::=	{ panduitAppsFWUpdateCompliances 2 }
+
+
+END

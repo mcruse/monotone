@@ -1,0 +1,696 @@
+CYBERSWITCHING-PM8-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+     enterprises, IpAddress,
+     Counter, Gauge FROM RFC1155-SMI
+     OBJECT-TYPE FROM RFC-1212
+     TRAP-TYPE FROM RFC-1215
+     DisplayString FROM RFC1213-MIB
+     pm8 FROM CYBERSWITCHING-COMMON-MIB;
+
+--
+--     CyberSwitching PM8 MIB ver 4.0.2
+--
+--     Copyright (C) 2008 CyberSwitching, Inc.  ALL RIGHTS RESERVED.
+--
+--     Title: CyberSwitching Definitions For PM8.
+--
+--     This file may be freely copied and distributed as
+--     long as no changes are made to it.
+--
+
+-- ========== PM8 OIDs ==========
+
+pm8-ctrl              OBJECT IDENTIFIER ::= { pm8 1 }
+pm8-settings          OBJECT IDENTIFIER ::= { pm8 2 }
+
+numCircuits OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The number of managed circuits present on this system."
+    ::= { pm8-ctrl 1 }
+
+circuitTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF CircuitEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+            "A list of circuit entries.  The number of entries is given by the value of numCircuits."
+    ::= { pm8-ctrl 2 }
+
+circuitEntry OBJECT-TYPE
+    SYNTAX  CircuitEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+            "A circuit entry containing status and properties of a circuit."
+    INDEX   { circuitIndex }
+    ::= { circuitTable 1 }
+
+CircuitEntry ::=
+    SEQUENCE {
+        circuitIndex
+            INTEGER,
+        circuitLabel
+            DisplayString,
+        circuitState
+            INTEGER,
+        circuitCurrent
+            DisplayString,
+        circuitRebootDelayTime
+            INTEGER,        
+	circuitRebootOffTime
+            INTEGER,        
+	circuitRebootDelayTimeOverride
+            INTEGER,        
+	circuitRebootOffTimeOverride
+            INTEGER,
+        circuitIsManaged
+                INTEGER,
+        circuitScaleFactor
+                DisplayString,
+        lowCurrentAlertEnabled
+                INTEGER,
+        lowCurrentThreshold
+                DisplayString,
+        lowCurrentGracePeriod
+                INTEGER,
+        highCurrentAlertEnabled
+                INTEGER,
+        highCurrentThreshold
+                DisplayString,
+        highCurrentGracePeriod
+                INTEGER,
+        vcbTripEnabled
+                INTEGER,
+        vcbTripThreshold
+                DisplayString,
+        vcbTripGracePeriod
+                INTEGER,
+        circuitEnableSchedule
+                INTEGER
+    }
+
+circuitIndex OBJECT-TYPE
+    SYNTAX  INTEGER (0..255)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "A unique value for each circuit.  Its value
+            ranges between 1 and the value of numCircuits."
+    ::= { circuitEntry 1 }
+
+circuitLabel OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..15))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "A textual string containing the circuit's
+            user-friendly name."
+    ::= { circuitEntry 2 }
+
+circuitState OBJECT-TYPE
+    SYNTAX  INTEGER {
+                off(1),     -- circuit is off
+                on(2),      -- circuit is on
+                tripped(3), -- circuit is tripped
+                reboot(4)   -- circuit should reboot
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "The circuit's state. (ON/OFF/TRIPPED/REBOOT). Reading circuitState 
+            returns the circuit's state. Setting circuitState to off
+            turns the circuit off. Setting circuitState to on turns the
+            circuit on. The circuit can not be set to tripped state.
+            Setting circuitstate to reboot will reboot the circuit. A GET
+            of circuitState returns the current state, it will never
+            return reboot."
+    ::= { circuitEntry 3 }
+
+circuitCurrent OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The amount of current the circuit is drawing, string
+            formatted."
+    ::= { circuitEntry 4 }
+
+circuitRebootDelayTime OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Number of Seconds (0-6,000) before circuit reboots after a
+             reboot request. This is a non-volatile setting."
+    ::= { circuitEntry 5 }
+
+circuitRebootOffTime OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Number of Seconds (0-6,000) circuit stays off before turning
+             back on during a reboot. This is a non-volatile setting."
+    ::= { circuitEntry 6 }
+
+circuitRebootDelayTimeOverride OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "This is the same as oRebootDelayTime except that it is volatile
+             and only applies to the next reboot of the associated circuit.
+             If frequently changing the reboot duration while a unit is
+             operating, use this object instead of setting oRebootDelayTime.
+             A read of this object will return the last setting until a reboot
+             of the associated circuit is initiated. It will then return the
+             same value as circuitRebootDelayTime."
+    ::= { circuitEntry 7 }
+
+circuitRebootOffTimeOverride OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "This is the same as circuitRebootOffTime except that it is volatile
+             and only applies to the next reboot of the associated circuit.
+             If frequently changing the reboot duration while a unit is
+             operating, use this object instead of setting circuitRebootOffTime.
+             A read of this object will return the last setting until a reboot
+             of the associated outlet is initiated. It will then return the
+             same value as circuitRebootOffTime."
+    ::= { circuitEntry 8 }
+
+circuitIsManaged OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "Circuit's management status: managed circuit or unmanaged circuit."
+    ::= { circuitEntry 9 }
+
+circuitScaleFactor OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Circuit current scale factor (0.0-up), string formatted."
+    ::= { circuitEntry 10 }
+
+lowCurrentAlertEnabled OBJECT-TYPE
+    SYNTAX  INTEGER {
+			disabled(1),   -- trap is disabled
+            enabled(2)     -- trap is enabled
+    }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Low current bound trap enable. When enabled, a trap will
+            be generated when current falls below lowCurrentThreshold and
+            stays below for longer than lowCurrentGracePeriod."
+    ::= { circuitEntry 11 }
+
+lowCurrentThreshold OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE(0..20))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Low current threshold. This string must contain only a valid
+            floating-point number representing current in Amps between
+            0.0 and 99.9. When the circuit current falls below this value,
+            and stays below for longer than lowCurrentGracePeriod a trap
+            will be generated."
+    ::= { circuitEntry 12 }
+
+lowCurrentGracePeriod OBJECT-TYPE
+    SYNTAX  INTEGER (0..65535)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Low current grace period in Seconds. When the circuit
+            current falls below lowCurrentThreshold, and stays below for longer
+            than this value, a trap will be generated. Care should be
+            taken not to set this too low, or the network might be
+            flooded with traps if the current rapidly fluctuates around
+            lowCurrentThreshold."
+    ::= { circuitEntry 13 }
+
+highCurrentAlertEnabled OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disabled(1),   -- trap is disabled
+                enabled(2)     -- trap is enabled
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "High current bound trap enable. When enabled, a trap will
+            be generated when current rises above highCurrentThreshold and
+            stays above for longer than highCurrentGracePeriod."
+    ::= { circuitEntry 14 }
+
+highCurrentThreshold OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE(0..20))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "High current threshold. This string must contain only a valid
+            floating-point number representing current in Amps between
+            0.0 and 99.9. When the circuit current rises above this value,
+            and stays above for longer than highCurrentGracePeriod a trap
+            will be generated."
+    ::= { circuitEntry 15 }
+
+highCurrentGracePeriod OBJECT-TYPE
+    SYNTAX  INTEGER (0..65535)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "High current grace period in Milliseconds. When the circuit
+            current rises above highCurrentThreshold, and stays above for longer
+            than this value, a trap will be generated. Care should be
+            taken not to set this too low, or the network might be
+            flooded with traps if the current rapidly fluctuates around
+            highCurrentThreshold."
+    ::= { circuitEntry 16 }
+
+vcbTripEnabled OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disabled(1),   -- Virtual Circuit Breaker(TM) is disabled
+                enabled(2)     -- Virtual Circuit Breaker(TM) is enabled
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "High current bound Virtual Circuit Breaker(TM) enable.
+            When enabled, the outlet will automatically shut off
+            when current rises above highCurrentThreshold and stays above
+            for longer than highCurrentGracePeriod."
+    ::= { circuitEntry 17 }
+
+vcbTripThreshold OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE(0..20))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "High current bound Virtual Circuit Breaker(TM) trip threshold. This string must contain only a valid
+            floating-point number representing current in Amps between
+            0.0 and 99.9. When the circuit current rises above this value,
+            and stays above for longer than vcbTripGracePeriod a trap
+            will be generated."
+    ::= { circuitEntry 18 }
+
+vcbTripGracePeriod OBJECT-TYPE
+    SYNTAX  INTEGER (0..65535)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "High current bound Virtual Circuit Breaker(TM) trip grace period in Milliseconds. When the circuit
+            current rises above vcbTripThreshold, and stays above for longer
+            than this value, a trap will be generated."
+    ::= { circuitEntry 19 }
+
+circuitEnableSchedule OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disabled(1),   -- circuit schedule is disabled
+                enabled(2)     -- circuit schedule is enabled
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Enable status of schedule."
+    ::= { circuitEntry 20 }
+    
+circuitStateMask OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "8 bit mask representing the current state of all
+             8 circuits. For each bit: 0=circuit is off,
+             1=circuit is on."
+    ::= { pm8-ctrl 3 }
+
+circuitPowerOnMask OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "8 bit mask representing power on state of all
+             8 circuits. For each bit: 0=circuit is off when
+             unit boots, 1=circuit is on when unit boots."
+    ::= { pm8-ctrl 4 }
+
+circuitManagedMask OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "8 bit mask representing management state of all
+             8 circuits. For each bit: 0=circuit is an unmanaged 
+             circuit; 1=circuit is a managed circuit."
+    ::= { pm8-ctrl 5 }
+
+systemTime OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Time in seconds since January 1, 1980."
+    ::= { pm8-settings 1 }
+
+timezone OBJECT-TYPE
+    SYNTAX  INTEGER (-13..13)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Time zone as an offset from GMT"
+    ::= { pm8-settings 2 }
+
+useDaylightSavings OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disabled(1),   -- Time is in standard time.
+                enabled(2)     -- Time is in daylight savings time.
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "When enabled, the clock is adjusted for daylight savings."
+    ::= { pm8-settings 3 }
+
+useNTP OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disabled(1),   -- NTP is disabled. Time must be set manually.
+                enabled(2)     -- NTP is enabled. Unit will attempt to get network time.
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "When enabled, the unit will attempt to set its clock from the
+            network using NTP servers 1 & 2."
+    ::= { pm8-settings 4 }
+
+ntpServer1 OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..59))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Time server #1. Set to 255.255.255.255 to broadcast time requests."
+    ::= { pm8-settings 5 }
+
+ntpServer2 OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..59))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Time server #2. Will be used if Timer Server #1 fails.
+             Set to 255.255.255.255 to broadcast time requests."
+    ::= { pm8-settings 6 }
+
+useDHCP OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disabled(1),   -- DHCP is disabled. Network Settings must be set manually.
+                enabled(2)     -- DHCP is enabled. Unit will attempt to get settings from DHCP server.
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "When enabled, the unit will attempt to get its network settings from a DHCP
+            server upon booting. If this fails, it will revert to the manual settings."
+    ::= { pm8-settings 7 }
+
+ipAddress OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "IP of this unit."
+    ::= { pm8-settings 8 }
+
+subnetMask OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Subnet Mask of this unit."
+    ::= { pm8-settings 9 }
+
+gateway OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Gateway of this unit."
+    ::= { pm8-settings 10 }
+
+dnsServer OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Domain Name Server of this unit."
+    ::= { pm8-settings 11 }
+
+hostName OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..15))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Host Name of this unit."
+    ::= { pm8-settings 12 }
+
+domain OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..32))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Domain of this unit."
+    ::= { pm8-settings 13 }
+
+syslogServer OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..59))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Server name to send BSD Syslog style log events to. Set this to a
+            NULL string to disable Syslog. (events will still be logged locally)"
+    ::= { pm8-settings 14 }
+
+loggingFacility OBJECT-TYPE
+    SYNTAX  INTEGER {
+                local-0(1),
+                local-1(2),
+                local-2(3),
+                local-3(4),
+                local-4(5),
+                local-5(6),
+                local-6(7),
+                local-7(8)
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "BSD Syslog Logging Facility."
+    ::= { pm8-settings 15 }
+
+loggingLevel OBJECT-TYPE
+    SYNTAX  INTEGER {
+                emergency(1),
+                alert(2),
+                critical(3),
+                error(4),
+                warning(5),
+                notice(6),
+                informational(7),
+                debug(8)
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "BSD Syslog Logging Level. This affects the amount of logging performed."
+    ::= { pm8-settings 16 }
+
+dumpLogs OBJECT-TYPE
+    SYNTAX  INTEGER {
+                nodump(1),   -- do not dump logs to email
+                dump(2)      -- dump logs to email
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Dump Logs to email when full option."
+    ::= { pm8-settings 17 }
+
+smtpServer OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..59))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Server used to send email."
+    ::= { pm8-settings 18 }
+
+emailTo OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..59))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Address to send email to."
+    ::= { pm8-settings 19 }
+
+emailFrom OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..59))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Address to send email from."
+    ::= { pm8-settings 20 }
+
+emailSubject OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..59))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Subject of email."
+    ::= { pm8-settings 21 }
+
+confirmStateChanges OBJECT-TYPE
+    SYNTAX  INTEGER {
+                noconfirm(1),   -- do not confirm outlet changes
+                confirm(2)      -- confirm outlet changes
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Whether or not to confirm circuit changes from web
+            interface."
+    ::= { pm8-settings 22 }
+
+httpRefreshRate OBJECT-TYPE
+    SYNTAX  INTEGER (5..999)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Number of seconds (5-999) to wait before refreshing
+            outlets on web interface."
+    ::= { pm8-settings 23 }
+
+numLogs OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The number of Log entries available"
+    ::= { pm8-settings 24 }
+
+logs OBJECT-TYPE
+    SYNTAX  SEQUENCE OF LogEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+            "A List of Log Entries."
+    ::= { pm8-settings 25 }
+
+logEntry OBJECT-TYPE
+    SYNTAX  LogEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+            "A Log Entry Display String."
+    INDEX   { logIndex }
+    ::= { logs 1 }
+
+LogEntry ::=
+    SEQUENCE {
+        logIndex
+            INTEGER,
+        logMessage
+            DisplayString
+    }
+
+logIndex OBJECT-TYPE
+    SYNTAX  INTEGER (1..32)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "A unique value for each log entry. Its value
+            ranges between 1 and trinumlogs."
+    ::= { logEntry 1 }
+
+logMessage OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "The log entry in string form."
+    ::= { logEntry 2 }
+
+serialBaudRate OBJECT-TYPE
+    SYNTAX  INTEGER {
+                baud9600(1),
+                baud19200(2),
+                baud38400(3),
+                baud57600(4)
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Serial Interface BAUD rate."
+    ::= { pm8-settings 26 }
+
+circuitStaggerOnDelay OBJECT-TYPE
+    SYNTAX  INTEGER (0..5000)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Number of milliseconds (0-5,000) to pause between circuits when
+            turning on multiple circuits at once."
+    ::= { pm8-settings 27 }
+
+circuitStaggerOffDelay OBJECT-TYPE
+    SYNTAX  INTEGER (0..5000)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "Number of milliseconds (0-5,000) to pause between circuits when
+            turning off multiple circuits at once."
+    ::= { pm8-settings 28 }
+
+snmpTrapServer OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "SNMP trap server ip address."
+    ::= { pm8-settings 29 }
+
+-- ========= PM8 Traps ==========
+
+circuitLowCurrentWarning TRAP-TYPE
+    ENTERPRISE pm8
+    VARIABLES { circuitIndex, circuitCurrent }
+    DESCRIPTION                   
+            "Current has gone below lowCurrentThreshold and
+            stayed there for longer than lowCurrentGracePeriod."
+    ::= 10
+
+circuitHighCurrentWarning TRAP-TYPE
+    ENTERPRISE pm8
+    VARIABLES { circuitIndex, circuitCurrent }
+    DESCRIPTION                   
+            "Current has gone above highCurrentThreshold and
+            stayed there for longer than highCurrentGracePeriod."
+    ::= 11
+
+circuitTripped TRAP-TYPE
+    ENTERPRISE pm8
+    VARIABLES { circuitIndex, circuitCurrent }
+    DESCRIPTION                   
+            "A circuit's Virtual Circuit Breaker(TM) tripped
+            because current has gone above vcbTripThreshold and
+            stayed there for longer than vcbTripGracePeriod."
+    ::= 12
+
+END

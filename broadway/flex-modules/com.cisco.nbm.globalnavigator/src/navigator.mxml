@@ -1,0 +1,643 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:ui="com.cisco.cbsbu.nbm.*"
+    width="100%" height="100%"
+    horizontalAlign="center"
+    creationComplete="creationCompleteHandler()"
+    paddingLeft="0"
+    paddingTop="0"
+    resize="callLater(resizeImage)" 
+    paddingBottom="0"
+    paddingRight="0">
+
+    <mx:Style source="kubrick.css" />
+    <mx:Script>
+        <![CDATA[
+        import mx.controls.Alert;
+		import mx.managers.CursorManager;
+        import flash.events.Event;
+        import flash.net.navigateToURL;
+        import flash.utils.getQualifiedClassName;
+        import mx.collections.ArrayCollection;
+        import mx.events.ListEvent;
+        import mx.events.AdvancedDataGridEvent;
+        import mx.rpc.events.FaultEvent;
+        import mx.rpc.events.ResultEvent;
+        import mx.rpc.http.HTTPService;
+        import mx.utils.ObjectUtil;
+        import mx.utils.ObjectProxy;
+        import mx.utils.object_proxy;
+        import mx.utils.URLUtil;
+        import mx.utils.StringUtil;
+	    import mx.events.CollectionEvent;
+        import mx.utils.URLUtil;
+	    import com.cisco.cbsbu.nbm.NodeVO;
+	    import flash.display.DisplayObject;
+	    import mx.collections.ListCollectionView;
+        import mx.events.FlexEvent;
+
+        [Bindable] private var ignoreLazyLoading: Boolean = false;
+        [Bindable] private var advanceSearchVisibility:Boolean = false;
+        [Bindable] private var service:HTTPService;
+        [Bindable] private var gridData:ArrayCollection;
+        [Bindable] private var pointKeyData:ArrayCollection;
+        [Bindable] private var multipleRowResult:Array;
+        [Bindable] private var expandNode:Boolean = false;
+        [Bindable] private var recureCount:int = 0;
+        [Bindable] private var selectedData:Object
+        
+        private var urlScheme:String = null;
+
+        //Set attributes to HTTPService object for xmlrpx query
+        private function prepService(dsService:HTTPService):void{
+            var serverName = Application.application.url;
+            serverName = serverName.substr(0, serverName.lastIndexOf("/"));
+            dsService.contentType = "application/xml";
+            dsService.url = serverName + "/xmlrpc";
+            dsService.method = "POST";
+        }
+
+        //Creates the HTTPService Request for quering the PointKeys.
+        private function fetchPointKeyDropDown():void{
+
+            var kpService:HTTPService = new HTTPService();
+            kpService.addEventListener(ResultEvent.RESULT, constructPoinKeyDropDown);
+            kpService.addEventListener(FaultEvent.FAULT, manageError);
+            prepService(kpService);
+
+            var xmlString:String = "<methodCall><methodName>DataService.fetchAllPointKey</methodName></methodCall>";
+            var requestString:XMLDocument = new XMLDocument(xmlString);
+
+            kpService.request = requestString;
+            kpService.resultFormat = "object";
+            kpService.send();
+        }
+
+        //Callback method that constructs the PoinKey Dropdown.
+        private function constructPoinKeyDropDown(event:ResultEvent):void{
+            pointKeyData = new ArrayCollection();
+            pointKeyData.addItem({label: "Select a Point key", data:""});
+			try{
+	    		var result:* = event.result;
+                if ( result.methodResponse.params.param.value.array.data == null ) {
+                    return;
+		        }
+		        multipleRowResult = new Array()
+		        for(var i:Object in result.methodResponse.params.param.value.array.data.value) {
+        		    var arrayData = result.methodResponse.params.param.value.array.data.value[i];
+                    var rowData:Object;
+                    if (arrayData.member != null ){
+                        rowData = arrayData.member;
+                    } else {
+                        rowData = arrayData.struct.member;
+                    }
+                    pointKeyData.addItem({label: rowData[1].value, data: rowData[1].value});
+                }
+            } catch(error:Error){
+	            Alert.show("An unexpected error occured while performing search. " + error.getStackTrace());
+            }
+        }
+
+
+        //Callback method called on post init and this method initializes the pointkey and other areas in the screen
+        private function creationCompleteHandler():void {
+            gridData = null;
+            invokeSearchByParentId(-1);
+            focusManager.setFocus(search);
+            fetchPointKeyDropDown();
+            resetAdvanceSearchForm();
+            //entityModelGrid.addEventListener(FlexEvent.UPDATE_COMPLETE, expandAllChildren);
+        }
+
+        //Creates a blank NodeVO object
+        private function createBlankParent(name:String, parent:int): NodeVO{
+
+		    var node:NodeVO = new NodeVO();
+		    node.name = name;
+		    node.parent = parent;
+		    return node;
+        }
+
+        //Creates a NodeVO using rows returned from Backend.
+        private function createNode(rowData:Object):NodeVO {
+            var lft:int;
+            var rgh:int;
+
+            var node:NodeVO = new NodeVO();
+            node.id = rowData[0].value.i4;
+            node.name =  (rowData[1].value is ObjectProxy? "": rowData[1].value);
+            node.description = (rowData[2].value is ObjectProxy? "": rowData[2].value);
+            node.managerName = (rowData[3].value is ObjectProxy? "": rowData[3].value);
+            node.type = (rowData[4].value is ObjectProxy? "": rowData[4].value);
+            node.url = (rowData[5].value is ObjectProxy? "": rowData[5].value);
+            node.displayURL= (rowData[6].value is ObjectProxy? "": rowData[6].value);
+            node.label= (rowData[7].value is ObjectProxy? "": rowData[7].value);
+            node.parent= (rowData[8] == null? null: rowData[8].value.i4);
+            var nodeURL:String = node.url;
+            if ( node.managerName != "" && node.managerName != null ) {
+                nodeURL = nodeURL.replace(/\//g, "::");
+                node.redirectionURL = this.getUrlScheme() + '://' + node.managerName + "?selectedNode=" + nodeURL;
+            }
+            lft = rowData[9].value.i4;
+            rgh = rowData[10].value.i4;
+            node.isLeaf = (lft + 1 == rgh);
+
+            //node.children = new ArrayCollection();
+
+            return node;
+        }
+
+
+        private function constructGrid(event:ResultEvent):void{
+
+            try{
+                var result:* = service.lastResult;
+                if ( result.methodResponse.params.param.value.array.data == null ) {
+                    Alert.show("No record found.", "Global Search");
+                    buttonStatus(true);
+                    return;
+		        }
+		        try {
+		        	if ( result.methodResponse.params.param.value.array.data.value.struct.member.name == "owner") {
+		        		Alert.show(result.methodResponse.params.param.value.array.data.value.struct.member.value + " is currently uploading data. \nPlease try again after a few minutes");
+		        		return;
+		        	}
+		        } catch (noError: Error) {
+		        	//do nothing
+		        }
+                var parent:NodeVO = null;
+		        multipleRowResult = new Array()
+                recureCount = 0;
+                if (!expandNode) {
+                    entityModelGrid.scrollToIndex(0);
+                } else {
+                    parent = entityModelGrid.selectedItem as NodeVO;
+                }
+		        for(var i:Object in result.methodResponse.params.param.value.array.data.value) {
+                    recureCount++;
+        		    var arrayData = result.methodResponse.params.param.value.array.data.value[i];
+                    var rowData:Object;
+
+                    if (arrayData.member != null ){
+                        rowData = arrayData.member;
+                    } else {
+                        rowData = arrayData.struct.member;
+                    }
+                    multipleRowResult.push(rowData);
+                    if (recureCount > 200 ) {
+
+                        parent = resolveMultiRowResult(parent);
+                        recureCount = 0;
+                        System.gc();
+                    }
+                }
+                parent = resolveMultiRowResult(parent);
+                expandAllChildren(parent);
+            } catch(error:Error){
+	            Alert.show("An unexpected error occured while performing search. " 
+                    + error.getStackTrace());
+            }
+            buttonStatus(true);
+        }
+
+        private function expandAllChildren(parent:NodeVO):void {
+
+            if (!expandNode) {
+                ignoreLazyLoading = true;
+                entityModelGrid.expandAll();
+                ignoreLazyLoading = false;
+            
+                entityModelGrid.selectedItem = parent;                
+                if (entityModelGrid.selectedIndex > 0 )  {
+                    entityModelGrid.scrollToIndex(entityModelGrid.selectedIndex);
+                }
+            } else {
+                entityModelGrid.expandItem(parent.parentNode, true);
+            }
+            expandNode = false;
+        }
+        
+        private function resolveMultiRowResult(parent:NodeVO):NodeVO{
+
+            do{
+                var rowData = multipleRowResult[0];
+                multipleRowResult = multipleRowResult.slice(1);
+                parent = invokeSearchByParentIdRecursive(rowData, parent);
+            } while (multipleRowResult.length  > 0 );
+            return parent;
+        }
+
+
+        private function invokeSearchByParentIdRecursive(row:Object, parent:NodeVO):NodeVO{
+            var found:Boolean = false;
+            if ( parent == null ) {
+                if (gridData == null) {
+                    gridData = new ArrayCollection();
+                    parent = createNode(row);
+                    gridData.addItem(parent);
+                    return parent;
+                } else  {
+                    var providerRoot:* = entityModelProvider.getRoot();
+
+                    var rootChildren:ArrayCollection = ArrayCollection(providerRoot);
+                    for (var child:* in rootChildren) {
+                        parent = rootChildren[child];
+                        break;
+                    }
+                }
+            }
+            if (row[8].value.i4 == parent.id) {             
+                for (var child:* in parent.children) {              
+                    if (parent.children[child].url == row[5].value) {
+                        parent = parent.children[child];
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    var item:NodeVO = createNode(row);
+                    item.parentNode = parent;
+                    if (parent.children == null )
+                        parent.children = new ArrayCollection();
+                    parent.children.addItem(item);
+                    parent = item;
+                }
+            } else {
+                if ( parent.parentNode == null ) {
+                    return parent;
+                }
+                return invokeSearchByParentIdRecursive(row, parent.parentNode);
+            }
+
+            return parent;
+        }
+
+        private function constructRequestByParentId(parentId:*, methodName:String):void{
+            
+            prepService(service);
+            var xmlString:String = "<methodCall><methodName>" + methodName + "</methodName>";
+            xmlString += "<params><param><value><struct>";
+
+            xmlString +="<member><name>id</name><value><string> "+
+                        parentId + "</string></value></member>";
+
+            xmlString += "</struct></value></param></params></methodCall>";
+
+            var requestString:XMLDocument = new XMLDocument(xmlString);
+
+            service.request = requestString;
+            service.resultFormat = "object";
+            service.send();
+        }
+        
+        private function constructRequestByChildName(parentId:*, childName:String, methodName:String):void{
+            
+            prepService(service);
+            var xmlString:String = "<methodCall><methodName>" + methodName + "</methodName>";
+            xmlString += "<params><param><value><struct>";
+
+            xmlString +="<member><name>id</name><value><string> "+
+                        parentId + "</string></value></member>";
+            xmlString +="<member><name>name</name><value><string> "+
+                        childName + "</string></value></member>";
+                        
+            xmlString += "</struct></value></param></params></methodCall>";
+
+            var requestString:XMLDocument = new XMLDocument(xmlString);
+
+            service.request = requestString;
+            service.resultFormat = "object";
+            service.send();
+        }
+
+        private function constructRequestForAdvanceSearch(methodName:String):void{
+            var searchCriteriaEntered:Boolean = false;
+            prepService(service);
+            var xmlString:String = "<methodCall><methodName>" + methodName + "</methodName>";
+            xmlString += "<params><param><value><struct>";
+
+             if (StringUtil.trim(entityName.text) != "" ) {
+	                xmlString +="<member><name>name</name><value><string> "+
+	                            entityName.text + "</string></value></member>";
+	            searchCriteriaEntered = true;
+            }
+            if (StringUtil.trim(description.text) != "" ) {
+                xmlString +="<member><name>description</name><value><string> "+
+                            description.text + "</string></value></member>";
+                searchCriteriaEntered = true;
+            }
+
+            if (pointKey.selectedItem.data != "" ) {
+                xmlString +="<member><name>pointKey</name><value><string> "+
+                            pointKey.selectedItem.data  + "</string></value></member>";
+                searchCriteriaEntered = true;
+            }
+
+            if (StringUtil.trim(location.text) != "" ) {
+                xmlString +="<member><name>location</name><value><string> "+
+                            location.text + "</string></value></member>";
+                searchCriteriaEntered = true;
+            }
+
+            if (StringUtil.trim(fetchSize.text) != "" ) {
+                xmlString +="<member><name>fetchSize</name><value><string> "+
+                            fetchSize.text + "</string></value></member>";
+            } else {
+                xmlString +="<member><name>fetchSize</name><value><string>100</string></value></member>";
+            }
+
+            if ( !searchCriteriaEntered ) {
+                Alert.show("Please enter search criteria.");
+                buttonStatus(true);
+                return;
+	        }
+                        
+            xmlString += "</struct></value></param></params></methodCall>";
+
+            var requestString:XMLDocument = new XMLDocument(xmlString);
+
+            service.request = requestString;
+            service.resultFormat = "object";
+            service.send();
+        }
+        
+
+        private function invokeSearchByParentId(parentId:Number):void{
+            service = new HTTPService();
+            service.addEventListener(ResultEvent.RESULT, constructGrid);
+            service.addEventListener(FaultEvent.FAULT, manageError);
+            constructRequestByParentId(parentId, "DataService.searchEntityByParent");
+        }
+
+
+
+        private function invokeSearchByStoreId(storeId:String):void{
+            service = new HTTPService();
+            service.addEventListener(ResultEvent.RESULT, constructGrid);
+            service.addEventListener(FaultEvent.FAULT, manageError);
+            constructRequestByParentId(storeId, "DataService.searchEntityByStore");
+        }
+        
+        private function invokeAdvanceSearch():void{
+        	buttonStatus(false);
+            service = new HTTPService();
+            service.addEventListener(ResultEvent.RESULT, constructGrid);
+            service.addEventListener(FaultEvent.FAULT, manageError);
+            constructRequestForAdvanceSearch("DataService.searchEntity");
+        }
+
+        private function manageError(event:FaultEvent):void {
+            mx.controls.Alert.show(event.fault.faultString, "Error");
+        }
+
+        private function rowSelected(event:ListEvent):void {
+            selectedData = event.currentTarget.selectedItem;
+            if ( selectedData.redirectionURL == null ) {
+                Alert.show("The Selected Row " + selectedData.name
+                    + " may have more the one Mediator Manager.");
+                return;
+            }
+            showBusyCursor(true);
+            var pingService:HTTPService = new HTTPService();
+            prepService(pingService);
+            pingService.addEventListener("result", httpResult);
+            pingService.addEventListener("fault", httpFault);
+
+            var xmlString:String = "<methodCall><methodName>DataService.isManagerReachable</methodName>";
+            xmlString += "<params><param><value><struct>";
+            xmlString +="<member><name>url</name><value><string>"+
+            selectedData.redirectionURL.split("?")[0] + "</string></value></member>";
+
+            xmlString += "</struct></value></param></params></methodCall>";
+            var requestString:XMLDocument = new XMLDocument(xmlString);
+            pingService.request = requestString;
+            pingService.resultFormat = "object";
+            pingService.send();
+        }
+
+        public function httpResult(event:ResultEvent):void {
+            showBusyCursor(false)
+            var result:* = event.result;
+            if (result.methodResponse.params.param.value.boolean == 0) {
+                Alert.show("Manager is down.", "Critical Error");
+            } else {
+                //Alert.show("Redirect" + selectedData.redirectionURL);
+                //var selectedRow:Object = entityModelGrid.selectedItem;
+                var url:URLRequest = new URLRequest(selectedData.redirectionURL); 
+                navigateToURL(url, selectedData.name);    
+            }
+        }
+
+        public function httpFault(event:FaultEvent):void {
+            showBusyCursor(false);
+            var faultstring:String = event.fault.faultString;
+            Alert.show(faultstring + "  " + event.statusCode);
+        }
+
+        private function onItemOpen(e:AdvancedDataGridEvent):void {
+
+            if (!e.opening){
+                return;
+            }
+            var selectedNode:NodeVO = e.item as NodeVO;
+            entityModelGrid.selectedItem = selectedNode;
+            if(!ignoreLazyLoading) {
+                if (selectedNode.children == null) {
+                    expandNode = true;
+                    showBusyCursor(true);
+                    invokeSearchByParentId(selectedNode.id);
+
+                }
+            }
+        }
+
+        private function searchEntity():void{
+        	buttonStatus(false);
+        	if ( StringUtil.trim(search.text) == "" || search.text == null ) {
+                Alert.show("Please enter search criteria.");
+                btnStoreSearch.enabled = true;
+                buttonStatus(true);
+                return;
+	        }
+            invokeSearchByStoreId(search.text);
+        }
+        
+        private function buttonStatus(status:Boolean): void {
+        	btnStoreSearch.enabled = status;
+        	btnAdvSearch.enabled = status;        	
+            showBusyCursor(!status);
+        }
+
+        private function showBusyCursor(busy:Boolean):void{
+        	if ( busy ) {
+        		CursorManager.setBusyCursor();
+        	} else {
+        		CursorManager.removeBusyCursor();
+        	}            
+        }
+
+        private function resetAdvanceSearchForm():void{
+            entityName.text = "";
+            description.text = "";
+            pointKey.selectedIndex = 0;
+            location.text = "";
+            fetchSize.text = "100";
+        }
+
+        private function toggleAdvSearch():void{
+
+            advanceSearchVisibility = !advanceSearchVisibility;
+            if (!advanceSearchVisibility) {
+                entityModelGrid.height = 600;
+            } else {
+                entityModelGrid.height = 430;
+            }
+        }
+
+        private function exportResult(): void{
+            
+            var fileRef:FileReference = new FileReference();
+            var data:String = new String("Name, Description, Label, URL\n");
+
+            var rootChildren:ArrayCollection = ArrayCollection(entityModelProvider.getRoot());
+            data = data + exportData(entityModelProvider.getRoot());
+            fileRef.save(data, "GlobalNavigationExport.csv");
+        }
+
+        private function exportData(providerRoot:*): String{
+            
+            var data:String = new String("");
+            var child:*;
+            try{
+                for (var childIndex:* in providerRoot) {
+                    child = providerRoot[childIndex];
+                    data = data + '"' + child.name + '","' + child.description + '","' + child.label + '","' + (child.redirectionURL == null? '': child.redirectionURL) + '"\n';
+                    data = data + exportData(child.children);
+                }
+
+            } catch(error:Error){
+	            Alert.show("An unexpected error occured while performing search.");
+	            Alert.show(error.getStackTrace());
+            }
+
+            return data;
+        }
+
+
+        private function resizeImage():void {
+            backgroundImg.width = backgroundImg.parent.width;
+        }
+        
+        private function getUrlScheme():String {
+        	if(this.urlScheme) {
+        		return this.urlScheme;
+        	}
+        	var url:String = Application.application.url;
+        	this.urlScheme = mx.utils.URLUtil.getProtocol(url);
+        	if(!this.urlScheme)
+        		this.urlScheme = "http";
+        	return this.urlScheme;
+        }
+
+        ]]>
+
+    </mx:Script>
+    
+    <mx:NumberValidator source="{fetchSize}" property="text" 
+                        integerError="Enter Integer value."
+                        minValue="1" domain="int" 
+                        invalid="Alert.show('Fetch size is required. Value will be reset.'); fetchSize.text='100';"
+                        trigger="{fetchSize}" triggerEvent="focusOut"/>
+
+    <mx:Image id="backgroundImg" source="@Embed('images/pageBackground.jpg')" 
+              includeInLayout="false"
+              
+              width="100%" height="100%" scaleContent="true" maintainAspectRatio="false"/>
+
+    <mx:VBox width="97%" paddingTop="10" paddingBottom="10"
+               paddingLeft="10" paddingRight="10">
+
+        <mx:HBox>
+        <mx:Image source="@Embed('images/cisco_logo_header.png')"/>
+        <mx:Label text="Global Navigation" selectable="false"
+                  fontSize="28" color="0xffffff" paddingLeft="10" fontThickness="20"/>
+        </mx:HBox>
+
+        <mx:HBox paddingTop="20" width="100%">
+            <mx:TextInput id="search"/>
+            <mx:Button id="btnStoreSearch" label="Search Site" click="searchEntity()" />
+            <mx:Button label="Reset Result" click="creationCompleteHandler();"/>
+            <mx:Button label="Export Result" click="exportResult();"/>
+        </mx:HBox>
+		<mx:LinkButton label="Advance Search" color="0xffffff" click="toggleAdvSearch();"/>
+    
+        <mx:Panel id="panel" title="Advance Search" width="100%" 
+            paddingTop="5" paddingLeft="5" paddingRight="5" paddingBottom="5"
+            borderThicknessBottom="5"
+            borderThicknessLeft="5"
+            borderThicknessRight="5"
+            borderThicknessTop="5"
+            visible="{advanceSearchVisibility}" includeInLayout="{advanceSearchVisibility}">
+            <mx:HBox>
+            <mx:Form width="100%" height="100%">
+
+              <mx:FormItem label="Name">
+                <mx:TextInput id="entityName"/>
+              </mx:FormItem>
+              
+              <mx:FormItem label="Description">
+                <mx:TextInput id="description"/>
+              </mx:FormItem>
+              
+              <mx:FormItem label="Point Key">
+                <mx:ComboBox id="pointKey" dataProvider="{pointKeyData}" width="300"/>
+              </mx:FormItem>
+
+            </mx:Form>
+            
+            <mx:Form width="100%" height="100%">
+              <mx:FormItem label="Location">
+                <mx:TextInput id="location"/>
+              </mx:FormItem>
+
+              <mx:FormItem label="Fetch Size">
+                <mx:TextInput id="fetchSize" restrict="0-9"/>
+              </mx:FormItem>
+
+              <mx:FormItem>
+                <mx:HBox>
+                  <mx:Button id="btnAdvSearch"  label="Search" click="invokeAdvanceSearch()" />                  
+                  <mx:Button label="Reset" click="resetAdvanceSearchForm()" />
+                </mx:HBox>
+              </mx:FormItem>
+            </mx:Form>
+            </mx:HBox>
+        </mx:Panel>
+            
+        <ui:ExtendedAdvancedDataGrid
+            id="entityModelGrid"
+	        width="100%" height="600"
+	        doubleClickEnabled="true" 
+	        folderClosedIcon="{null}" 
+            folderOpenIcon="{null}" 
+            defaultLeafIcon="{null}"
+	        itemDoubleClick="rowSelected(event);"
+            draggableColumns="false"
+            itemOpening="onItemOpen(event);">
+            <ui:dataProvider>
+                <ui:LazyDataDescriptor id="entityModelProvider" source="{gridData}"
+                        childrenField="children"/>
+            </ui:dataProvider>
+        
+            <ui:columns>
+                <mx:AdvancedDataGridColumn dataField="name" headerText="Name"/>
+                <mx:AdvancedDataGridColumn dataField="description" headerText="Description"/>
+                <mx:AdvancedDataGridColumn dataField="label" headerText="Label"/>
+                <mx:AdvancedDataGridColumn dataField="redirectionURL" headerText="URL"/>
+            </ui:columns>
+
+        </ui:ExtendedAdvancedDataGrid>		
+
+    </mx:VBox>
+
+</mx:Application>

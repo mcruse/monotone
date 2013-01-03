@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application
+		xmlns:mx="http://www.adobe.com/2006/mxml"
+		layout="vertical"
+		xmlns:navigator="com.cisco.nbm.navigator.*"
+		minWidth="100"
+		paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0"
+		verticalGap="0"
+		horizontalAlign="left">
+	<mx:Style source="kubrick.css" />
+	<navigator:EnterpriseNavigation width="100%" height="100%"/>
+</mx:Application>

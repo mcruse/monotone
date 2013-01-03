@@ -1,0 +1,28 @@
+<%
+# Copyright (c) 2005 Richards-Zeta
+import os
+import sys
+from mpx import properties
+
+if request.get_protocol() == 'http':
+    root = properties.HTTP_ROOT
+else:
+    root = properties.HTTPS_ROOT
+    
+qs = request.get_query_dictionary()
+if qs.has_key('fromfile') and qs.has_key('tofile'):
+    fromfile= '%s' % qs['fromfile']
+    tofile = '%s' % qs['tofile']
+else:
+    response.send_error(404, 'Not Found')
+
+fullfromfile = os.path.normpath(os.path.join(root, fromfile.lstrip('/')))
+fulltofile = os.path.normpath(os.path.join(root, tofile.lstrip('/')))
+
+if not os.path.exists(fullfromfile):
+    response.send_error(404, 'Not Found')
+else:
+    if os.path.exists(fulltofile):
+        os.remove(fulltofile)
+    os.symlink(fullfromfile, fulltofile)
+%>

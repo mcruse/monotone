@@ -1,0 +1,72 @@
+@CHARSET "UTF-8";
+
+/* Filters body and footer tables class. */
+#filtersPane {
+    clear: both;
+}
+
+.eventFiltersTable {
+    margin: 0;
+    padding: 0;
+    width: auto;
+    height: auto;
+    border-style: none;
+    border-spacing: 1px;
+    border-collapse: separate;
+    background-color: transparent;
+}
+
+.eventFiltersTable tr {
+    margin: 0;
+    padding: 0;
+    height: auto;
+}
+
+.eventFiltersTable .eventFilterRow {
+    padding: 5px 0 0 0;    
+}
+
+.eventFiltersTable .filterInputLabel {
+    padding: 0;
+    margin: 0 2px 0 0;
+}
+
+.eventFiltersTable .rightLabel {
+    margin-left: 10px;
+    padding-left: 10px;
+}
+
+.eventFiltersTable .filterInputCell {
+    width: auto;
+    padding: 0 0 5px;
+}
+
+.eventFiltersTable .filterLabelCell {
+    width: auto;
+    padding: 0 0 5px;
+}
+
+.eventFiltersTable .filterInput {
+    width: 15em;
+}
+
+.eventFiltersTable .filterDateInput {
+    width: 7em;
+}
+
+.eventFiltersTable .filterTimeInput {
+    width: 7em;
+}
+
+.eventFiltersTable .descriptionFilterInput {
+    width: auto;
+}
+
+table.eventFiltersTable .filterInput .dijitButtonNode {
+    padding: 0;
+} 
+
+/* Use div.dijitTextBox to specify non-standard text-boxes. */
+table.eventFiltersTable div.dijitTextBox .dijitInputField input {
+    background-image: url("/dojoroot/dojo/resources/blank.gif") !important;
+}

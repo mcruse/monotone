@@ -1,0 +1,364 @@
+<?xml version="1.0"?>
+<project name="Global Navigator" default="compile main flex application" basedir=".">
+	<property environment="env" />	
+	<property file="../common.properties" />
+	<property file="build.properties" />
+
+	<!-- Information for tasks -->
+	<taskdef resource="flexTasks.tasks" classpath="${flex.task}" />
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+		<classpath>
+			<pathelement location="${flex.antcontrib}" />
+		</classpath>
+	</taskdef>
+
+	<fail>
+		<condition>
+			<not>
+				<isset property="FLEX_HOME" />
+			</not>
+		</condition>
+		Error!
+		You need to set FLEX_HOME prperty (path to Flex SDK) in 
+        local.properties file located in the same dir as build.xml!
+		For example: FLEX_HOME = C:\\flex\\sdk\\
+	</fail>	
+
+	<!-- file description -->
+	<description>Build Script</description>
+
+	<!-- timestamp -->
+	<tstamp>
+		<format property="timestamp" pattern="ddMMyyyy" />
+	</tstamp>
+
+
+	<property name="FLEX_HOME" value="${flex.SDK}" />
+	<property name="BIN_DIR" value="${project.binDir}" />
+
+	<!-- project setting -->
+	<property name="SRC_DIR" value="${project.src}" />
+
+	<!-- - - - - - - - - - - - - - - - - -
+		target: Delete and create the Build/DEPLOY dir again
+	- - - - - - - - - - - - - - - - - -->
+	<target name="init" description="initializes for the ant build process">
+		<delete dir="${BUILD_DIR}" />
+		<mkdir dir="${BUILD_DIR}" />
+		<!--<delete dir="${LOCAL_BUILD_DIR}" />
+		<mkdir dir="${LOCAL_BUILD_DIR}" />-->
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - -
+		target: Clean Bin-debug
+	- - - - - - - - - - - - - - - - - -->
+
+	<macrodef name="cleanBin-Debug" description="delete and create bin folder">
+		<sequential>
+			<echo message="*******************************************************" />
+			<echo message="Clean up and Compile of ${project.fullname} project started" />
+			<echo message="Deleting ${BIN_DIR} Directory..." />
+			<delete dir="${BIN_DIR}" failOnError="false" includeEmptyDirs="true" />
+			<echo message="Deleted ${BIN_DIR} Directory..." />
+			<echo message="Creating ${BIN_DIR} Directory..." />
+			<mkdir dir="${BIN_DIR}" />
+			<echo message="Created ${BIN_DIR} Directory..." />
+		</sequential>
+	</macrodef>
+
+	<!-- - - - - - - - - - - - - - - - - -
+		target: Creates Assets.swc
+	- - - - - - - - - - - - - - - - - -->
+	<macrodef name="createAssetLibrary">
+		<sequential>
+			<echo message="Creating Assset.swc for the project static files..." />
+			<fileset id="assets.flex" dir="src" includes="**/*.css,**/*.swf,**/*.gif,**/*.jpg,**/*.png,**/*.css,**/*.TTF,**/*.jpeg" />
+			<pathconvert pathsep=" " property="assets.flex.output" refid="assets.flex" dirsep="/">
+				<map from="${basedir}/" to="" />
+			</pathconvert>
+			<echo message="...Resources being considered..." />
+			<var name="filelist" value="" />
+			<var name="prefixfilelist" value="-include-file" />
+			<for list="${assets.flex.output}" delimiter=" " param="asset">
+				<sequential>
+					<echo>Asset:  @{asset}</echo>
+					<propertyregex property="prop" input="@{asset}" regexp="(.*)main/flex/(.*)" select="\2" casesensitive="false" />
+					<var name="filelist_tmp" value="${filelist}" />
+					<var name="filelist" unset="true" />
+					<var name="filelist" value="${filelist_tmp} ${prefixfilelist} ${prop} @{asset}" />
+					<var name="prop" unset="true" />
+				</sequential>
+			</for>
+			<echo message="-output ${project.libs}/assets.swc ${filelist}" />
+			<!--Next Line Only for Linux-->
+			<exec executable="${compc.path}" failonerror="true">
+				<arg line="-output libs/assets.swc ${filelist}" /> 
+			</exec>
+		</sequential>
+	</macrodef>
+
+	<!-- - - - - - - - - - - - - - - - - -
+		target: Compiles Main Flex Application
+	- - - - - - - - - - - - - - - - - -->
+
+	<target name="compile main flex application" description="compiles application">
+		<cleanBin-Debug />
+		<createAssetLibrary />
+		<mxmlc file="${basedir}/${project.main}" output="${BIN_DIR}/${project.name}.swf" actionscript-file-encoding="UTF-8" keep-generated-actionscript="false" allow-source-path-overlap="true" compiler.locale="en_US" context-root=".">
+			<load-config filename="${FLEX_HOME}/frameworks/flex-config.xml" />
+			<source-path path-element="${FLEX_HOME}/frameworks" />
+
+			<!-- List of SWC files or directories that contain SWC files. -->
+			<!-- include dependencies -->
+			<compiler.library-path dir="${FLEX_HOME}/frameworks" append="true">
+				<include name="libs" />
+			</compiler.library-path>
+			<compiler.library-path dir="${basedir}" append="true">
+				<include name="${project.assets}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${project.kubrick}" append="true">
+				<include name="${project.kubrick.swc}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${project.entities}" append="true">
+				<include name="${project.entities.swc}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${project.components}" append="true">
+				<include name="${project.components.swc}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${project.browserbridge}" append="true">
+				<include name="${project.browserbridge.swc}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${project.search}" append="true">
+				<include name="${project.search.swc}" />
+			</compiler.library-path>
+			<compiler.source-path path-element="${basedir}/${project.src}/main/flex" />
+			<!--Compiler Debug-->
+			<compiler.debug>false</compiler.debug>
+			<!--Compiler Strict-->
+			<compiler.strict>true</compiler.strict>
+			<!--Compiler Optmize-->
+			<compiler.optimize>true</compiler.optimize>
+			<!--Compiler Network-->
+			<!--<compiler.use-network>true</compiler.use-network>-->
+			<!--Compiler All Warnings-->
+			<!--<compiler.warnings>false</compiler.warnings>-->
+			<!--Compiler Individual Warnings-->
+			<compiler.show-actionscript-warnings>false</compiler.show-actionscript-warnings>
+			<compiler.show-binding-warnings>false</compiler.show-binding-warnings>
+			<!--<compiler.show-shadowed-device-font-warnings>false</compiler.show-shadowed-device-font-warnings>-->
+			<compiler.show-unused-type-selector-warnings>false</compiler.show-unused-type-selector-warnings>
+
+		</mxmlc>
+
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - -
+			          target: Compiles Unit Test Application
+			         - - - - - - - - - - - - - - - - - -->
+	<target name="compile unit test project" description="compiles unit test application" depends="compile main flex application">
+		<mxmlc file="${basedir}/${project.unittest}" output="${BIN_DIR}/${project.name}UnitTest.swf">
+			<load-config filename="${FLEX_HOME}/frameworks/flex-config.xml" />
+			<source-path path-element="${FLEX_HOME}/frameworks" />
+
+			<!-- List of SWC files or directories that contain SWC files. -->
+			<!-- include dependencies -->
+			<compiler.library-path dir="${FLEX_HOME}/frameworks" append="true">
+				<include name="libs" />
+			</compiler.library-path>
+			<compiler.library-path dir="${project.search}" append="true">
+				<include name="${project.search.swc}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${basedir}" append="true">
+				<include name="${project.libs}/${project.flexunit}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${basedir}" append="true">
+				<include name="${project.libs}/${project.flexunitlib}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${basedir}" append="true">
+				<include name="${project.libs}/${project.flexunitui}" />
+			</compiler.library-path>
+			<compiler.source-path path-element="${basedir}/${project.src}/main/flex" />
+			<!--Compiler Debug-->
+			<compiler.debug>false</compiler.debug>
+			<!--Compiler Strict-->
+			<compiler.strict>true</compiler.strict>
+			<!--Compiler Optmize-->
+			<compiler.optimize>true</compiler.optimize>
+			<!--Compiler Network-->
+			<!--<compiler.use-network>true</compiler.use-network>-->
+			<!--Compiler All Warnings-->
+			<!--<compiler.warnings>false</compiler.warnings>-->
+			<!--Compiler Individual Warnings-->
+			<compiler.show-actionscript-warnings>false</compiler.show-actionscript-warnings>
+			<compiler.show-binding-warnings>false</compiler.show-binding-warnings>
+			<!--<compiler.show-shadowed-device-font-warnings>false</compiler.show-shadowed-device-font-warnings>-->
+			<compiler.show-unused-type-selector-warnings>false</compiler.show-unused-type-selector-warnings>
+
+		</mxmlc>
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - -
+				          target: Compiles Unit Test2 Application
+				         - - - - - - - - - - - - - - - - - -->
+	<target name="compile unit test2 project" description="compiles unit test2 application" depends="compile unit test project">
+		<mxmlc file="${basedir}/${project.unittest2}" output="${BIN_DIR}/${project.name}UnitTest2.swf">
+			<load-config filename="${FLEX_HOME}/frameworks/flex-config.xml" />
+			<source-path path-element="${FLEX_HOME}/frameworks" />
+
+			<!-- List of SWC files or directories that contain SWC files. -->
+			<!-- include dependencies -->
+			<compiler.library-path dir="${FLEX_HOME}/frameworks" append="true">
+				<include name="libs" />
+			</compiler.library-path>
+			<compiler.library-path dir="${basedir}" append="true">
+				<include name="${project.libs}/${project.fluint}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${basedir}" append="true">
+				<include name="${project.libs}/${project.flexunit}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${basedir}" append="true">
+				<include name="${project.assets}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${project.kubrick}" append="true">
+				<include name="${project.kubrick.swc}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${project.entities}" append="true">
+				<include name="${project.entities.swc}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${project.components}" append="true">
+				<include name="${project.components.swc}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${project.browserbridge}" append="true">
+				<include name="${project.browserbridge.swc}" />
+			</compiler.library-path>
+			<compiler.library-path dir="${project.search}" append="true">
+				<include name="${project.search.swc}" />
+			</compiler.library-path>
+			<compiler.source-path path-element="${basedir}/${project.src}/main/flex" />
+			<!--Compiler Debug-->
+			<compiler.debug>false</compiler.debug>
+			<!--Compiler Strict-->
+			<compiler.strict>true</compiler.strict>
+			<!--Compiler Optmize-->
+			<compiler.optimize>true</compiler.optimize>
+			<!--Compiler Network-->
+			<!--<compiler.use-network>true</compiler.use-network>-->
+			<!--Compiler All Warnings-->
+			<!--<compiler.warnings>false</compiler.warnings>-->
+			<!--Compiler Individual Warnings-->
+			<compiler.show-actionscript-warnings>false</compiler.show-actionscript-warnings>
+			<compiler.show-binding-warnings>false</compiler.show-binding-warnings>
+			<!--<compiler.show-shadowed-device-font-warnings>false</compiler.show-shadowed-device-font-warnings>-->
+			<compiler.show-unused-type-selector-warnings>false</compiler.show-unused-type-selector-warnings>
+
+		</mxmlc>
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - -
+	          target: Copy HTML wrapper files
+	         - - - - - - - - - - - - - - - - - -->
+	<target name="copy Html Wrapper" description="copy htnml wrapper filed from html-template to BIN-DEBUG/LOCAL_BUILD_DIR" depends="compile unit test2 project">
+		<copy todir="${project.binDir}">
+			<fileset dir="${htmlwrapper.dir}">
+				<exclude name="**/index.template.html" />
+				<exclude name="**/no-embed.template.html" />
+				<exclude name="**/no-embed-UnitTest.template.html" />
+				<exclude name="**/no-embed-UnitTest2.template.html" />
+			</fileset>
+		</copy>
+		<!--entityNavigator.html-->
+		<copy file="${htmlwrapper.dir}/index.template.html" tofile="${project.binDir}/${output.html}" encoding="utf-8">
+			<filterchain>
+				<expandproperties />
+			</filterchain>
+		</copy>
+		<replaceregexp file="${project.binDir}/${output.html}" flags="gs" match="\$\{swf\}" replace="${project.name}" />
+		<replaceregexp file="${project.binDir}/${output.html}" flags="gs" match="\$\{title\}" replace="" />
+		<!--entityNavigatorUnitTest.html-->
+		<copy file="${htmlwrapper.dir}/index.template.html" tofile="${project.binDir}/${output.test.html}" encoding="utf-8">
+			<filterchain>
+				<expandproperties />
+			</filterchain>
+		</copy>
+		<replaceregexp file="${project.binDir}/${output.test.html}" flags="gs" match="\$\{swf\}" replace="${project.name}" />
+		<replaceregexp file="${project.binDir}/${output.test.html}" flags="gs" match="\$\{title\}" replace="" />
+		<!--entityNavigatorUnitTest2.html-->
+		<copy file="${htmlwrapper.dir}/index.template.html" tofile="${project.binDir}/${output.test2.html}" encoding="utf-8">
+			<filterchain>
+				<expandproperties />
+			</filterchain>
+		</copy>
+		<replaceregexp file="${project.binDir}/${output.test2.html}" flags="gs" match="\$\{swf\}" replace="${project.name}" />
+		<replaceregexp file="${project.binDir}/${output.test2.html}" flags="gs" match="\$\{title\}" replace="" />
+		<!--noembed.html-->
+		<copy file="${htmlwrapper.dir}/no-embed.template.html" tofile="${project.binDir}/${noembed.html}" encoding="utf-8">
+			<filterchain>
+				<expandproperties />
+			</filterchain>
+		</copy>
+		<!--<replaceregexp file="${project.binDir}/${noembed.html}" flags="gs" match="\$\{swf\}" replace="${project.name}" />-->
+		<replaceregexp file="${project.binDir}/${noembed.html}" flags="gs" match="\$\{title\}" replace="" />
+		<!--noembed-UnitTest.html-->
+		<copy file="${htmlwrapper.dir}/no-embed-UnitTest.template.html" tofile="${project.binDir}/${noembed-UnitTest.html}" encoding="utf-8">
+			<filterchain>
+				<expandproperties />
+			</filterchain>
+		</copy>
+		<replaceregexp file="${project.binDir}/${noembed-UnitTest.html}" flags="gs" match="\$\{title\}" replace="" />
+		<!--noembed-UnitTest2.html-->
+		<copy file="${htmlwrapper.dir}/no-embed-UnitTest2.template.html" tofile="${project.binDir}/${noembed-UnitTest2.html}" encoding="utf-8">
+			<filterchain>
+				<expandproperties />
+			</filterchain>
+		</copy>
+		<replaceregexp file="${project.binDir}/${noembed-UnitTest2.html}" flags="gs" match="\$\{title\}" replace="" />
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - -
+			          target: Copy new builded files to LOCAL_BUILD_DIR from BIN-DEBUG for Testing
+			         - - - - - - - - - - - - - - - - - -->
+
+	<target name="copy to local build" description="copy build files to local build dir from bin-debug" depends="copy Html Wrapper">
+		<echo>Copying all files from ${BIN_DIR} directory to ${LOCAL_BUILD_DIR} </echo>
+		<copy todir="${LOCAL_BUILD_DIR}" filtering="true" overwrite="true">
+			<fileset dir="${BIN_DIR}" includes="**/*" />
+		</copy>
+		<echo>Copyed all files from ${BIN_DIR} directory to ${LOCAL_BUILD_DIR} </echo>
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - -
+		          target: Increment build number
+		         - - - - - - - - - - - - - - - - - -->
+	<!--********Uncomment the first line of the target and comment the second line when working in windows
+		and local build is required in 	C:\Library\WebServer\Documents\navigator ********-->
+
+	<target name="compile and increment-build-number aneris-com.cisco.nbm.navigator" description="increments the build number" depends="copy to local build">
+		<!--<target name="compile and increment-build-number aneris-com.cisco.nbm.navigator" description="increments the build number" depends="copy Html Wrapper">-->
+		<buildnumber file="build/buildnumber.txt" />
+		<echo>New build number: ${build.number}</echo>
+		<filter filtersfile="build/buildnumber.txt" />
+		<copy file="build/BuildNumber.as" todir="${basedir}/src/main/flex/com/cisco/nbm/navigator" filtering="true" overwrite="true" />
+		<echo>Clean up and Compile of ${project.fullname} project finished</echo>
+		<echo>*******************************************************</echo>
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - -
+			          target: Deploy entityNavigator.swf file to broadway
+			         - - - - - - - - - - - - - - - - - -->
+
+	<target name="deploy entityNavigator.swf" description="deploys the swf to broadway" depends="compile and increment-build-number aneris-com.cisco.nbm.navigator">
+		<echo>Deploying ${project.name}.swf file in broadway</echo>
+		<echo>Copy Pasting entityNavigator.swf from build number: ${build.number} to broadway</echo>
+		<copy file="${project.binDir}/${project.name}.swf" todir="${project.deployDir}" filtering="true" overwrite="true" />
+		<echo>Deployed ${project.name}.swf file in broadway</echo>
+		<echo>*********************FINISHED**********************</echo>
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - -
+			          target: Dummy Target used when flex builder is used for build or debug
+			         - - - - - - - - - - - - - - - - - -->
+
+	<target name="dummy" description="dummy target">
+		<echo>Doing nothing its a dummy target used when flex builder is used for build or debug</echo>
+	</target>
+</project>

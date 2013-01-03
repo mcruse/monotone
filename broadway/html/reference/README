@@ -1,0 +1,8 @@
+This folder contains HTML pages defining standard CUES 
+page elements, such as headers, footers, etc.
+
+There will normally be no links to this content, as it is 
+primarily for references purposes.
+
+The original Cisco NBM project stored these files in a 
+folder named "html".

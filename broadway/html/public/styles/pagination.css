@@ -1,0 +1,75 @@
+@CHARSET "UTF-8";
+/**************************
+    Style settings for page and table pagination and navigation.
+    Expects markup structure such as the following:
+
+    <div id="pagination" class="pagination">
+        <div id="result-range" class="result-range">
+            <span id="first-result"></span>
+                -
+            <span id="last-result"></span>
+                of 
+            <span id="total-results"></span>
+        </div>
+        <div id="navigation-controls" 
+            class="navigation-controls">
+            <button id="previous-page" class="navigation-control previous" title="Previous">
+                <img class="navigation-icon previous" src="/public/images/Previous.gif" />
+            </button>
+            <ul id="page-links" class="page-links"></ul>
+            <button id="next-page" class="navigation-control next" title="Next">
+                <img class="navigation-icon next" src="/public/images/Next.gif" />
+            </button>
+        </div>
+    </div> 
+
+***************************/
+div.pagination {
+    display: inline;
+}
+
+div.pagination div {
+    display: inline;
+    font-size: 12px;
+    font-family: Arial;
+}
+
+div.pagination div.result-range {
+    color:#000000;
+}
+
+div.pagination button.navigation-control img {
+    width: 12px;
+    height: 12px;
+}   
+
+div.pagination ul.page-links {
+    margin: 0;
+    padding: 0;
+    display: inline;
+    list-style: none;      
+}
+
+div.pagination ul.page-links li {
+    margin: 0 5px;
+    padding: 0 5px;
+    display: inline;
+}
+
+div.pagination ul.page-links li a {
+    color: #0088C2;
+    text-decoration: none;
+}
+
+div.pagination ul.page-links li.selected a {
+    color:#000000;
+    font-weight: bold;
+}
+
+div.pagination ul.page-links li a:hover {
+    text-decoration: underline;
+}
+
+div.pagination ul.page-links li.selected a:hover {
+    text-decoration: none;
+}

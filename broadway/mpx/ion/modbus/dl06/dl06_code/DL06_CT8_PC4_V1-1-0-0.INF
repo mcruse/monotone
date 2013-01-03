@@ -1,0 +1,13 @@
+[ProjectInfo]
+Path=c:\directsoft4\projects\dl06_ct8_pc4 v1-1-0-0\dl06_ct8_pc4 v1-1-0-0.prj
+Save Date=12/16/2002 02:51:22 PM
+Creation Date=12/16/2002 02:48:05 PM
+PLC Type=06
+Class ID=7
+Link Name=06 KSeq
+Description=A Sample Project for a DL440 CPU. An automatic press example demonstrating standard ladder logic programming techniques.
+[ProjectInfoUser]
+&Version=
+&Company=
+D&epartment=
+&Programmer=

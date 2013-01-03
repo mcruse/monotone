@@ -1,0 +1,461 @@
+<!--
+Copyright (C) 2008 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<html>
+
+<head>
+
+<!-- $Name: mediator_3_1_2_branch $ -->
+<!-- $Id: api_general_helper_functions.html 20101 2011-03-06 16:02:15Z bhagn $ -->
+<title>Documentation General Helper Functions</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+<link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+
+<link rel="stylesheet" href="css/webapi.css" type="text/css">
+
+</head>
+
+
+
+<body>
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+
+  <tr> 
+
+    <td  colspan="2"> 
+
+      <table width="100%">
+
+        <tr> 
+
+          <td class="page_header"><img src="images/header.png" width="639px" height="100px"></td>
+
+          <td align="right" valign="top"><a href="/index.html"> Home Page</a>&nbsp;|&nbsp;&nbsp;<a href="api.html">back to api</a></td>
+
+        </tr>
+
+      </table>
+
+    </td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="header_bottom" >&nbsp;</td>
+
+  </tr>
+
+  <tr> 
+
+    <td width="100%" class="documentation_header">General Functions  
+
+    </td>
+
+  </tr>
+
+  <tr> 
+
+    <td width="100%">
+
+      <table width="100%" border="0">
+
+        <tr> 
+
+          <td><a href="#center" class="function">center</a></td>
+
+        </tr>
+
+         <tr> 
+
+          <td><a href="#delete_cookie" class="function">delete_cookie</a></td>
+
+        </tr>
+
+        <tr> 
+
+          <td><a href="#get_cookie" class="function">get_cookie</a></td>
+
+        </tr>
+
+        <tr> 
+
+          <td><a href="#get_query_string_args" class="function">get_query_string_args</a></td>
+
+        </tr>
+
+        <tr> 
+
+          <td ><a href="#set_cookie" class="function">set_cookie</a></td>
+
+        </tr>                     
+
+        <tr> 
+
+          <td>&nbsp;</td>
+
+        </tr>
+
+          <tr>
+
+          <td class="outer_color">
+
+<table width="100%" border="0" cellpadding="3">
+
+  <tr> 
+
+    <td colspan="2" class="function_header">
+
+       <a name="center"></a><span class="function">center</span>(<span class="param">objWin</span>,<span class="param">width</span>,<span class="param">height</span>)</td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="inner_color" colspan="2" class="function_def">takes the window object and centers the window and sets focus to the window</td>
+
+  </tr>
+
+  <tr><td width="30" class="param">objWin</td>
+
+<td width="91%" class="param_def">a window object refrenece
+
+</td>
+
+</tr>
+
+<tr><td width="30" class="param">width</td>
+
+<td width="91%" class="param_def">width of the window
+
+</td>
+
+</tr>
+
+<tr><td width="30" class="param">height</td>
+
+<td width="91%" class="param_def">height of the window
+
+</td>
+
+</tr>
+
+  <tr><td class="label" width="30">Return</td>
+
+<td class="return">null</td></tr>
+
+</table>
+
+          </td>
+
+        </tr>
+
+        <tr>
+
+          <td>&nbsp;
+
+          </td>
+
+        </tr>
+
+        <tr>
+
+          <td class="outer_color">
+
+<table width="100%" border="0" cellpadding="3">
+
+  <tr> 
+
+    <td colspan="2" class="function_header">
+
+       <a name="delete_cookie"></a><span class="function">delete_cookie</span>(<span class="param">name</span>,<span class="param">[path]</span>,<span class="param">[domain]domain</span>)</td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="inner_color" colspan="2" class="function_def">deletes the cookie :</td>
+
+  </tr>
+
+  <tr><td width="30" class="param">name</td>
+
+<td width="91%" class="param_def">name of the cookie
+
+</td>
+
+</tr>
+
+<tr><td width="30" class="param">[path]</td>
+
+<td width="91%" class="param_def">path of the cookie (must be same as path used to create cookie)
+
+</td>
+
+</tr>
+
+<tr><td width="30" class="param">[domain]</td>
+
+<td width="91%" class="param_def">domain of the cookie (must be same as domain used to create cookie)
+
+</td>
+
+</tr>
+
+
+
+  <tr><td class="label" width="30">Return</td>
+
+<td class="return">null</td></tr>
+
+  <tr><td class="label" width="30">NOTE</td>
+
+<td class="note">path and domain default if assigned null or omitted if no explicit argument proceeds</td>
+
+</tr>
+
+</table>
+
+          </td>
+
+        </tr>
+
+        <tr>
+
+          <td>&nbsp;
+
+          </td>
+
+        </tr> 
+
+        <tr>
+
+          <td class="outer_color">
+
+<table width="100%" border="0" cellpadding="3">
+
+  <tr> 
+
+    <td colspan="2" class="function_header">
+
+       <a name="get_cookie"></a><span class="function">get_cookie</span>(<span class="param">name</span>)</td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="inner_color" colspan="2" class="function_def">return string containing value of specified cookie or null if cookie does not exist</td>
+
+  </tr>
+
+  <tr><td width="30" class="param">name</td>
+
+<td width="91%" class="param_def">name of the desired cookie
+
+</td>
+
+</tr>
+
+
+
+  <tr><td class="label" width="30">Return</td>
+
+<td class="return">string or null</td></tr>
+
+  
+
+</table>
+
+          </td>
+
+        </tr>
+
+        <tr>
+
+          <td>&nbsp;
+
+          </td>
+
+        </tr> 
+
+        <tr>
+
+          <td class="outer_color">
+
+<table width="100%" border="0" cellpadding="3">
+
+  <tr> 
+
+    <td colspan="2" class="function_header">
+
+       <a name="set_cookie"></a><span class="function">set_cookie</span>(<span class="param">name</span>,<span class="param">value</span>,<span class="param">[expires]</span>,<span class="param">[path]</span>,<span class="param">[domain]</span>,<span class="param">[secure]</span>)</td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="inner_color" colspan="2" class="function_def">This will set a cookie with the parameters provided</td>
+
+  </tr>
+
+  <tr><td width="30" class="param">name</td>
+
+<td width="91%" class="param_def">name of the cookie
+
+</td>
+
+</tr>
+
+<tr><td width="30" class="param">value</td>
+
+<td width="91%" class="param_def">value of the cookie
+
+</td>
+
+</tr>
+
+<tr><td width="30" class="param">[expires]</td>
+
+<td width="91%" class="param_def">expiration date of the cookie (defaults to end of current session)
+
+</td>
+
+</tr>
+
+<tr><td width="30" class="param">[path]</td>
+
+<td width="91%" class="param_def">path for which the cookie is valid (defaults to path of calling document)
+
+</td>
+
+</tr>
+
+<tr><td width="30" class="param">[domain]</td>
+
+<td width="91%" class="param_def">domain for which the cookie is valid (defaults to domain of calling document)
+
+</td>
+
+</tr>
+
+<tr><td width="30" class="param">[secure]</td>
+
+<td width="91%" class="param_def">boolean value indicating if the cookie transmission requires a secure transmission
+
+</td>
+
+</tr>
+
+
+
+  <tr><td class="label" width="30">Return</td>
+
+<td class="return">null</td></tr>
+
+  <tr><td class="label" width="30">NOTE</td>
+
+<td class="note">an argument defaults when it is assigned null as a placeholder</td>
+
+</tr><tr><td class="label" width="30">NOTE</td>
+
+<td class="note">a null placeholder is not required for trailing omitted arguments</td>
+
+</tr>
+
+</table>     
+
+          </td>
+
+        </tr>
+
+        <tr>
+
+          <td>&nbsp;
+
+          </td>
+
+        </tr> 
+
+        <tr>
+
+          <td class="outer_color">
+
+<table width="100%" border="0" cellpadding="3">
+
+  <tr> 
+
+    <td colspan="2" class="function_header">
+
+       <a name="get_query_string_args"></a><span class="function">get_query_string_args</span>()</td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="inner_color" colspan="2" class="function_def">returns an associative array of the query string arguments if any or  empty object</td>
+
+  </tr>
+
+  
+
+  <tr><td class="label" width="30">Return</td>
+
+<td class="return">associative array</td></tr>
+
+  
+
+</table>
+
+          </td>
+
+        </tr>
+
+      </table>
+
+    </td>
+
+  </tr>
+
+  <tr> 
+
+    <td class="footer" colspan="2"><span class="footer">&copy;Envenergy</span></td>
+
+  </tr>
+
+</table>
+
+</body>
+
+</html>
+

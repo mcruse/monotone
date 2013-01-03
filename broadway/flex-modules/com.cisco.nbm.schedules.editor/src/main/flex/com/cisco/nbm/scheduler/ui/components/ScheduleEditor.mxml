@@ -1,0 +1,785 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:components="com.cisco.nbm.scheduler.components.*" 
+	xmlns:components1="com.cisco.nbm.scheduler.ui.components.*" 
+	xmlns:components2="com.cisco.ui.components.*" 
+	xmlns:ui="com.cisco.ui.*"
+	width="100%" height="100%"
+	creationComplete="init()" 
+	>
+	<mx:Style>
+		.dayLabel
+		{
+			width: 70;
+			text-align: right;
+		}
+	</mx:Style>
+<mx:Script>
+	<![CDATA[
+		import mx.events.PropertyChangeEvent;
+		import mx.controls.Alert;
+		import mx.events.CloseEvent;
+		import mx.managers.PopUpManager;
+		import mx.logging.Log;
+		import mx.logging.ILogger;
+		import mx.formatters.DateFormatter;
+		import mx.collections.ArrayCollection;
+		
+		import com.cisco.nbm.scheduler.ui.operations.RemoveDailyEntryOperation;
+		import com.cisco.app.core.async.AsyncMethod;
+		import com.cisco.util.UniqueNameFinder;
+		import com.cisco.nbm.entities.EntityManager;
+		import com.cisco.nbm.scheduler.ui.ScheduleDocumentEvent;
+		import com.cisco.nbm.scheduler.ScheduleDocument;
+		import com.cisco.ui.components.DialogCloseReason;
+		import com.cisco.app.core.operations.OperationHistory;
+		import com.cisco.nbm.scheduler.ui.operations.UpdateEntryTimeOperation;
+		import com.cisco.nbm.scheduler.components.WeekdayTimeValueEditorEvent;
+		import com.cisco.nbm.scheduler.events.ScheduleEvent;
+		import com.cisco.nbm.scheduler.ui.operations.AddDailyEntryOperation;
+		import com.cisco.app.core.operations.IOperationHistoryService;
+		import com.cisco.app.core.commands.ICommandService;
+		import com.cisco.nbm.scheduler.EventMetaData;
+		import com.cisco.nbm.scheduler.HierarchicalScheduleManager;
+		import com.cisco.nbm.scheduler.HierarchicalSchedule;
+		import com.cisco.nbm.scheduler.DailyEntry;
+		import com.cisco.nbm.scheduler.components.WeekdayTimeValueEditor;
+		import com.cisco.nbm.scheduler.ui.schedules.ScheduleGridCollection;
+		
+		private var _created:Boolean = false;
+		
+		private var _document:ScheduleDocument;
+		
+		[Bindable]
+		private var _schedule:HierarchicalSchedule;
+		
+		private var times:ArrayCollection = new ArrayCollection();
+		
+		private var dayControlArray:Array /* of WeekdayTimeValueEditor */ = [];
+		
+		private var scheduleGridCollection:ScheduleGridCollection = 
+			new ScheduleGridCollection();
+			
+		[Bindable]
+		private var selectedEntry:DailyEntry;
+		
+		[Bindable]
+		private var CLOCK_PERIOD:Array = ['AM', 'PM'];
+		
+		[Bindable]
+		private var scheduleMetaData:EventMetaData;
+		
+		[Bindable]
+		public var operationHistoryService:OperationHistory;
+		
+		[Bindable]
+		public var entityManager:EntityManager;
+		
+		private var logger:ILogger = Log.getLogger("cisco.nbm.scheduler.ScheduleEditor");
+		
+		[Bindable]
+		private var dayLabelWidth:int = 60;
+		
+		[Bindable]
+		public var canAddEntry:Boolean = false;
+		
+		[Bindable]
+		public var scheduleManager:HierarchicalScheduleManager;
+		
+		public function init():void
+		{
+			_created = true;
+			dayControlArray = [ mondayTVEditor, tuesdayTVEditor, wednesdayTVEditor,
+				thursdayTVEditor, fridayTVEditor, saturdayTVEditor, sundayTVEditor ];
+				
+			if (_document != null)
+			{
+				setSchedule(_document.schedule);
+			}
+				
+			updateEditors();
+		}
+	
+		public function set scheduleDocument(value:ScheduleDocument):void
+		{
+			if (value != _document)
+			{
+				var oldValue:ScheduleDocument = _document;
+				
+				if (oldValue != null)
+				{
+					oldValue.removeEventListener(ScheduleDocumentEvent.SCHEDULE_CHANGE, handleScheduleDocumentChange);
+					oldValue.removeEventListener(ScheduleDocumentEvent.SCHEDULE_MODIFIED, handleScheduleDocumentModified);
+				}
+				
+				
+				_document = value;
+				
+				if (_document != null)
+				{
+					_document.addEventListener(ScheduleDocumentEvent.SCHEDULE_CHANGE, handleScheduleDocumentChange);
+					_document.addEventListener(ScheduleDocumentEvent.SCHEDULE_MODIFIED, handleScheduleDocumentModified);
+					
+					setSchedule(_document.schedule)  
+				}
+				else
+				{
+					setSchedule(null);
+				}
+				
+				metaDataView.scheduleDocument = _document;
+				propertiesView.scheduleDocument = _document;
+				exceptionsView.scheduleDocument = _document;
+								
+				updateEditors();
+			}
+		}
+		
+		private function handleScheduleDocumentChange(event:ScheduleDocumentEvent):void
+		{
+			setSchedule(_document.schedule);
+		}
+		
+		private function handleScheduleDocumentModified(event:ScheduleDocumentEvent):void
+		{
+			updateWeeklyControls();
+		}
+		
+		public function setSchedule(value:HierarchicalSchedule):void
+		{
+			if (value === _schedule)
+			{
+				return;
+			}
+			
+			var oldSchedule:HierarchicalSchedule = _schedule;
+			
+			if (oldSchedule != null)
+			{
+				releaseSchedule(oldSchedule);
+			}
+			
+			_schedule = value;
+			
+			scheduleGridCollection.schedule = _schedule;
+			
+			if (_schedule != null)
+			{
+				attachSchedule(_schedule);
+			}
+			
+			updateEditors();
+		}
+		
+		private function releaseSchedule(value:HierarchicalSchedule):void
+		{
+			value.removeEventListener(ScheduleEvent.SUMMARY_COMPLETE, handleSummaryComplete);
+			value.removeEventListener(PropertyChangeEvent.PROPERTY_CHANGE, handleScheduleChange);
+		}
+		
+		private function attachSchedule(value:HierarchicalSchedule):void
+		{
+			value.addEventListener(ScheduleEvent.SUMMARY_COMPLETE, handleSummaryComplete);
+			value.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, handleScheduleChange);
+		}
+		
+		private function handleScheduleChange(event:PropertyChangeEvent):void
+		{
+			updateEditors();
+		}
+		
+		private function handleSummaryComplete(event:ScheduleEvent):void
+		{
+			logger.debug("handle summary complete");
+			scheduleGridCollection.schedule = _schedule;
+			
+			// force
+			
+			weeklyScheduleGrid.validateNow();
+			
+			updateEditors();
+		}
+		
+		private function updateEditors():void
+		{
+			if (!_created)
+			{
+				return;
+			}
+			
+			if (_schedule != null)
+			{
+				
+				
+				scheduleName.text = _schedule.name;
+				mondayTVEditor.entries = _schedule.getEntriesForDay(HierarchicalSchedule.MONDAY);
+				tuesdayTVEditor.entries = _schedule.getEntriesForDay(HierarchicalSchedule.TUESDAY);
+				wednesdayTVEditor.entries = _schedule.getEntriesForDay(HierarchicalSchedule.WEDNESDAY);
+				thursdayTVEditor.entries = _schedule.getEntriesForDay(HierarchicalSchedule.THURSDAY);
+				fridayTVEditor.entries = _schedule.getEntriesForDay(HierarchicalSchedule.FRIDAY);
+				saturdayTVEditor.entries = _schedule.getEntriesForDay(HierarchicalSchedule.SATURDAY);
+				sundayTVEditor.entries = _schedule.getEntriesForDay(HierarchicalSchedule.SUNDAY);
+				
+				// Set all entry colors to the event meta data
+				scheduleMetaData = new EventMetaData()//_schedule.metaData;
+				scheduleMetaData.name = "[MODIFY!]";
+				scheduleMetaData.value = "[MODIFY!]";
+				scheduleMetaData.color = 0x00ff00;
+				
+				//exceptionsView.schedule = _schedule;
+				//exceptionsView.scheduleDocument = schedule
+				//propertiesView.schedule = _schedule;
+				//metaDataView.schedule = _schedule;
+				// TODO Event meta might not be loaded yet
+				dailyEntryTimeEditor.eventMeta = _schedule.metaData;
+				selectedEntry = null; // clear out the entry
+				//updateSelectedEntryEditor();	
+			
+				weeklyScheduleGrid.dataProvider = scheduleGridCollection;
+				
+				
+				canAddEntry = _schedule.overrideStatus || _schedule.parent == null; 
+				
+				buttonChangeName.enabled = _schedule.online && !_schedule.readOnly;
+			
+			}
+			// TODO Remove all entries if not a weekly schedule or null.  This
+			// path should not be taken but we do it for completeness
+
+		}
+		
+		private function toggleGridEditor():void
+		{
+			weeklyScheduleGrid.visible = !weeklyScheduleGrid.visible;
+		}
+		
+		private function labelFunction(item:Object, column:AdvancedDataGridColumn):String
+		{
+//			trace("label func: " + item + ", column=" + column);
+			var entry:DailyEntry = item[column.dataField] as DailyEntry;
+			
+			if (entry == null)
+			{
+				return null;
+			}
+			
+			var value:String = DailyEntry.timeStringInHoursMinutes(entry);
+			
+			if (entry.eventMeta != null)
+			{
+				value += " | " + entry.eventMeta.name; 
+			}
+			else
+			{
+				logger.warn("entry had no meta: {0}", entry);
+				value += " | " + entry.value;
+			} 
+			
+			return  value;
+		}
+		
+		
+		
+		private function handleTimeValueDoubleClick(event:MouseEvent):void
+		{
+			if ( !canAddEntry )	return;
+			logger.debug("handleTimeValueDoubleClick()");
+			
+			var control:WeekdayTimeValueEditor = event.target as WeekdayTimeValueEditor;
+			
+			var time:int = control.pixelToMinutes(event.localX);
+			var found:Boolean = false;
+			
+			// Find out if we're too near an entry
+			for each (var entry:DailyEntry in control.entries)
+			{
+				var entryTime:int = entry.time / 60;
+				if (entryTime - 4 <= time && entryTime + 4 >= time)
+				{
+					found = true;
+					break;
+				}
+			}
+			
+			if (!found)
+			{
+				addNewDailyEntry(control.dayName, time * 60, null);				
+			}
+			
+		}
+		
+		private function addNewDailyEntry(dayName:String, time:int, eventMeta:EventMetaData, rawValue:String=null):void
+		{
+			var entries:ArrayCollection = _schedule.getEntriesForDay(dayName);//control.entries;
+				
+			var names:Array = [];
+			
+			for each (var de:DailyEntry in entries)
+			{
+				names.push(de.name);
+			}
+			
+			var uniqueNameFinder:UniqueNameFinder = new UniqueNameFinder();
+			
+			var newEntry:DailyEntry =  _schedule.createDailyEntry();
+			newEntry.name = uniqueNameFinder.find("entry", names); 
+			newEntry.time = time;// * 60;
+			
+			if (eventMeta != null)
+			{
+				newEntry.eventMeta = eventMeta;
+			}
+			
+			if (rawValue != null) {
+				newEntry.eventMeta = null;
+				newEntry.value = rawValue;
+			}
+			
+			var command:AddDailyEntryOperation = new AddDailyEntryOperation(
+				_document, dayName, newEntry);
+			
+			operationHistoryService.execute(command);
+			operationHistoryService.closeUndoGroup();
+		}
+		
+		private function handleWeekdayChange(event:Event):void
+		{
+			var control:WeekdayTimeValueEditor = event.target as WeekdayTimeValueEditor;
+			
+			var entry:DailyEntry = control.selectedEntry;
+			
+			var cellIndex = scheduleGridCollection.getCellCoordinateForEntry(entry);
+			weeklyScheduleGrid.selectedCells = [ cellIndex ]; 
+			
+			selectedEntry = entry;
+		}
+		
+		
+		
+		private function handleWeekdayGridChange(event:Event):void
+		{
+			/// TODO Refactor this
+			var cell:Object = weeklyScheduleGrid.selectedCells;
+			
+			if (cell == null || cell.length == 0)
+			{
+				return;
+			}
+			
+			cell = cell[0];
+			var rowIndex:int = cell.rowIndex;
+			var columnIndex:int = cell.columnIndex
+			
+			var control:WeekdayTimeValueEditor = dayControlArray[columnIndex];
+			control.setFocus();
+			
+			if (rowIndex > control.entries.length)
+			{
+				return;
+			}
+			
+			/*
+			if (rowIndex == 0)
+			{
+				return;
+			}
+			*/
+			
+			control.selectedIndex = rowIndex;//columnIndex;
+			
+			selectedEntry = control.selectedEntry; // TODO Don't like this
+		//	updateSelectedEntryEditor();
+			var name:String = control.dayName;
+			name = name.substr(0, 1).toUpperCase() + name.substr(1); 
+			labelSelectedDay.text = name;
+		}
+		
+		
+		private function handleGridKeyUp(event:Event):void
+		{
+		}	
+		
+		private function deleteSelectedEntry():void
+		{
+			var cell:Object = weeklyScheduleGrid.selectedCells;
+			
+			if (cell == null || cell.length == 0)
+			{
+				return;
+			}
+			
+			cell = cell[0];
+			var rowIndex:int = cell.rowIndex;
+			var columnIndex:int = cell.columnIndex
+			
+			var dayIndex:int = columnIndex;
+			
+			dayIndex = dayIndex + 1;
+			if (dayIndex > 6)
+			{
+				dayIndex = 0;
+			}
+			
+			var name:String = HierarchicalSchedule.DAY_INDEXES[dayIndex];
+			var entries:ArrayCollection = _schedule.getEntriesForDay(name);
+			
+			if (rowIndex > entries.length)
+			{
+				throw new Error("Invalid row index: " + rowIndex + " can only have " + entries.length);
+			}
+			
+			var entry:DailyEntry = entries.getItemAt(rowIndex) as DailyEntry;
+			var command:RemoveDailyEntryOperation = new RemoveDailyEntryOperation(
+				_document, name, entry);
+			
+			operationHistoryService.execute(command);
+			operationHistoryService.closeUndoGroup();
+		
+			selectedEntry = null;
+						
+			updateEditors();
+		}
+			
+		private function save():void
+		{
+		}
+		
+		public var lastTime:int = -1;
+		
+		private function handleItemEditBegin(event:WeekdayTimeValueEditorEvent):void
+		{
+			lastTime = event.target.selectedEntry.time;
+		}
+	
+		/**	
+		 * This is called by the weekly time editors to update a time entry.
+		 * 
+		 * Because of the way the controls work, where they directly modify the
+		 * time entry, we capture the previously set time here, then we 
+		 * get the modified time entry, set its time to the last time, and finally
+		 * call the operationHistory to modify the entry.  
+		 * 
+		 * At some point this may change.
+		 */
+		private function handleItemEditEnd(event:WeekdayTimeValueEditorEvent):void
+		{
+			var entry:DailyEntry = event.target.selectedEntry;
+			var hours24:int = entry.hours;
+			var minutes:int = entry.minutes;
+			
+			entry.time = lastTime;
+			
+			var operation:UpdateEntryTimeOperation = new UpdateEntryTimeOperation(entry, 
+				hours24, minutes, _document);
+			lastTime = -1;
+			
+			operationHistoryService.execute(operation);
+			operationHistoryService.closeUndoGroup();
+		}
+		
+		private var newEntryPopup:AddDailyEntryPopup;
+		
+		private function handleAddEntry():void
+		{
+			newEntryPopup = PopUpManager.createPopUp(this,
+				AddDailyEntryPopup, true) as AddDailyEntryPopup;
+			PopUpManager.centerPopUp(newEntryPopup);
+			
+			newEntryPopup.eventMeta = _schedule.metaData;
+			newEntryPopup.addEventListener(Event.COMPLETE, handleNewEntryComplete);
+		}
+		
+		private function handleNewEntryComplete(event:Event):void
+		{
+			PopUpManager.removePopUp(newEntryPopup);
+			newEntryPopup.removeEventListener(Event.COMPLETE, handleNewEntryComplete);
+			
+			if (newEntryPopup.reason == DialogCloseReason.OK)
+			{
+				var day:String = newEntryPopup.day;
+				addNewDailyEntry(day, newEntryPopup.time, newEntryPopup.selectedMetaData,
+					newEntryPopup.rawValue);
+				
+				//var time:int = newEntryPopup.time;
+				//var meta:EventMetaData = newEntryPopup.
+				/*
+				var entry:DailyEntry = _schedule.createDailyEntry();
+				entry.time = newEntryPopup.time;
+				entry.eventMeta = newEntryPopup.selectedMetaData;
+				*/
+				newEntryPopup = null;
+				
+				//entry.time = time;
+				
+				// TODO Turn into operation
+				//_schedule.addDailyEntry(day, entry);
+				
+			}
+		}
+		
+		private function handleDailyEntryUpdated(event:DailyEntryEditorEvent):void
+		{
+			var operation:UpdateEntryTimeOperation = 
+				new UpdateEntryTimeOperation(event.target.entry, 
+					-1, -1, _document,
+					event.time, event.eventMeta, event.rawValue);
+			operationHistoryService.execute(operation);
+			operationHistoryService.closeUndoGroup();
+		}
+		
+		private function updateWeeklyControls():void
+		{
+			for each (var control:WeekdayTimeValueEditor in dayControlArray)
+			{
+				control.invalidateDisplayList();
+			}
+		}
+		
+		private function handleEditName():void
+		{
+			var sibblingNames:Array = [ ];
+			
+			// get the sibblings of the schedule
+			var parent:Object = _schedule.parent;
+			var sibblingSchedules:ArrayCollection;
+			
+			if (parent == null)
+			{
+				sibblingSchedules = scheduleManager.rootSchedules;
+			}
+			else
+			{
+				sibblingSchedules = HierarchicalSchedule(parent).children;
+			}
+			
+			for each (var child:HierarchicalSchedule in sibblingSchedules)
+			{
+				if (child.name != _schedule.name)
+				{
+					sibblingNames.push(child.name);
+				}
+			}
+			
+			var panel:EditScheduleNameDialog = EditScheduleNameDialog.show(null,
+				_schedule.name, sibblingNames, handleCloseEditName);
+			
+		}
+		
+		private function handleCloseEditName(event:CloseEvent):void
+		{
+			if (event.detail == Alert.OK)
+			{
+				var panel:EditScheduleNameDialog = event.target as EditScheduleNameDialog;
+				logger.debug("new Name: '{0}'", panel.newName);
+				var name:String = panel.newName;
+				
+				scheduleManager.rename(_schedule, name).addCallback(handleRenameComplete,
+					handleRenameError);
+			}
+		}
+		
+		private function handleRenameComplete(call:AsyncMethod, result:Object):void
+		{
+		}
+		
+		private function handleRenameError(call:AsyncMethod, result:Object):void
+		{
+		}
+	]]>
+</mx:Script>
+
+	<ui:CiscoNumberFormatter id="timeNumberFormatter" leadingZeros="2" />
+	
+	<mx:HBox width="100%" verticalAlign="middle">	
+		<mx:Label id="scheduleName" text="" styleName="scheduleName" 
+			filters="{[new DropShadowFilter(1, 45, 0, 0.2, 0, 0)]}" />
+			
+		<mx:Button id="buttonChangeName" label="Change Name" click="handleEditName()" 
+			enabled="false" />
+		
+		<!--
+		<mx:Spacer width="10" />
+		<mx:Button label="Save" />
+		<mx:Button label="Override" />
+		-->
+	</mx:HBox>
+	<!--
+	<mx:HBox width="100%" backgroundColor="0xFF0000">
+		<mx:Label text="Remote:" />
+		<mx:Label text="{_schedule.isRemote}" />
+		<mx:Spacer width="20" />
+		
+		<mx:Label text="Remote Root:" />
+		<mx:Label text="{_schedule.isRemoteRoot}" />
+		<mx:Spacer width="20" />
+		
+		<mx:Label text="Override Status:" />
+		<mx:Label text="{_schedule.overrideStatus}" />
+		<mx:Spacer width="20" />
+		
+		<mx:Label text="Read Only:" />
+		<mx:Label text="{_schedule.readOnly}" />
+	</mx:HBox>
+	-->
+	<mx:TabNavigator width="100%" height="100%" id="scheduleEditorView">
+		<mx:Canvas label="Weekly Schedule" width="100%" height="100%"
+			verticalScrollPolicy="auto" horizontalScrollPolicy="auto" 
+			>
+			<mx:VBox top="0" left="0" bottom="0" right="10"
+				paddingLeft="10" paddingRight="10" paddingTop="1" paddingBottom="10">
+			<mx:VBox width="100%" horizontalAlign="center" verticalGap="1">
+				<mx:HBox width="100%" paddingTop="0" paddingBottom="0">
+					<mx:Spacer width="{dayLabelWidth}" />
+					<components:DailyHourRuler width="100%" />
+				</mx:HBox>
+				<mx:HBox width="100%" verticalAlign="middle" paddingTop="0">
+					<mx:Label text="Monday" styleName="dayLabel"
+						width="{dayLabelWidth}" />
+					<components:WeekdayTimeValueEditor 
+						id="mondayTVEditor"
+						dayName="{HierarchicalSchedule.MONDAY}"
+						entries="{_schedule.getEntriesForDay(HierarchicalSchedule.MONDAY)}"
+						change="handleWeekdayChange(event)"
+						metaData="{_schedule.metaData}"
+						editable="{canAddEntry}"
+						width="100%"
+						itemEditBegin="handleItemEditBegin(event)"
+						itemEditEnd="handleItemEditEnd(event)"
+						doubleClick="handleTimeValueDoubleClick(event)" 
+						
+						/>
+				 	
+				 </mx:HBox>
+				 <mx:HBox width="100%" verticalAlign="middle">
+				 	<mx:Label text="Tuesday" styleName="dayLabel" 
+				 		width="{dayLabelWidth}" />
+					<components:WeekdayTimeValueEditor width="100%" 
+						id="tuesdayTVEditor"
+						dayName="{HierarchicalSchedule.TUESDAY}"
+						entries="{_schedule.getEntriesForDay(HierarchicalSchedule.TUESDAY)}"
+						change="handleWeekdayChange(event)"
+						metaData="{_schedule.metaData}"
+						editable="{canAddEntry}"
+						itemEditBegin="handleItemEditBegin(event)"
+						itemEditEnd="handleItemEditEnd(event)"
+						doubleClick="handleTimeValueDoubleClick(event)" />
+				 </mx:HBox>
+				 <mx:HBox width="100%" verticalAlign="middle">
+				 	<mx:Label text="Wednesday" styleName="dayLabel" 
+				 		width="{dayLabelWidth}" />
+					<components:WeekdayTimeValueEditor width="100%" 
+						id="wednesdayTVEditor"
+						dayName="{HierarchicalSchedule.WEDNESDAY}"
+						entries="{_schedule.getEntriesForDay(HierarchicalSchedule.WEDNESDAY)}"
+						change="handleWeekdayChange(event)"
+						metaData="{_schedule.metaData}"
+						editable="{canAddEntry}"
+						itemEditBegin="handleItemEditBegin(event)"
+						itemEditEnd="handleItemEditEnd(event)"
+						doubleClick="handleTimeValueDoubleClick(event)" />
+				 </mx:HBox>
+				 <mx:HBox width="100%" verticalAlign="middle">
+				 	<mx:Label text="Thursday" styleName="dayLabel" 
+				 		width="{dayLabelWidth}" />
+					<components:WeekdayTimeValueEditor width="100%" 
+						id="thursdayTVEditor"
+						dayName="{HierarchicalSchedule.THURSDAY}"
+						entries="{_schedule.getEntriesForDay(HierarchicalSchedule.THURSDAY)}"
+						change="handleWeekdayChange(event)"
+						metaData="{_schedule.metaData}"
+						editable="{canAddEntry}"
+						itemEditBegin="handleItemEditBegin(event)"
+						itemEditEnd="handleItemEditEnd(event)"
+						doubleClick="handleTimeValueDoubleClick(event)" />
+				 </mx:HBox>
+				 <mx:HBox width="100%" verticalAlign="middle">
+				 	<mx:Label text="Friday" styleName="dayLabel" 
+				 		width="{dayLabelWidth}" />
+					<components:WeekdayTimeValueEditor width="100%" 
+						id="fridayTVEditor"
+						dayName="{HierarchicalSchedule.FRIDAY}"
+						entries="{_schedule.getEntriesForDay(HierarchicalSchedule.FRIDAY)}"
+						change="handleWeekdayChange(event)"
+						metaData="{_schedule.metaData}"
+						editable="{canAddEntry}"
+						itemEditBegin="handleItemEditBegin(event)"
+						itemEditEnd="handleItemEditEnd(event)"
+						doubleClick="handleTimeValueDoubleClick(event)" />
+				 </mx:HBox>
+				 <mx:HBox width="100%" verticalAlign="middle">
+				 	<mx:Label text="Saturday" styleName="dayLabel" 
+				 		width="{dayLabelWidth}" />
+					<components:WeekdayTimeValueEditor width="100%" 
+						id="saturdayTVEditor"
+						dayName="{HierarchicalSchedule.SATURDAY}"
+						entries="{_schedule.getEntriesForDay(HierarchicalSchedule.SATURDAY)}"
+						change="handleWeekdayChange(event)"
+						metaData="{_schedule.metaData}"
+						editable="{canAddEntry}"
+						itemEditBegin="handleItemEditBegin(event)"
+						itemEditEnd="handleItemEditEnd(event)"
+						doubleClick="handleTimeValueDoubleClick(event)" />
+				 </mx:HBox>
+				 <mx:HBox width="100%" verticalAlign="middle">
+				 	<mx:Label text="Sunday" styleName="dayLabel" 
+				 		width="{dayLabelWidth}" />
+					<components:WeekdayTimeValueEditor width="100%" 
+						id="sundayTVEditor"
+						dayName="{HierarchicalSchedule.SUNDAY}"
+						entries="{_schedule.getEntriesForDay(HierarchicalSchedule.SUNDAY)}"
+						change="handleWeekdayChange(event)"
+						metaData="{_schedule.metaData}"
+						editable="{canAddEntry}"
+						itemEditBegin="handleItemEditBegin(event)"
+						itemEditEnd="handleItemEditEnd(event)"
+						doubleClick="handleTimeValueDoubleClick(event)" />				
+				 </mx:HBox>
+			</mx:VBox>
+			
+			<mx:HBox width="100%" paddingTop="5" paddingBottom="5">
+				<mx:Button label="Delete" click="deleteSelectedEntry()" 
+					enabled="{selectedEntry != null &amp;&amp; _schedule.overrideStatus}"/>
+				<mx:Button label="Add" click="handleAddEntry()"
+					enabled="{canAddEntry}" />
+				
+			</mx:HBox>
+			<mx:AdvancedDataGrid id="weeklyScheduleGrid" 
+				dataProvider="{scheduleGridCollection}"
+				labelFunction="labelFunction"
+				selectionMode="singleCell"
+				change="handleWeekdayGridChange(event)"
+				keyUp="handleGridKeyUp(event)"
+				width="100%" height="150">
+				<mx:columns>
+					<mx:AdvancedDataGridColumn headerText="Monday" dataField="monday" /> 
+					<mx:AdvancedDataGridColumn headerText="Tuesday" dataField="tuesday" />
+					<mx:AdvancedDataGridColumn headerText="Wednesday" dataField="wednesday" />
+					<mx:AdvancedDataGridColumn headerText="Thursday" dataField="thursday" />
+					<mx:AdvancedDataGridColumn headerText="Friday" dataField="friday" />
+					<mx:AdvancedDataGridColumn headerText="Saturday" dataField="saturday" />
+					<mx:AdvancedDataGridColumn headerText="Sunday" dataField="sunday" />
+				</mx:columns>
+			</mx:AdvancedDataGrid>
+			<mx:HBox width="100%" verticalAlign="middle">
+				<mx:Label text="" id="labelSelectedDay" width="70" textAlign="right" />
+				<components1:DailyEntryTimeEditor 
+					id="dailyEntryTimeEditor"
+					enabled="{_schedule.overrideStatus || _schedule.parent == null}"
+					timeUpdated="handleDailyEntryUpdated(event)"
+					entry="{selectedEntry}"
+					/>
+			</mx:HBox>
+			</mx:VBox>
+		</mx:Canvas>
+		<components1:ExceptionsEditor id="exceptionsView" 			
+			operationHistoryService="{operationHistoryService}"
+			width="100%" height="100%" />
+		<components1:SchedulePropertiesEditor id="propertiesView"
+				entityManager="{entityManager}"
+				label="Properties"
+				width="100%" height="100%" />
+		<components1:EventMetaDataEditor id="metaDataView"
+				label="Options" width="100%" height="100%" />
+	</mx:TabNavigator>
+</mx:VBox>

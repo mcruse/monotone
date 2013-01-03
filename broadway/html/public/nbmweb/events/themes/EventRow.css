@@ -1,0 +1,10 @@
+@CHARSET "UTF-8";
+
+.eventRow .eventCell  {
+    vertical-align: inherit;
+}
+
+.eventRow .selectRowCell {
+    text-align: center;
+}
+

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalAlign="center"
+	doubleClick="enableControl()" verticalAlign="middle">
+
+	<mx:Script>
+	<![CDATA[
+
+		[Bindable]
+		public var value:Number;
+
+		override public function set data(value:Object):void
+		{
+			if(value != null){
+				super.data = value;
+			}
+		}
+		
+		// Show Editor
+		private function enableControl():void{
+			displayNumberStepper.enabled = true;
+			displayNumberStepper.setFocus();
+		}
+	]]>
+	</mx:Script>
+	<mx:NumericStepper id="displayNumberStepper" minimum="1" maximum="16" value="{data.priority}"
+		enabled="false" change="value = Number(displayNumberStepper.value)"
+		focusOut="{displayNumberStepper.enabled = false}" />
+</mx:HBox>

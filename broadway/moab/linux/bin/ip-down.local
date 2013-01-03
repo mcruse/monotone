@@ -1,0 +1,32 @@
+#!/usr/bin/env python-mpx
+import sys
+
+###
+# pppd sets up the environment as shown in the following example, where os.environ is:
+#
+#    {'TERM': 'dumb', 'IPLOCAL': '12.65.127.150', 'IPREMOTE': '12.67.7.41', 'SHLVL': '1',
+#     'PPPLOGNAME': 'root', 'CONNECT_TIME': '14', 'HOSTNAME': 'chetmoe.envenergy.com',
+#     'BYTES_SENT': '73', 'HOSTTYPE': 'i386', 'ORIG_UID': '0', 'OSTYPE': 'linux-gnu',
+#     'PWD': '/', 'SHELL': '/bin/bash', 'PATH': '/sbin:/usr/sbin:/bin:/usr/bin',
+#     'DEVICE': '/dev/ttyS1', 'BYTES_RCVD': '204', 'IFNAME': 'ppp0',
+#     'MACHTYPE': 'i386-redhat-linux-gnu', 'SPEED': '57600', 'PPPD_PID': '1000',
+#     '_': '/etc/ppp/ip-down.local'}
+#
+#
+# In accordance with the above example, sys.argv is as follows:
+#
+#    ['/etc/ppp/ip-down.local', 'ppp0', '/dev/ttyS1', '57600', '12.65.127.150', '12.67.7.41']
+#
+# Finally, sys.path looks like this (NOTE: no path to broadway):
+#
+#    ['/etc/ppp', '/usr/lib/python2.2', '/usr/lib/python2.2/plat-linux2',
+#     '/usr/lib/python2.2/lib-dynload', '/usr/lib/python2.2/site-packages']
+#
+###
+
+# The following module needs to be found in the default module search path (see above).
+from routing import RoutingTable
+
+# Restore the default routes that were in effect when pppd was started.
+rt = RoutingTable( sys.argv[1] )
+rt.restoreDefaultRoutes()

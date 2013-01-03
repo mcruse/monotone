@@ -1,0 +1,71 @@
+<% 
+from mpx.lib.node import as_node
+root = as_node('/')
+qs = request.get_query_dictionary()
+if not qs.has_key('textid'):
+    qs['textid'] = ''
+%>
+<html>
+<head>
+<!-- Copyright (c) 2004 Richards-Zeta -->
+<!-- $Name: mediator_3_1_2_branch $ -->
+<!-- $Id: nodeSelector.psp 20101 2011-03-06 16:02:15Z bhagn $ -->
+<title> Node Selector</title>
+<!-- Modify this file to change the way the tree looks -->
+<link type="text/css" rel="stylesheet" href="/webapi/js/xloadtree/xtree.css">
+
+<!-- The xtree script file -->
+<script src="/webapi/js/xloadtree/xtree.js"></script>
+<script src="/webapi/js/xloadtree/xloadtree.js"></script>
+<script src="/webapi/js/xloadtree/xmlextras.js"></script>
+</head>
+<body>
+<p>
+<script type="text/javascript">
+var tree = new WebFXTree("/",'javascript:node_selected()');
+<%
+a = as_node('/aliases')
+if a.children_names() == []:
+    psp.write("tree.add(new WebFXTreeItem('aliases','javascript:node_selected()'));\n")
+else:
+    psp.write("tree.add(new WebFXLoadTreeItem('aliases','/webapi/psp/tree.psp?node=/aliases','javascript:node_selected()'));\n")   
+
+i = as_node('/interfaces')
+if i.children_names() == []:
+    psp.write("tree.add(new WebFXTreeItem('interfaces','javascript:node_selected()'));\n")
+else:
+    psp.write("tree.add(new WebFXLoadTreeItem('interfaces','/webapi/psp/tree.psp?node=/interfaces','javascript:node_selected()'));\n")   
+
+s = as_node('/services')
+if s.children_names() == []:
+    psp.write("tree.add(new WebFXTreeItem('services','javascript:node_selected()'));\n")
+else:
+    psp.write("tree.add(new WebFXLoadTreeItem('services','/webapi/psp/tree.psp?node=/services','javascript:node_selected()'));\n")   
+%>
+
+document.write(tree);
+
+
+function node_selected(){
+   var n = tree.getSelected();
+   var parentNode = n.parentNode;
+   var node_name = n.text; 
+   while (parentNode){
+      if (parentNode.text == '/'){
+         node_name = parentNode.text + node_name;
+         parentNode = null  
+      }
+      else{
+        node_name = parentNode.text + '/' + node_name;
+        parentNode = parentNode.parentNode;
+      }      
+   }
+   
+   window.parent.document.getElementById('node_path').value = node_name;
+}
+
+
+</script>
+
+</body>
+</html>

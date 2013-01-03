@@ -1,0 +1,174 @@
+#
+# Resource file for specifying tools for a native build.
+#
+# Remarks:
+#   ac_XXX variables are intended as an intermediate resource for configure.
+#   This is because autoconf is pretty particular about how it looks for non-
+#   traditional programs (as opposed to the standard 'CC' and 'CXX').  In
+#   order to detect and use the correct programs that support the toolchain
+#   we want we have to do a little black magic in the configure script.  Sorry
+#   about the extra warts.
+#
+#   ENVENERGY_DT_HOME, JAVA_HOME, and ANT_HOME are Envenergy-required
+#   environment variables.
+#
+#   CC is the de-facto way to call out an alternate C compiler.
+#
+# NOTE NOTE NOTE NOTE:
+#   For a native build we still use the m4 provided by the devtools.  Reason
+#   being is that the official GNU version is 1.4.  The version provided with
+#   RedCrap 8+ is 1.4.1, and is not compatible with automake 2.57 (which
+#   is the official GNU version of automake).  One more reason why people
+#   shouldn't screw around with stuff that ain't broken.  Ya wonder why I
+#   despise RedHat. *STM*
+#
+
+echo "\
+========================================================================
+NOTICE:  Configuring build directory to use native tools.  This means
+         the first gcc, et al in your PATH at configuration time.
+
+         This also means that all libraries and python packages required
+         to build and run broadway must be installed in the locations
+         required by the build tools and python found in the configure
+         time PATH.
+------------------------------------------------------------------------
+Verifying the required programs, libraries and python packages are installed:
+"
+
+exit_if_error () {
+    local err=$1
+    local msg="$2"
+    if [ $err -ne 0 ]
+    then
+	echo "\
+************************************************************************"
+	echo "$msg"
+	echo "\
+************************************************************************"
+	exit $err
+    fi
+    return 0
+}
+
+exit_if_dir_missing () {
+    local path="$1"
+    local msg="$2"
+    if [ ! -e "$path" ] || [ ! -d "$path" ]
+    then
+	echo "\
+************************************************************************
+ERROR: '$path' is not a valid directory."
+	echo "\
+........................................................................"
+	echo "$msg"
+	echo "\
+************************************************************************"
+	exit $err
+    fi
+    return 0
+}
+
+exit_if_exe_missing () {
+    local path="$1"
+    local msg="$2"
+    if [ ! -x "$path" ]
+    then
+	echo "\
+************************************************************************
+ERROR: '$path' is not a valid directory."
+	echo "\
+........................................................................"
+	echo "$msg"
+	echo "\
+************************************************************************"
+	exit $err
+    fi
+    return 0
+}
+
+echo -n "Detecting default python configuration..."
+python -c ""
+exit_if_error $? "\
+ERROR: python not found, python must be installed and in your PATH."
+PYTHON_VER="$(python -c 'import sys
+sys.stdout.write("%d.%d" % sys.version_info[:2])
+')"
+exit_if_error $? "ERROR: Failed to determine PYTHON_VER"
+PYTHON_PREFIX=$(python -c "import sys
+print sys.prefix")
+exit_if_error $? "ERROR: Failed to determine PYTHON_PREFIX"
+exit_if_dir_missing "${PYTHON_PREFIX}" "\
+       Failed to determine PYTHON_PYTHON, perhaps python installed incorrectly."
+PYTHON_EXEC_PREFIX=$(python -c "import sys
+print sys.exec_prefix")
+exit_if_error $? "ERROR: Failed to determine PYTHON_EXEC_PREFIX"
+exit_if_dir_missing "${PYTHON_EXEC_PREFIX}" "\
+       Failed to determine PYTHON_EXEC_PYTHON, perhaps python installed
+       incorrectly."
+PYTHON_LIB="${PYTHON_EXEC_PREFIX}/lib/python${PYTHON_VER}"
+exit_if_dir_missing "${PYTHON_LIB}" "\
+       Failed to determine PYTHON_LIB, perhaps python-dev is not installed."
+PYTHON_INC="${PYTHON_EXEC_PREFIX}/include/python${PYTHON_VER}"
+exit_if_dir_missing "${PYTHON_INC}" "\
+       Failed to determine PYTHON_INC, perhaps python-dev is not installed."
+PYTHON="${PYTHON_EXEC_PREFIX}/bin/python${PYTHON_VER}"
+exit_if_exe_missing "${PYTHON}" "\
+       Failed to determine PYTHON, perhaps python installed incorrectly."
+echo "done."
+
+# @fixme Work around a hack in configure.in
+ENVENERGY_DT_HOME="$(dirname $(dirname $(which m4)))"
+
+# libsmi
+# libsmi-dev
+# python
+# python-dev
+
+# <http://pueblo.cisco.com/viewvc/pueblo/blobs/HTMLgen.tgz?view=log>
+# touch HTMLgen/__init__.py
+# http://pueblo.cisco.com/viewvc/pueblo/blobs/pyfeed-0.7.4.tar.gz?view=log
+# http://pueblo.cisco.com/viewvc/pueblo/blobs/xe-0.7.4.tar.gz?view=log
+# Install packages in the native python.
+#
+# everything in python-mpx...
+
+echo -n "Validating required include files..."
+_KERNEL_INC="/usr/src/linux-headers-$(uname --kernel-release)/include"
+exit_if_dir_missing "${_KERNEL_INC}" "\
+       Failed to locate the default kernel include files for version:
+       $(uname --kernel-release)"
+INCLUDES="-I${PYTHON_INC}"
+INCLUDES="$INCLUDES -I${_KERNEL_INC}"
+echo "done."
+
+CC="$(which gcc)"
+exit_if_error $? "ERROR: Could not locate gcc in current PATH"
+CXX="$(which g++)"
+exit_if_error $? "ERROR: Could not locate g++ in current PATH"
+
+LDFLAGS="" # Use tool's built-in search path.
+
+ac_toolchain_dir="${ENVENERGY_DT_HOME}/bin"
+ac_AR="ar"
+ac_LD="ld"
+ac_NM="nm"
+ac_M4="m4"
+ac_RANLIB="ranlib"
+ac_STRIP="strip"
+
+AUTOMAKE="$(which automake)"
+AUTOCONF="$(which autoconf)"
+AUTOHEADER="$(which autoheader)"
+ACLOCAL="$(which aclocal)"
+
+JAVA_HOME="$(ant -diagnostics | grep java\\.home | tail -1 | cut -f 3 -d ' ')"
+JAVACMD="${JAVA_HOME}/bin/java"
+ANT_HOME="$(ant -diagnostics | grep ant\\.home | tail -1 | cut -f 3 -d ' ')"
+
+echo "Verification complete."
+echo "========================================================================"
+
+# Local Variables:
+# mode:shell-script
+# End:

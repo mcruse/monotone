@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE XServeConfig SYSTEM "./xserve_config.dtd">
+<XServeConfig>
+	<XFieldExtractor name="LightPoint Config - Holidays" order="3">
+		<XFields>
+			<XField name="amtype" byteoffset="2" length="1" type="uint8"/>
+			<XField name="nodeid" byteoffset="7" length="2" type="uint16" specialtype="nodeid"/>
+			<XField name="parent" byteoffset="14" length="2" type="uint16" specialtype="parentid"/>
+			<XField name="group" byteoffset="3" length="1" type="uint8"/>
+			<XField name="socketid" byteoffset="11" length="1" type="uint8"/>
+			<XField name="board_id" byteoffset="12" length="1" type="uint8" specialtype="boardid"/>
+			<XField name="packet_id" byteoffset="13" length="1" type="uint8"/>
+			<XField name="elem1" byteoffset="16" length="1" type="uint8"/>
+			<XField name="elem2" byteoffset="16" length="1" type="uint8">
+				<XConversion function="x+1" returntype="int">
+					<XConvParam variablename="x" fieldname="elem2" type="uint8"/>					
+				</XConversion>			
+			</XField>
+			<XField name="totalElems" byteoffset="17" length="1" type="uint8"/>
+			<XField name="dayID1" byteoffset="18" length="2" type="uint16"/>
+			<XField name="startDayEncoded1" byteoffset="20" length="2" type="uint16"/>
+			<XBitField name="startDay1" byteoffset="20" length="2" type="uint16" mask="0x1f" shift="0"/>
+			<XBitField name="startMonth1" byteoffset="20" length="2" type="uint16" mask="0x1E0" shift="5"/>
+			<XBitField name="startYear1"  byteoffset="20" length="2" type="uint16" mask="0xFFFF" shift="9">
+				<XConversion function="x+2006" returntype="int">
+					<XConvParam variablename="x" fieldname="startYear1" type="uint16"/>					
+				</XConversion>			
+			</XBitField>
+			<XField name="stopDayEncoded1" byteoffset="22" length="2" type="uint16"/>
+			<XBitField name="stopDay1" byteoffset="22" length="2" type="uint16" mask="0x1f" shift="0"/>
+			<XBitField name="stopMonth1" byteoffset="22" length="2" type="uint16" mask="0x1E0" shift="5"/>
+			<XBitField name="stopYear1"  byteoffset="22" length="2" type="uint16" mask="0xFFFF" shift="9">
+				<XConversion function="x+2006" returntype="int">
+					<XConvParam variablename="x" fieldname="stopYear1" type="uint16"/>					
+				</XConversion>			
+			</XBitField>
+			<XField name="dayID2" byteoffset="24" length="2" type="uint16"/>
+			<XField name="startDayEncoded2" byteoffset="26" length="2" type="uint16"/>
+			<XBitField name="startDay2" byteoffset="26" length="2" type="uint16" mask="0x1f" shift="0"/>
+			<XBitField name="startMonth2" byteoffset="26" length="2" type="uint16" mask="0x1E0" shift="5"/>
+			<XBitField name="startYear2"  byteoffset="26" length="2" type="uint16" mask="0xFFFF" shift="9">
+				<XConversion function="x+2006" returntype="int">
+					<XConvParam variablename="x" fieldname="startYear2" type="uint16"/>					
+				</XConversion>			
+			</XBitField>
+			<XField name="stopDayEncoded2" byteoffset="28" length="2" type="uint16"/>
+			<XBitField name="stopDay2" byteoffset="28" length="2" type="uint16" mask="0x1f" shift="0"/>
+			<XBitField name="stopMonth2" byteoffset="28" length="2" type="uint16" mask="0x1E0" shift="5"/>
+			<XBitField name="stopYear2"  byteoffset="28" length="2" type="uint16" mask="0xFFFF" shift="9">
+				<XConversion function="x+2006" returntype="int">
+					<XConvParam variablename="x" fieldname="stopYear2" type="uint16"/>					
+				</XConversion>			
+			</XBitField>
+		</XFields>
+		<XFilter>
+			<XCondAnd>
+			
+				<!--
+					Check if this is a sensor type packet...AMTYPE_MULTIHOP or AMTYPE_XDEBUG
+					The Byte offsets defined above assume that there is a multihop header
+				-->
+				<XCondOr>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="amtype"/>
+						<XFilterParam name="fieldvalue" value="0x31"/>
+					</XCond>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="amtype"/>
+						<XFilterParam name="fieldvalue" value="0x33"/>
+					</XCond>
+					<XCondAnd>
+						<XCondOr>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="socketid"/>
+								<XFilterParam name="fieldvalue" value="0x31"/>
+							</XCond>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="socketid"/>
+								<XFilterParam name="fieldvalue" value="0x33"/>
+							</XCond>
+						</XCondOr>
+						<XCondOr>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="amtype"/>
+								<XFilterParam name="fieldvalue" value="0x0B"/>
+							</XCond>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="amtype"/>
+								<XFilterParam name="fieldvalue" value="0x0D"/>
+							</XCond>
+						</XCondOr>										
+					</XCondAnd>
+				</XCondOr>
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="board_id"/>
+					<XFilterParam name="fieldvalue" value="0x84"/>
+				</XCond>				
+				<XCondOr>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x1A"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x1B"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x1C"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x1D"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x1E"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x1F"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x20"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x21"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x22"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x23"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x24"/>
+					</XCond>				
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="packet_id"/>
+						<XFilterParam name="fieldvalue" value="0x25"/>
+					</XCond>				
+				</XCondOr>
+			</XCondAnd>
+		</XFilter>
+		<XDataSinks>
+			<XDataSink name="Generic Print Datasink">
+				<XDSParam name="printstring" value="Holiday %s of %s for node %s:\n   DayID: %s \n   StartDay: %s \n   Month: %s \n   Day: %s \n   Year: %s \n   StopDay: %s \n   Month: %s \n   Day: %s \n   Year: %s \nHoliday %s of %s for node %s:\n   DayID: %s \n   StartDay: %s \n   Month: %s \n   Day: %s \n   Year: %s \n   StopDay: %s \n   Month: %s \n   Day: %s \n   Year: %s \n"/>
+				<XDSParam name="printfields" value="elem1,totalElems,nodeid,dayID1,startDayEncoded1,startMonth1,startDay1,stopYear1,stopDayEncoded1,stopMonth1,stopDay1,stopYear1,elem2,totalElems,nodeid,dayID2,startDayEncoded2,startMonth2,startDay2,stopYear2,stopDayEncoded2,stopMonth2,stopDay2,stopYear2"/>
+			</XDataSink>
+			
+			
+			
+		</XDataSinks>
+	</XFieldExtractor>
+	
+</XServeConfig>

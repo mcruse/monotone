@@ -1,0 +1,404 @@
+/*
+Purpose: PHAnimation widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: PHAnimation.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+function PHAnimation(){
+  this.base = Widget;
+  this.base();
+  this._name = 'PHAnimation';
+  this._z_index = '1000';
+  this._node = '';
+  this.node_selector_node = 'true';
+  this._animation_type = 'static';
+  this._animation_scale = '100';
+  this.config_index = new Object();
+  this.config_index['animation_images'] = 1
+  this._animation_images = '';
+  this.image_selector_animation_images = {'savefunction': 'appendFileName', 
+  										  'filename': 'NEWFILE'};
+  this._animation_width = '10px';
+  this._animation_height = '10px';
+  this._animation_interval = '250';
+ }
+
+PHAnimation.prototype = new Widget;
+
+function appendFileName() {
+	var fileinput = objWin.document.getElementById('file_name');
+	var filename =  fileinput.value;
+	if (!objWin.opener) {
+		alert('file name:' + filename);
+	} else if (filename == '') {
+		if (objWin.confirm('You have not chosen a file.  Close image selector?')) {
+			objWin.close();
+			objWin = null;
+		}
+	} else {
+		//check for proper file name format before saving
+		var gifAtEnd = (filename.length >= 4 && filename.slice(-4).toLowerCase() == '.gif') ? true : false;
+		var jpgAtEnd = (filename.length >= 4 && filename.slice(-4).toLowerCase() == '.jpg') ? true : false;
+		var pngAtEnd = (filename.length >= 4 && filename.slice(-4).toLowerCase() == '.png') ? true : false;
+		if (!(gifAtEnd || jpgAtEnd || pngAtEnd)) {
+			objWin.alert('Filename must end with .gif, .jpg or .png!');
+		} else if(gifAtEnd && filename.length == 4) {
+			objWin.alert('Filename must have at least one character before .gif!');
+		} else if(jpgAtEnd && filename.length == 4) {
+			objWin.alert('Filename must have at least one character before .jpg!');
+		} else if(pngAtEnd && filename.length == 4) {
+			objWin.alert('Filename must have at least one character before .png!');
+		} else {
+			if (image_selector_elem.value.length > 0) {
+				image_selector_elem.value += ',';
+			}
+			image_selector_elem.value += filename;
+			if (!objWin.confirm('An image has been added.  Continue adding images?')) {
+				objWin.close();
+				objWin = null;
+			} else {
+				fileinput.value = '';
+			}
+		}
+	}
+}
+
+var PHAnimationImages = new Object(); //pre-cache animation images
+var PHAnimationTimers = new Object(); //dynamic animation timers
+
+PHAnimation.prototype.after_config_table = function() {
+  Widget_log('PHAnimation.after_config_table(), at top');
+  document.getElementById('PHAnimation_animation_type').value = this._animation_type;
+}
+
+PHAnimation.prototype.get_animation_type_defaults = function() {
+  var s = document.createElement('select');
+
+  s.setAttribute('id', 'PHAnimation_animation_type');
+
+  var o = document.createElement('option');
+
+  o.value = 'static';
+  o.innerHTML = 'static';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'dynamic';
+  o.innerHTML = 'dynamic';
+  s.appendChild(o);
+  return s;
+}
+
+PHAnimation.prototype.init = function(element) {
+  Widget_log('PHAnimation.init(), at top');
+  this._name = 'PHAnimation';
+  this._z_index = element.getAttribute('zindex');
+  var imgholder = this.get_element(element,'div','imgholder');
+  this._node = imgholder.getAttribute('node');
+  var infospan = this.get_element(element,'div','info');
+  this._animation_type = this.get_span_attr(infospan, 'animation_type');
+  this._animation_scale = this.get_span_attr(infospan, 'animation_scale');
+  var animationImages = infospan.getAttribute('animation_images');
+
+  var animationDirectory = infospan.getAttribute('animation_directory');
+  if (animationDirectory) {
+  	// This Widget was created with the old-style PHAnimation
+  	var imageNames = animationImages.split(",");
+  	for (var i = 0; i < imageNames.length; i++) {
+  		var filename = imageNames[i];
+  		imageNames[i] = animationDirectory + filename;
+  	}
+  	animationImages = imageNames.join();
+  	Widget_log('PHAnimation.init(), converted old-style widget images to: ' + animationImages);
+  }
+
+  this._animation_images = animationImages;
+  this._animation_width = this.get_span_attr(infospan, 'animation_width');
+  this._animation_height = this.get_span_attr(infospan, 'animation_height');
+  this._animation_interval = this.get_span_attr(infospan, 'animation_interval');
+}
+
+PHAnimation.prototype.init_element = function (){
+  Widget_log('PHAnimation.init_element(), at top');
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version', '1_0_dev_2');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  this.element.style.position = 'absolute';
+  this.element.style.zIndex = this._z_index;
+
+  var container = document.createElement('div');
+  container.setAttribute('element','container');
+  container.style.position = 'relative';
+  container.style.verticalAlign = 'middle';
+  container.style.height = 'auto';
+  container.style.width = 'auto';
+  container.style.backgroundColor = 'transparent';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.zIndex = '0';
+
+  var imgholder = document.createElement('div');
+  imgholder.setAttribute('element','imgholder');
+  imgholder.setAttribute('node', this._node);
+  switch(this._animation_type) {
+    case 'static':
+      imgholder.setAttribute('display_function', 'PHAnimationDisplayStatic');
+      break;
+    case 'dynamic':
+      imgholder.setAttribute('display_function', 'PHAnimationDisplayDynamic');
+      break;
+  }
+  imgholder.style.backgroundColor = 'transparent';
+  imgholder.style.top = '0';
+  imgholder.style.left = '0';
+  imgholder.style.zIndex = '1';
+
+  var animationimg = document.createElement('img');
+  animationimg.setAttribute('element','img');
+  animationimg.setAttribute('recache','true');
+  if(this._animation_images.length > 0) {
+    var myImages = this._animation_images.split(",");
+    var myImagesLength = myImages.length;
+    animationimg.setAttribute('src', myImages[0]);
+  }
+  else {
+    var myImagesLength = 0;
+    animationimg.setAttribute('src','');
+  }
+  animationimg.setAttribute('alt','');
+  var myAnimationWidth = Math.round(parseInt(this._animation_width) * (this._animation_scale / 100.0));
+  animationimg.setAttribute('width',myAnimationWidth);
+  var myAnimationHeight = Math.round(parseInt(this._animation_height) * (this._animation_scale / 100.0));
+  animationimg.setAttribute('height',myAnimationHeight);
+  animationimg.setAttribute('onload','PHAnimationCacheImages(event)');
+
+  imgholder.appendChild(animationimg);
+  container.appendChild(imgholder);
+
+  var infospan = document.createElement('div');
+  infospan.setAttribute('element','info');
+  infospan.setAttribute('type','hidden');  
+  infospan.setAttribute('animation_type', this._animation_type);
+  infospan.setAttribute('animation_scale', this._animation_scale);
+  infospan.setAttribute('animation_images', this._animation_images);
+  infospan.setAttribute('animation_width', this._animation_width);
+  infospan.setAttribute('animation_height', this._animation_height);
+  infospan.setAttribute('animation_interval', this._animation_interval);
+  infospan.setAttribute('animation_index', '0');
+  infospan.setAttribute('animation_count', myImagesLength);
+  infospan.setAttribute('animation_active','false');
+  //infospan.style.position = 'relative';
+  infospan.style.backgroundColor = 'transparent';
+  infospan.style.top = '0';
+  infospan.style.left = '0';
+  infospan.style.height = '1';
+  infospan.style.width = '1';
+  infospan.style.zIndex = '0';
+  infospan.style.visibility = 'hidden';
+  infospan.style.display = 'none';
+   
+  container.appendChild(infospan);
+
+  this.element.appendChild(container);
+}
+
+
+PHAnimation.prototype.create = function (){
+  Widget_log('PHAnimation.create(), at top');
+  //_msglog('PHAnimation.create(), arguments.length=' + arguments.length);
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function PHAnimation_factory(){
+  return new PHAnimation();
+}
+
+function PHAnimationGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e
+}
+
+function PHAnimationDisplayNoErrors(v) {
+  try {    
+    var pattern1 = /\?/;      
+    var pattern2 = /error\:/;      
+    if (pattern1.exec(v.toString()) == null && pattern2.exec(v.toString()) == null) {
+      return 1;
+    }
+  }
+  catch(err) {
+    return 0;
+  }
+  return 0;
+}
+
+function PHAnimationDisplayStatic(e,v){
+  try{    
+    var myWidget = e.parentNode.parentNode;
+    var myWidgetID = myWidget.getAttribute('id');
+    Widget_log("PHAnimationDisplayStatic, myWidgetID=" + myWidgetID);
+    var ielement = PHAnimationGetElement(myWidget,'div','info');
+    var imgelement = PHAnimationGetElement(myWidget,'img','img');
+    if(PHAnimationDisplayNoErrors(v)){
+      var myIndex = 0;
+      var myCount = ielement.getAttribute('animation_count');
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      if(typeof(v) == "number") {
+        myIndex = Math.round(v);
+      } else { // process string values
+        // find if equal to one of the common enumeration strings
+        var enumStrings = {"active":1, "inactive":0, "on":1, "off":0, "true":1, "false":0};
+        myIndex = enumStrings[v.toLowerCase()]
+        if(typeof(myIndex) == "undefined"){ // not an enumeration string
+        	myIndex = Math.round(v); // try to convert string to number
+        }
+      }
+      if(myIndex >= myCount) {
+        myIndex = myCount - 1;
+      }
+      else if(myIndex < 0) {
+        myIndex = 0;
+      }
+      imgelement.src = PHAnimationImages[myWidgetID][myIndex].src;
+      ielement.setAttribute('animation_index',myIndex);
+    }
+    else{ // if error, display first image
+      imgelement.src = PHAnimationImages[myWidgetID][0].src;
+      ielement.setAttribute('animation_index','0');
+    }
+  }
+  catch(err){   
+    Widget_log("GenericNodeBoxDisplayStatic, err=" + err.description);
+  }
+}
+
+function PHAnimationIsActive(v){
+    var isActive = false;
+    var enumStrings = {"active":1, "inactive":0, "on":1, "off":0, "true":1, "false":0};
+    if(v.as_magnitude){
+        v = v.as_magnitude();
+    }
+    if(typeof(v) == "number"){
+        isActive = v > 0;
+    }else{
+        isActive = enumStrings[v.toLowerCase()]
+        if(typeof(isActive) == "undefined"){
+            isActive = Boolean(parseInt(v));
+        }
+    }
+    return isActive;
+}
+
+function PHAnimationDisplayDynamic(e,v){
+  try{    
+    var myWidget = e.parentNode.parentNode;
+    var myWidgetID = myWidget.getAttribute('id');
+    Widget_log("PHAnimationDisplayDynamic, myWidgetID=" + myWidgetID);
+    var ielement = PHAnimationGetElement(myWidget,'div','info');
+    if(PHAnimationDisplayNoErrors(v)){
+      if(PHAnimationIsActive(v)) { //start animation
+        if(PHAnimationTimers[myWidgetID] == null || ielement.getAttribute('animation_active') == 'false') {
+          ielement.setAttribute('animation_active','true');
+          PHAnimationRunDynamic(myWidgetID);
+        }
+      }
+      else { //stop animation
+          ielement.setAttribute('animation_active','false');
+      }
+    }
+    else{ //stop animation if error
+      ielement.setAttribute('animation_active','false');
+    }
+  }
+  catch(err){   
+    Widget_log("PHAnimationDisplayDynamic, err=" + err.description);
+  }
+}
+
+function PHAnimationRunDynamic(id, index) {
+  try{
+  index = (index) ? index : 0;
+  myWidget = document.getElementById(id);
+  var ielement = PHAnimationGetElement(myWidget,'div','info');
+  var imgelement = PHAnimationGetElement(myWidget,'img','img');
+  if(ielement.getAttribute('animation_active') == 'true') { //start or continue animation
+    //Widget_log("PHAnimationRunDynamic(), " + id + ", new image=" + PHAnimationImages[id][index].src);
+    imgelement.src = PHAnimationImages[id][index].src;
+    ielement.setAttribute('animation_index',index);
+    index = (index + 1) % ielement.getAttribute('animation_count');
+    PHAnimationTimers[id] = setTimeout("PHAnimationRunDynamic('" + id + "'," + index + ")", ielement.getAttribute('animation_interval'));
+  }
+  else { //stop animation
+    //Widget_log("PHAnimationRunDynamic(), stoping animation for " + id);
+    var myTimer = PHAnimationTimers[id];
+    if(myTimer != null) {
+      clearTimeout(myTimer);
+      delete PHAnimationTimers[id];
+    }
+    imgelement.src = PHAnimationImages[id][0].src;
+    ielement.setAttribute('animation_index','0');
+  }
+  }
+  catch(err){   
+    Widget_log("PHAnimationRunDynamic, err=" + err.description);
+  }
+}
+
+function PHAnimationGetImageNames(element){
+  var myWidget = element.parentNode.parentNode.parentNode;
+  var ielement = PHAnimationGetElement(myWidget,'div','info');
+  var animationImages = ielement.getAttribute('animation_images');
+  var imageNames = animationImages.split(",");
+  var animationDirectory = ielement.getAttribute('animation_directory');
+  if (animationDirectory) {
+  	// This Widget was created with the old-style PHAnimation
+  	for (var i = 0; i < imageNames.length; i++) {
+  		var filename = imageNames[i];
+  		imageNames[i] = animationDirectory + filename;
+  	}
+  }
+  return imageNames;
+}
+
+function PHAnimationCacheImages(evt) {
+  evt = (evt) ? evt : ((event) ? event : null);
+  var elem = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null);
+  if(elem.nodeType == 9) { //if NN, use currentTarget
+    elem = evt.currentTarget;
+  }
+  var myWidgetID = elem.parentNode.parentNode.parentNode.getAttribute('id');
+  var myRecache = elem.getAttribute('recache');
+  var imgRef = PHAnimationImages[myWidgetID];
+  if(imgRef == null || myRecache == 'true') {
+    Widget_log('PHAnimationCacheImages(), myWidgetID=' + myWidgetID);
+    Widget_log('PHAnimationCacheImages(), typeof imgRef=' + typeof imgRef + ', recache=' + myRecache);
+    var ielement = PHAnimationGetElement(elem.parentNode.parentNode.parentNode,'div','info');
+    PHAnimationImages[myWidgetID] = new Array();
+    var myImages = PHAnimationGetImageNames(elem);
+    for(var i = 0; i < myImages.length; i++) {
+      Widget_log("PHAnimationCacheImages(), cacheing " + myImages[i]);
+      PHAnimationImages[myWidgetID][i] = new Image();
+      PHAnimationImages[myWidgetID][i].src = myImages[i];
+    }
+    elem.setAttribute('recache','false');
+  }
+}
+
+var PHAnimation_loaded = true;

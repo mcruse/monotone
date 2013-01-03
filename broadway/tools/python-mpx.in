@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+#-*-Shell-Script-*- Hint to [X]Emacs on colorization, etc...
+#
+# Load the correct version of python for the current build.
+#
+
+# Search the MOE25 version of shared libs (and ONLY the MOE25 shared libs)
+# first.
+export LD_LIBRARY_PATH="@PYTHON_LIB@/lib-moe2"
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/moe25/lib"
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/moe25/usr/lib"
+# Preloading the correct PAM library is required.
+export LD_PRELOAD="@PYTHON_MPX_PRELOAD@"
+# @note For some reason the trimmed/compressed python 2.5 can't find it's
+#       own PREFIX.
+export PYTHONHOME="@PYTHON_PREFIX@:@PYTHON_EXEC_PREFIX@"
+# Export a PYTHONPATH that only includes the current
+# mpx.properties.ROOT.
+export PYTHONPATH="@BUILD_DIR@" # PYTHONPATH-MARKER (MARKER required by install)
+exec @PYTHON@ "$@"              # PYTHONEXEC-MARKER (MARKER required by install)

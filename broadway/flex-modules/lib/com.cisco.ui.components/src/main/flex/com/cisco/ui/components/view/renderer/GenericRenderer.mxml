@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:mx="http://www.adobe.com/2006/mxml"
+		width="100%"
+		height="100%"
+		implements="mx.controls.listClasses.IDropInListItemRenderer"
+		paddingLeft="2"
+		paddingTop="2"
+		paddingRight="2"
+		paddingBottom="2" tabChildren="true" tabEnabled="true">
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.listClasses.BaseListData;
+			import mx.core.UIComponent;
+
+			protected var dataChangeFlag:Boolean=true;
+			private var _listData:BaseListData;
+			protected var listDataChangeFlag:Boolean=true;
+
+			[Bindable]
+			public var allowChange:Boolean=true;
+
+			//[Bindable]
+			//public var style:String=Styles.SR_NORMAL_LABEL;
+
+
+			protected function refresh():void
+			{
+				(owner as UIComponent).invalidateProperties();
+				(owner as UIComponent).invalidateDisplayList();
+			}
+
+			override public function set data(value:Object):void
+			{
+				super.data=value;
+				dataChangeFlag=true;
+				invalidateProperties();
+			}
+
+			public function get listData():BaseListData
+			{
+				return _listData;
+			}
+
+			public function set listData(value:BaseListData):void
+			{
+				_listData=value;
+				listDataChangeFlag=true;
+				invalidateProperties();
+			}
+
+
+			override protected function commitProperties():void
+			{
+				super.commitProperties();
+
+				setDefaults();
+				if (dataChangeFlag)
+				{
+					if (data != null)
+					{
+						extractData();
+					}
+					dataChangeFlag=false;
+				}
+
+				if (listDataChangeFlag)
+				{
+					if (listData != null)
+					{
+						extractListData();
+					}
+					listDataChangeFlag=false;
+				}
+			}
+
+			protected function setDefaults():void
+			{
+
+			}
+
+
+			protected function extractData():void
+			{
+
+			}
+
+			protected function extractListData():void
+			{
+
+			}
+
+			protected function setModified(modified:Boolean=false):void
+			{
+				/* if (!allowChange)
+					style=Styles.SR_READ_ONLY_LABEL;
+				else if (modified)
+					style=Styles.SR_MODIFIED_LABEL;
+				else
+					style=Styles.SR_NORMAL_LABEL; */
+			}
+		]]>
+	</mx:Script>
+</mx:Box>

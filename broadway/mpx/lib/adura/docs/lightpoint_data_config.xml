@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE XServeConfig SYSTEM "./xserve_config.dtd">
+<XServeConfig>
+	<XFieldExtractor name="LightPoint Config - Event Insert" order="3">
+		<XFields>
+			<XField name="amtype" byteoffset="2" length="1" type="uint8"/>
+			<XField name="firmware_id" byteoffset="7" length="2" type="uint16" specialtype="nodeid"/>
+			<XField name="parent" byteoffset="14" length="2" type="uint16" specialtype="parentid"/>
+			<XField name="group" byteoffset="3" length="1" type="uint8"/>
+			<XField name="socketid" byteoffset="11" length="1" type="uint8"/>
+			<XField name="board_id" byteoffset="12" length="1" type="uint8" specialtype="boardid"/>
+			<XField name="packet_id" byteoffset="13" length="1" type="uint8"/>
+			<XField name="vref" byteoffset="16" length="2" type="uint16"/>
+			<XField name="cur1" byteoffset="18" length="2" type="uint16">
+				<XConversion function="x/1024*5" returntype="float">
+					<XConvParam variablename="x" fieldname="cur1" type="uint16"/>					
+				</XConversion>			
+			</XField>
+			<XField name="cur2" byteoffset="20" length="2" type="uint16">
+				<XConversion function="x/1024*5" returntype="float">
+					<XConvParam variablename="x" fieldname="cur2" type="uint16"/>					
+				</XConversion>			
+			</XField>
+			<XField name="group1" byteoffset="22" length="2" type="uint16"/>
+			<XField name="group2" byteoffset="24" length="2" type="uint16"/>
+			<XField name="relayState1" byteoffset="26" length="1" type="uint8"/>
+			<XBitField name="relayState2" byteoffset="27" length="1" type="uint8" mask="0xfe" shift="1" />
+			<XBitField name="year"  byteoffset="28" length="4" type="uint32" mask="0xfc000000" shift="26">
+				<XConversion function="x+2006" returntype="int">
+					<XConvParam variablename="x" fieldname="year" type="uint32"/>					
+				</XConversion>			
+			</XBitField>
+			<XBitField name="month" byteoffset="28" length="4" type="uint32" mask="0x3c00000" shift="22"/>
+			<XBitField name="day"   byteoffset="28" length="4" type="uint32" mask="0x3e0000" shift="17"/>
+			<XBitField name="hour"  byteoffset="28" length="4" type="uint32" mask="0x1f000" shift="12"/>
+			<XBitField name="minute" byteoffset="28" length="4" type="uint32" mask="0xfc0" shift="6"/>
+			<XBitField name="second" byteoffset="28" length="4" type="uint32" mask="0x3f" shift="0"/>
+			
+			<XField name="clock" byteoffset="28" length="4" type="uint32"/>
+		</XFields>
+		<XFilter>
+			<XCondAnd>
+			
+				<!--
+					Check if this is a sensor type packet...AMTYPE_MULTIHOP or AMTYPE_XDEBUG
+					The Byte offsets defined above assume that there is a multihop header
+				-->
+				<XCondOr>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="amtype"/>
+						<XFilterParam name="fieldvalue" value="0x31"/>
+					</XCond>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="amtype"/>
+						<XFilterParam name="fieldvalue" value="0x33"/>
+					</XCond>
+					<XCondAnd>
+						<XCondOr>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="socketid"/>
+								<XFilterParam name="fieldvalue" value="0x31"/>
+							</XCond>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="socketid"/>
+								<XFilterParam name="fieldvalue" value="0x33"/>
+							</XCond>
+						</XCondOr>
+						<XCondOr>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="amtype"/>
+								<XFilterParam name="fieldvalue" value="0x0B"/>
+							</XCond>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="amtype"/>
+								<XFilterParam name="fieldvalue" value="0x0D"/>
+							</XCond>
+						</XCondOr>										
+					</XCondAnd>
+				</XCondOr>
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="board_id"/>
+					<XFilterParam name="fieldvalue" value="0x84"/>
+				</XCond>				
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="packet_id"/>
+					<XFilterParam name="fieldvalue" value="0x0"/>
+				</XCond>				
+			</XCondAnd>
+		</XFilter>
+		<XDataSinks>
+			<XDataSink name="Generic Print Datasink">
+				<XDSParam name="printstring" value="LightPoint event data:\n   firmware_id: %s parent: %s\n   relay1: %s \n   relay2: %s \n   group1: %s \n   group2: %s \n   current 1: %s amps\n   current 2: %s amps\n   clock: %s\n   year: %s\n   month: %s\n   day: %s\n   hour: %s\n   minute: %s\n   second: %s\n   "/>
+				<XDSParam name="printfields" value="firmware_id,parent,relayState1,relayState2,group1,group2,cur1,cur2,clock,year,month,day,hour,minute,second"/>
+			</XDataSink>
+			<XDataSink name="Open Log Datasink">
+				<XDSParam name="tablename_1" value="lightpoint_results"/>
+				<XDSParam name="createsql_1" value="CREATE TABLE lightpoint_results ( id serial primary key, result_time timestamp without time zone, epoch integer, firmware_id integer, parent integer, relayState1 integer, relayState2 integer, group1 integer, group2 integer,current1 integer, current2 integer)"/>	
+				<XDSParam name="tablename_2" value="lightpoint_results_l"/>				
+				<XDSParam name="createsql_2" value="CREATE TABLE lightpoint_results_l ( result_time timestamp without time zone, epoch integer, firmware_id integer, parent integer, relayState1 integer, relayState2 integer, group1 integer, group2 integer,current1 integer, current2 integer)"/>
+				<XDSParam name="rulesql_2" value="CREATE RULE cache_lightpoint_results AS ON INSERT TO lightpoint_results DO ( DELETE FROM lightpoint_results_l WHERE firmware_id = NEW.firmware_id;INSERT INTO lightpoint_results_l VALUES (NEW.*); )"/>				
+				<XDSParam name="insertsql_2" value="INSERT into lightpoint_results (result_time,firmware_id,parent,relayState1,relayState2,group1,group2,current1,current2) values (now(),%i,%i,%i,%i,%i,%i,%i,%i)"/>
+				<XDSParam name="insertfields_2" value="firmware_id,parent,relayState1,relayState2,group1,group2,cur1,cur2"/>
+			</XDataSink>
+			<XDataSink name="Generic Alert Datasink">
+				<XDSParam name="cur1" value="[0,5]"/>
+			</XDataSink>
+		</XDataSinks>
+	</XFieldExtractor>
+	
+</XServeConfig>

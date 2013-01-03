@@ -1,0 +1,2 @@
+# Breadcrumb that indicates that we are in a source directory, which
+# is no longer a valid $(proot).

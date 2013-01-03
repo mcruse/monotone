@@ -1,0 +1,483 @@
+/*
+Purpose: Generic Node widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: GenericNode.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+function GenericNode(){
+  this.base = Widget;
+  this.base();
+  this._name = 'GenericNode';
+  this._z_index = '1000';
+  this._node = '';
+  this.node_selector_node = 'true';
+  this._display_type = 'real';
+  this._precision = '2';
+  this._display_character_length = '10'; 
+  this._text_color = 'black';
+  this.color_selector_text_color = 'true';
+  this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+  this._text_font_size = '12px';
+ }
+
+GenericNode.prototype = new Widget;
+
+GenericNode.prototype.after_config_table = function() {
+  document.getElementById('GenericNode_display_type').value = this._display_type;
+}
+
+GenericNode.prototype.get_display_type_defaults = function(){
+ 
+  var s = document.createElement('select');
+   
+  s.setAttribute('id','GenericNode_display_type');
+
+  var o =  document.createElement('option');
+
+  o.value = 'active/inactive';
+  o.innerHTML = 'active/inactive';  
+  s.appendChild(o);  
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'binary';
+  o.innerHTML = 'binary';  
+  s.appendChild(o);  
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'boolean';
+  o.innerHTML = 'boolean';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'integer';
+  o.innerHTML = 'integer';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'on/off';
+  o.innerHTML = 'on/off';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'real';
+  o.innerHTML = 'real';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'string';
+  o.innerHTML = 'string';
+  s.appendChild(o);
+  return s;
+}
+
+GenericNode.prototype.init = function(element) {
+  this._name = 'GenericNode';
+  this._z_index = element.getAttribute('zindex');
+  var nodedisplaydiv = this.get_element(element,'div','nodedisplay');
+  this._node = nodedisplaydiv.getAttribute('node');
+  if(nodedisplaydiv.currentStyle) {
+    this._text_color = nodedisplaydiv.currentStyle['color'];
+    this._text_font_family = nodedisplaydiv.currentStyle['fontFamily'];
+    this._text_font_size = nodedisplaydiv.currentStyle['fontSize'];
+  }
+  else if(window.getComputedStyle) {
+    var compStyle = window.getComputedStyle(nodedisplaydiv,"");
+    this._text_color = compStyle.getPropertyValue('color');
+    this._text_font_family = compStyle.getPropertyValue('font-family');
+    this._text_font_size = compStyle.getPropertyValue('font-size');
+  }
+  else {
+    this._text_color = 'black';
+    this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+    this._text_font_size = '12px';
+  }
+  var infodiv = this.get_element(element,'input','info');
+  this._display_type = this.get_span_attr(infodiv, 'display_type');
+  this._precision = this.get_span_attr(infodiv, 'precision');
+  this._display_character_length = this.get_span_attr(infodiv, 'display_character_length');
+}
+
+GenericNode.prototype.init_element = function (){
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version','1_0_dev_2');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  this.element.style.position = 'absolute';
+  this.element.style.zIndex = this._z_index;
+
+  var infodiv = document.createElement('input');
+  infodiv.setAttribute('element','info');
+  infodiv.setAttribute('type','hidden');  
+  infodiv.setAttribute('display_type', this._display_type);
+  infodiv.setAttribute('precision', this._precision);  
+  infodiv.setAttribute('display_character_length', this._display_character_length);  
+   
+  this.element.appendChild(infodiv);
+
+  var placeholderdiv = document.createElement('div');
+  placeholderdiv.setAttribute('element', 'placeholder');
+  if(this._text_font_family != ''){
+    placeholderdiv.style.fontFamily = this._text_font_family;
+  }  
+  if(this._text_font_size != ''){
+    placeholderdiv.style.fontSize = this._text_font_size;
+  }  
+  var pstring = '';
+  for(var i = 0; i < parseInt(this._display_character_length); i++)
+	pstring += 'X';
+  placeholderdiv.innerHTML = pstring;
+  placeholderdiv.style.visibility = 'hidden';
+  this.element.appendChild(placeholderdiv);
+  
+  var nodedisplaydiv = document.createElement('div');
+  nodedisplaydiv.setAttribute('element', 'nodedisplay');
+  nodedisplaydiv.setAttribute('node', this._node);
+  switch(this._display_type) {
+    case 'active/inactive':
+      nodedisplaydiv.setAttribute('display_function', 'GenericNodeDisplayActiveInactive');
+      break;
+    case 'binary':
+      nodedisplaydiv.setAttribute('display_function', 'GenericNodeDisplayBinary');
+      break;
+    case 'boolean':
+      nodedisplaydiv.setAttribute('display_function', 'GenericNodeDisplayBoolean');
+      break;
+    case 'integer':
+      nodedisplaydiv.setAttribute('display_function', 'GenericNodeDisplayInteger');
+      break;
+    case 'on/off':
+      nodedisplaydiv.setAttribute('display_function', 'GenericNodeDisplayOnOff');
+      break;
+    case 'real':
+      nodedisplaydiv.setAttribute('display_function', 'GenericNodeDisplayReal');
+      break;
+    case 'string':
+      nodedisplaydiv.setAttribute('display_function', 'GenericNodeDisplayString');
+      break;
+  }
+  if(this._text_color != ''){
+    nodedisplaydiv.style.color = this._text_color;
+  }
+  if(this._text_font_family != ''){
+    nodedisplaydiv.style.fontFamily = this._text_font_family;
+  }  
+  if(this._text_font_size != ''){
+    nodedisplaydiv.style.fontSize = this._text_font_size;
+  }  
+  this.element.appendChild(nodedisplaydiv);
+}
+
+
+GenericNode.prototype.create = function (){
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function GenericNode_factory(){
+  return new GenericNode();
+}
+
+function GenericNodeDisplayNoErrors(v) {
+  try {    
+    var pattern1 = /\?/;      
+    var pattern2 = /error\:/;      
+    if (pattern1.exec(v.toString()) == null && pattern2.exec(v.toString()) == null) {
+      return 1;
+    }
+  }
+  catch(err) {
+    return 0;
+  }
+  return 0;
+}
+
+function GenericNodeDisplayActiveInactive(e,v){
+  try{    
+    if(GenericNodeDisplayNoErrors(v)){
+      var val;
+      if(v.as_magnitude){
+        val = v.as_magnitude();
+      }
+      else{
+        val = parseInt(v);
+      } 
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(val == 0) {
+          e.innerHTML = 'inactive';
+        }
+        else{
+            e.innerHTML = 'active';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(val == 0) {
+          e.value = 'inactive';
+        }
+        else {
+          e.value = 'active';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+}
+
+function GenericNodeDisplayBinary(e,v){
+  try{    
+    if(GenericNodeDisplayNoErrors(v)){
+      var val;
+      if(v.as_magnitude){
+        val = v.as_magnitude();
+      }else{
+        val = parseInt(v);
+      } 
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(val == 0) {
+          e.innerHTML = '0';
+        }
+        else {
+          e.innerHTML = '1';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(val == 0) {
+          e.value = '0';
+        }
+        else {
+          e.value = '1';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+}
+
+function GenericNodeDisplayBoolean(e,v){
+  try{    
+    if(GenericNodeDisplayNoErrors(v)){
+      var val;
+      if(v.as_magnitude){
+        val = v.as_magnitude();
+      }
+      else{
+        val = parseInt(v);
+      } 
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(val == 0) {
+          e.innerHTML = 'false';
+        }
+        else {
+          e.innerHTML = 'true';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(val == 0) {
+          e.value = 'false';
+	}
+        else {
+          e.value = 'true';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+}
+
+function GenericNodeDisplayInteger(e,v){
+  try{    
+    if(GenericNodeDisplayNoErrors(v)){
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      precision(e,v,0);
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+}
+
+function GenericNodeDisplayOnOff(e,v){
+  try{    
+    if(GenericNodeDisplayNoErrors(v)){
+      var val;
+      if(v.as_magnitude){
+        val = v.as_magnitude();
+      }
+      else{
+        val = parseInt(v);
+      } 
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(val == 0) {
+          e.innerHTML = 'off';
+	}
+        else {
+          e.innerHTML = 'on';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(val == 0) {
+          e.value = 'off';
+	}
+        else {
+          e.value = 'on';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+}
+
+function GenericNodeDisplayReal(e,v){
+  try{    
+    if(GenericNodeDisplayNoErrors(v)){
+      var ielement = GenericNodeGetElement(e.parentNode.parentNode, 'div', 'info');
+      var places = parseInt(ielement.getAttribute('precision'));
+      if(isNaN(places)){
+        places = 2;
+      }
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      precision(e,v,places);
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+}
+
+function GenericNodeDisplayString(e,v){
+  try{    
+    if(GenericNodeDisplayNoErrors(v)){
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = v.toString();
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = v.toString();
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+}
+
+function GenericNodeGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e
+}
+
+var GenericNode_loaded = true;

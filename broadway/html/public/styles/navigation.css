@@ -1,0 +1,23 @@
+@CHARSET "UTF-8";
+@import url("buttons.css");
+/***********************************************
+ *  Crate simple navigation pane menu styles.
+ **********************************************/
+  
+/****************
+ * Move down stage and other blocks to accommodate new pane.
+ ****************/
+div#stage div#contentarea {
+    left: 205px;
+}
+
+div#stage div#navigation-pane {
+    left: 0;
+    right: auto;
+    width: 180px;
+    padding: 10px;
+    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+

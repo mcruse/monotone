@@ -1,0 +1,29 @@
+POST /RCKData.asmx HTTP/1.1
+Host: rckservices.com
+Content-Type: text/xml; charset=utf-8
+Content-Length: 732
+SOAPAction: "http://RCKServices.com/GetRequestedData"
+
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <GetRequestedData xmlns="http://RCKServices.com/">
+      <Request>
+<DataRequest>
+  <Request>
+    <Name>Trane Forbidden Reef Differential Pressure</Name>
+    <Type>analog</Type>
+  </Request>
+  <Request>
+    <Name>Trane Tide Pool Differential Pressure</Name>
+    <Type>analog</Type>
+  </Request>
+  <Request>
+    <Name>Trane Wild Arctic Differential Pressure</Name>
+    <Type>analog</Type>
+  </Request>
+</DataRequest>
+</Request>
+    </GetRequestedData>
+  </soap:Body>
+</soap:Envelope>

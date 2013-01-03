@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cisco:EntityViewerWidgetApp
+	xmlns:cisco="com.cisco.nbm.entityviewer.*"
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	layout="vertical"
+	horizontalAlign="left"
+	paddingBottom="3" paddingLeft="3" paddingRight="3" paddingTop="3" 
+	>
+	<mx:Style source="kubrick.css" />
+	<mx:Style>
+		.entityNameStyle
+		{
+			font-weight: bold;
+			font-size: 16;
+		}
+		
+		.sectionLabel
+		{
+			font-weight: bold;
+			font-size: 20;
+		} 
+	</mx:Style>
+	<mx:Script>
+		<![CDATA[
+			import com.cisco.app.core.async.AsyncMethod;
+			import com.cisco.cisco_internal;
+			import com.cisco.nbm.browserbridge.BrowserBridge;
+			import com.cisco.nbm.browserbridge.BrowserBridgeEvent;
+			import com.cisco.nbm.entities.Entity;
+			import com.cisco.nbm.entities.EntityEvent;
+			import com.cisco.nbm.entities.EntityManager;
+			import com.cisco.nbm.entities.EntityProperty;
+			import com.cisco.nbm.entities.EntityPropertyChangeEvent;
+			import com.cisco.nbm.entities.EntityPropertyOverrideEvent;
+			import com.cisco.nbm.entities.ui.OutputEditorPanel;
+			import com.cisco.nbm.xmlrpc.v2.MediatorNode;
+			import com.cisco.nbm.xmlrpc.v2.MediatorNodeCall;
+			import com.cisco.nbm.xmlrpc.v2.XMLRPCService;
+			import com.cisco.ui.components.ErrorPanel;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.advancedDataGridClasses.AdvancedDataGridColumn;
+			import mx.events.CloseEvent;
+			import mx.logging.ILogger;
+			import mx.logging.Log;
+			import mx.logging.targets.TraceTarget;
+			import mx.utils.StringUtil;
+			
+			use namespace cisco_internal;
+				
+			[Bindable]
+			private var outputs:ArrayCollection = new ArrayCollection();
+		
+			[Bindable]
+			private var inputs:ArrayCollection = new ArrayCollection();
+			
+			private var outputEditorPanel:OutputEditorPanel;
+			
+			private var _isRunning:Boolean = false;
+			
+			[Bindable]
+			private var canEditSelection:Boolean = false;
+			
+			override protected function init():void
+			{
+				outputs.filterFunction = filterOutputs;
+				outputs.refresh();
+				
+				inputs.filterFunction = filterInputs;
+				inputs.refresh();
+			}
+			
+			override protected function customizeBrowserBridge():void
+			{
+				if (browserBridge.isReady)
+				{
+					browserBridge.addCallback("stop", handleStop);
+					browserBridge.addCallback("start", handleStart);
+					browserBridge.addCallback("isRunning", handleIsRunning);
+				}
+				
+				if (initialSelectedEntity != null && initialSelectedEntity.length != 0)
+				{
+					//logger.debug("Showing entity: " + initialSelectedEntity);
+					tiEntityPath.text = initialSelectedEntity;
+				}
+			}
+			
+			private function handleStop(empty:Object=null):void
+			{
+			//	Alert.show("Stop Called", "Stop Called");
+				_isRunning = false;
+				
+				if (entity != null)
+				{
+					entity.stopPoll();
+				}
+			}
+			
+			private function handleStart(empty:Object=null):void
+			{
+			//	Alert.show("Start called", "Start Called");
+				_isRunning = true;
+				
+				if (entity != null)
+				{
+					entity.startPoll();
+				}			
+			}
+			
+			private function filterSchedules(item:EntityProperty):Boolean
+			{
+				return item.type.toLowerCase() == "schedule";
+			}
+			
+			
+			
+			private function filterLogs(item:EntityProperty):Boolean
+			{
+				var result:Boolean = (item.type.toLowerCase() == "log"); 
+				return result;
+			}
+			
+			private function filterInputs(item:EntityProperty):Boolean
+			{
+				// Previous type descriptors returned the full type in the
+				// definition, for example "Analog Input".  The latest
+				// backend code from 12/08/2009 is returning bacnet 
+				// type definitions as "AI", instead of Analog Input, for
+				// example.  So we now test by making sure the type is
+				// of two characters and that the last character is either
+				// I or O
+				// For example, XI is input of type X.
+				trace("filter inputs: " + item.isInput() + ", " + item.name);
+				return item.isInput();
+				
+			}
+			
+			private function filterOutputs(item:EntityProperty):Boolean
+			{
+				return item.isOutput();
+			}
+			
+			
+			override protected function entityPropertiesLoaded():void
+			{
+				super.entityPropertiesLoaded();
+				
+				updateControls();
+			}
+						
+			override protected function entitySelected():void
+			{
+				super.entitySelected();
+				
+				tiEntityPath.text = entity.path;//entityId;
+				
+				if (entity != null)
+				{
+					handleStop();
+					
+					_isRunning = true;
+				}				
+				
+				updateControls();
+			}
+			
+			
+			
+			public function handleIsRunning(empty:Object=null):Boolean
+			{
+				return _isRunning;
+			}
+			
+			override protected function cleanCurrentEntity():void
+			{
+				super.cleanCurrentEntity();
+				if (entity != null)
+				{
+					entity.stopPoll();
+				}
+				
+				canEditSelection = false;
+			}
+			
+			private function updateControls():void
+			{
+				labelEntityName.text = entity.label;
+				
+				if (entity.propertiesLoaded)
+				{
+					// doh!
+					outputs.list = entity.properties;
+					outputs.refresh();
+					
+					/*
+					logs.removeAll();
+					logs.list = entity.properties;
+					logs.refresh();
+					*/
+					inputs.list = entity.properties;
+					inputs.refresh();
+					
+				}
+			}
+			
+			override protected function getLoggerName():String
+			{
+				return "cisco.nbm.widgets.entityPropertyViewer";
+			}
+			
+			private function handleOutputsDoubleClick():void
+			{
+				var item:EntityProperty = gridOutputs.selectedItem as EntityProperty;
+				
+				logger.debug("selected output: {0}", item);
+				
+				if (!item.canWrite) {
+					logger.debug("User can't write");
+					return;
+				}
+				
+				if (item != null)
+				{
+					editProperty(item);
+				}
+			}
+			
+			private function editProperty(property:EntityProperty):void
+			{
+				logger.debug("displayOutputEditor({0})", property);
+				
+				//var call:AsyncMethod = entity.getPropertyOverride(property);
+				//call.addCallback(handlePropertyOverrideResult, handlePropertyOverrideError);
+				outputEditorPanel = OutputEditorPanel.show(entity, property, this, handleCloseEditorPanel);
+				outputEditorPanel.addEventListener(ErrorEvent.ERROR, handleOutputEditorPanel);
+				
+			}
+			
+			private function handleOutputEditorPanel(event:ErrorEvent):void
+			{
+				cleanOutputEditorPanel();
+				//Alert.show("Error retrieving overrides:\n" + event.text, "Error", Alert.OK, this);
+				ErrorPanel.show(this, "Error loading overrides from mediator",
+				 	"Error Loading Overrides", event.text);
+			}
+			
+			private function handleCloseEditorPanel(event:CloseEvent):void
+			{
+				if (event.detail == Alert.OK)
+				{
+					logger.debug("levels: " + outputEditorPanel.overrides);
+					var panel:OutputEditorPanel = event.target as OutputEditorPanel;
+					var property:EntityProperty = panel.property;
+					// convert overrides into an array
+					var overrides:Array = [];
+					
+					for (var i:int = 0; i < 16; i++)
+					{
+						overrides.push( panel.overrides[i+1] );
+					}
+					
+					entity.addEventListener(EntityPropertyOverrideEvent.ON_COMPLETE, onOverrideComplete);
+					entity.addEventListener(EntityPropertyOverrideEvent.ON_ERROR, onOverrideError);
+					if (entity.setPropertyOverride(property, outputEditorPanel.overrides) == null) {
+						logger.debug("Unable to set property");
+						Alert.show("Unable to override property", "Error");
+					}
+				}
+				
+				cleanOutputEditorPanel();
+
+			}
+			private function onOverrideComplete(event:EntityPropertyOverrideEvent):void
+			{
+				event.entity.removeEventListener(EntityPropertyOverrideEvent.ON_COMPLETE, onOverrideComplete);
+				event.entity.removeEventListener(EntityPropertyOverrideEvent.ON_ERROR, onOverrideError);
+			}
+			
+			private function onOverrideError(event:EntityPropertyOverrideEvent):void
+			{
+				Alert.show(event.error, "Unable to override property");
+				event.entity.removeEventListener(EntityPropertyOverrideEvent.ON_COMPLETE, onOverrideComplete);
+				event.entity.removeEventListener(EntityPropertyOverrideEvent.ON_ERROR, onOverrideError);
+			}
+			
+			private function cleanOutputEditorPanel():void
+			{
+				if (outputEditorPanel != null)
+				{
+					outputEditorPanel.removeEventListener(ErrorEvent.ERROR, handleOutputEditorPanel);
+					outputEditorPanel = null;
+				}
+			}
+			
+			private function propertyLabelFunction(item:EntityProperty, 
+				column:AdvancedDataGridColumn):String
+			{
+				if (item.label == null || StringUtil.trim(item.label).length == 0)
+				{
+					return item.name;
+				}
+				
+				return item.label + " ("+ item.name + ")";
+			}
+			
+			override protected function enableDebug():void
+			{
+				super.enableDebug();
+				debugBox.visible = true;
+				debugBox.height = debugBox.measuredHeight;
+			}
+			
+			private function handleOutputChanged():void {
+				
+				trace("checking handle output changed");
+				
+				var prop:EntityProperty = gridOutputs.selectedItem as EntityProperty;
+				canEditSelection = prop.canWrite;
+			}
+		]]>
+	</mx:Script>
+	<mx:HBox width="100%"   
+		height="0"
+		id="debugBox"
+		styleName="debugBox"
+		visible="false">
+		<mx:Label text="Entity Path" />
+		<mx:TextInput width="100%" id="tiEntityPath" text="{Globals.INITIAL_ENTITY_PATH}"  />
+		<mx:Button label="Load" click="debugLoadEntity(tiEntityPath.text)" 
+			enabled="{StringUtil.trim(tiEntityPath.text).length != 0 &amp;&amp; ready}" 
+			/>
+			
+		<mx:Spacer width="50" />
+		<mx:Button label="Start" click="handleStart()"
+				enabled="{entity != null}" />
+		<mx:Button label="Stop" click="handleStop()" 
+			enabled="{entity != null}"/>
+		<mx:Button label="Get Entity" click="handleGetEntity()" 
+			enabled="{entity != null}"/>
+	</mx:HBox>
+	<mx:Label styleName="entityNameStyle" id="labelEntityName" />
+	<mx:Label styleName="sectionLabel" text="Outputs" />
+	<mx:AdvancedDataGrid id="gridOutputs" width="100%" 
+		height="50%" dataProvider="{outputs}"
+		change="handleOutputChanged()"
+		doubleClickEnabled="true" doubleClick="handleOutputsDoubleClick()">
+		<mx:columns>
+			<mx:AdvancedDataGridColumn headerText="Name" dataField="name" width="100" />
+			<mx:AdvancedDataGridColumn headerText="Label" dataField="label" width="150" />
+			<mx:AdvancedDataGridColumn headerText="Description" dataField="description" />
+			<mx:AdvancedDataGridColumn headerText="Value" dataField="value" width="100" />
+		</mx:columns>
+	</mx:AdvancedDataGrid>
+	<mx:HBox width="100%" horizontalAlign="left">
+		<mx:Button label="Edit Overrides" click="handleOutputsDoubleClick()" 
+			enabled="{gridOutputs.selectedItem != null}" />
+	</mx:HBox>
+	<mx:Label styleName="sectionLabel" text="Inputs" />
+	<mx:AdvancedDataGrid id="gridInputs" width="100%" 
+		height="50%" 
+		dataProvider="{inputs}">
+		<mx:columns>
+			<mx:AdvancedDataGridColumn headerText="Name" dataField="name" width="100" />
+			<mx:AdvancedDataGridColumn headerText="Label" dataField="label" width="150" />
+			<mx:AdvancedDataGridColumn headerText="Description" dataField="description" />
+			<mx:AdvancedDataGridColumn headerText="Value" dataField="value" width="100" />
+		</mx:columns>
+	</mx:AdvancedDataGrid>
+</cisco:EntityViewerWidgetApp>

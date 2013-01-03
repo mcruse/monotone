@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	implements="com.cisco.nbm.entities.ui.IOverrideValueEditor">
+	<mx:Script>
+		<![CDATA[
+			
+			private var _value:Number;
+			
+			private var newValue:Number;
+			
+			public function get value():Object
+			{
+				return newValue;
+			}
+		
+			public function set value(v:Object):void
+			{
+				if (!(v is Number) && v != null)
+				{
+					throw new Error("Value must be of type Number");
+				}
+				
+				if (v != _value)
+				{
+					_value = v as Number;
+				}
+				
+				updateEditors();
+			}
+			
+			private function updateEditors():void
+			{
+				if (!initialized)
+				{
+					return;
+				}
+				
+				tiInput.text = new String(_value);
+			}
+			
+			private function updateValues():void
+			{
+				// Check for invalid number
+				newValue = new Number(tiInput.text);
+			}
+		]]>
+	</mx:Script>
+	<mx:TextInput id="tiInput" width="100%" 
+		change="updateValues()"/>
+</mx:HBox>

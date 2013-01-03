@@ -1,0 +1,58 @@
+<%
+# Copyright (c) 2004 Richards-Zeta
+# $Name: mediator_3_1_2_branch $
+# $Id: SubscriptionManager.psp 20101 2011-03-06 16:02:15Z bhagn $
+from mpx.lib.node import as_node
+sm = as_node('/services/Subscription Manager')
+
+dict_of_nodes = sm._SubscriptionManager__master_node_table
+
+#sid= '2891dca5-9529-11da-9b97-000f1f2003d3'
+
+sub = sm._SubscriptionManager__subscriptions
+
+%>
+<html>
+<style type="text/css">
+body{
+ font-size:14px;
+ color:#333333;
+ }
+
+.subIDS{
+ font-weight:bold;
+ margin-left:5px;
+}
+
+.sub{
+ margin-left:10px;
+ font-weight:bold;
+ color:green;
+}
+.node{
+ margin-left:15px;
+ color:blue;
+}
+
+</style>
+<body>
+
+Number of Subscriptions:<%=len(sub) %><br>
+Number of entries in the Node Def Reference Table:<%=len(dict_of_nodes)%><br>
+<%
+for sub_id in sub.keys():
+    %>
+    <span class="subIDS">Subscription IDS</span><br>
+    <span class="sub"><%=sub_id%></span><br>
+    <%
+    nodes = sub[sub_id].node_reference_table()
+    for k2 in nodes.keys():
+        value = ''
+        # value = sub[sub_id].all_values()[k2]['value']
+        %>
+        <%=k2%> <span class="node"><%=nodes[k2]%></span> <%=value%><br>
+    
+<br>
+
+</body>
+</html>

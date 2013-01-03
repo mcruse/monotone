@@ -1,0 +1,4 @@
+This folder contains style sheets which have been deprecated 
+but not fully retired.  Eventually all style content should 
+be stored in /public/styles/* and externally included style 
+sheet content. 

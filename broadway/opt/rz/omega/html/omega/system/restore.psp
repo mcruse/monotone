@@ -1,0 +1,85 @@
+<%
+# $Name: mediator_3_1_2_branch $
+# $Id: restore.psp 20932 2011-10-12 09:15:11Z rthettal $
+import os
+import sys
+import string
+import subprocess
+from mpx.lib.http import MultipartLargeFileCollector
+from mpx import properties
+from mpx.lib.node import as_node
+
+HTTP_ROOT = properties.HTTP_ROOT
+m = MultipartLargeFileCollector(request)
+
+errormessage = ''
+tar_says = ''
+admin = request.user_object().is_admin()
+
+def do_untar_fd(fd, filename):
+    #@fixme does not currently address available disk space, etc..
+    superexec = os.path.join(properties.ROOT, 'tools', 'superexec')
+    child = subprocess.Popen((superexec, 'tar', 'tzPf', '-'),
+                             shell = False,
+                             stdin = fd,
+                             stdout = subprocess.PIPE)
+    flag = 1
+    for line in child.stdout.readlines():
+        if flag and line.endswith('config/broadway.xml\n'):
+            flag = 0
+    child.wait()
+    if child.returncode:
+        return 'Backup file "%s" corrupted' % string.split(filename, '/')[-1]
+    if flag:
+        return 'Invalid backup file "%s"' % string.split(filename, '/')[-1]
+    fd.seek(0)
+    backup_reg = as_node('/services/backup_registry')
+    exclude_list = backup_reg.get_exclude_list()
+    cmd = [superexec, 'tar', 'xzPf', '-', '--overwrite']
+    cmd1 = cmd + exclude_list
+    child = subprocess.Popen(cmd1,
+                             shell=False,
+                             stdin=fd,
+                             stderr=subprocess.PIPE)
+    tar_error = child.stderr.read()
+    child.wait()
+    if child.returncode:
+       return tar_error
+    return ''
+
+if m.has_key('restorefile'):
+    filename = m['restorefile'].filename
+    if admin:
+        fd = m['restorefile'].file
+        if fd:
+            try:
+                errormessage = do_untar_fd(fd, filename)
+            except Exception,e:
+                print 'ERROR:%s' % e
+            finally:
+                fd.close()
+        else:
+            errormessage = 'File attachment failed'
+    else:
+        errormessage = 'Unauthorized action'
+else:
+    errormessage = 'Form did not have correct file element'
+if (errormessage != ''):
+	message = "<span style=\"color:red\">ERROR: %s</span>"%errormessage
+else:
+	message = "<span style=\"color:green\">Backup restored successfuly</span>"
+
+%>
+<html>
+    <head>
+        <title>Backup/Restore</title>
+    </head>
+    <body style="background-color:transparent">
+    <form action="/omega/system/restore.psp" name="backup_restore" method="post" enctype="multipart/form-data">
+		<input type="File" name="restorefile">
+		<input type="Submit" value="Restore">
+		<input type="hidden" name="restore">
+	</form>
+	<%= message%>
+    </body>
+</html>

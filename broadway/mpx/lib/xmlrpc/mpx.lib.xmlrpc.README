@@ -1,0 +1,5 @@
+This allows for setting up XMLRPC deployment objects.   You can create an object that will be callable through the XMLRPC infrastructure.
+
+This allows for encapsulating an object for security or ease of use reason.
+
+

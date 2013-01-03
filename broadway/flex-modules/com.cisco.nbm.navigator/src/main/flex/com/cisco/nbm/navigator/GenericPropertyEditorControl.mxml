@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" 
+	creationComplete="init()">
+<mx:Script>
+	<![CDATA[
+		import mx.controls.ComboBox;
+		import mx.controls.TextInput;
+		import mx.core.UIComponent;
+		import com.cisco.nbm.entities.EntityProperty;
+		
+		[Bindable]
+		private var _property:EntityProperty;
+		
+		private var component:UIComponent;
+		
+		public var value:Object;
+
+		private var readOnlyTypes:Array = ["Analog Output", "MultiState Output", 
+			"Output", "Binary Output"]
+
+		private function init():void
+		{
+			if (_property != null)
+			{
+				createControls();
+				updateControls();
+			}
+		}
+		
+		public function setValue(v:Object):void
+		{
+			value = v;
+			
+			updateControls();
+		}
+		
+		private function updateControls():void
+		{
+			if (!initialized)
+			{
+				return;
+			}
+			
+			if (value == null)
+			{
+				return;
+			}
+			
+			tiDebugValue.text = new String(value);
+			
+			if (component is TextInput)
+			{
+				(component as TextInput).text = new String(value);
+			}
+			else if (component is ComboBox)
+			{
+				(component as ComboBox).selectedIndex = new Number(value);
+			}
+			
+		}
+		
+		public function set property(value:EntityProperty):void
+		{
+			_property = value;
+			
+			if (_property != null && initialized)
+			{
+				createControls();
+			}
+		}
+		
+		private function createControls():void
+		{
+			labelType.text = _property.type;
+			
+			switch (_property.type)
+			{
+				case "Analog Output":
+				case "MultiState Output":
+				case "Output":
+				case "Analog Input":
+				case "MultiState Input":
+				case "Input":
+					component = new TextInput();
+					
+				break
+				case "Binary Input":
+				case "Binary Output":
+					 if (_property.optional['enumeration'] != undefined)
+					 {
+						component = new ComboBox();
+						
+						(component as ComboBox).dataProvider = _property.optional['enumeration'];
+					}
+					else
+					{
+						component = new TextInput();
+					} 
+				break;
+			}
+			
+			
+			if (component != null)
+			{
+				if (readOnlyTypes.indexOf(_property.type) != -1)
+				{
+				//	component.enabled = false;
+				}
+				
+				component.width = 100;
+				inputControlBox.addChild(component);
+			}
+		}
+	]]>
+</mx:Script>
+	<mx:Label text="{_property.name}" fontWeight="bold" fontSize="12" />
+	<mx:HBox width="100%" id="inputControlBox">
+		<mx:Label text="Type: " />
+		<mx:Label id="labelType" />
+		<mx:TextInput id="tiDebugValue" width="100" />
+	</mx:HBox>
+	<mx:HRule width="100%" />
+</mx:VBox>

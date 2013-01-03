@@ -1,0 +1,263 @@
+<!--
+Copyright (C) 2008 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<!-- $Name: mediator_3_1_2_branch $ -->
+<!-- $Id: timed_override.html 20101 2011-03-06 16:02:15Z bhagn $ -->
+<title>Override</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<script language="JavaScript" type="text/JavaScript">
+function initOverride() {
+  var display_element = opener.OverridablePointGetElement(
+    opener.OverridablePointDialogWin.elem, 'div', 'nodedisplay');
+  var node_element = document.getElementById('node');
+  node_element.value = display_element.getAttribute('node');
+
+  var value_element = document.getElementById('newvalue');
+  value_element.value = display_element.innerHTML;
+  refresh_status(true);
+  setTimeout('focusElementById("newvalue")',250);
+}
+
+function refresh_status(reschedule) {
+  reschedule = reschedule || true;
+  var information_element = opener.OverridablePointGetElement(opener.OverridablePointDialogWin.elem,'div','info');
+  var override_active = information_element.getAttribute('override_active');
+  var clear_button = document.getElementById("clear_btn");
+  var status_text = ''
+  if (override_active && eval(override_active)) {
+    status_text = 'Overridden ';
+    var override_clears_at = information_element.getAttribute('override_clears_at');
+    if (override_clears_at) {
+      var timelapse = (override_clears_at - (new Date()).getTime());
+      if (timelapse < 0) {
+        timelapse = 0;
+      }
+      var seconds = Math.floor(timelapse / 1000);
+      var minutes = Math.floor(seconds / 60);
+      seconds %= 60;
+      var hours = Math.floor(minutes / 60);
+      minutes %= 60;
+      var timearray = new Array(hours, minutes, seconds);
+      for (var i = 0; i < timearray.length; i++) {
+        var numberstring = timearray[i].toFixed(0);
+        if (numberstring.length == 1) {
+          numberstring = '0' + numberstring;
+        }
+        timearray[i] = numberstring;
+      }
+      status_text += 'for ' + timearray.join(':');
+    } else {
+      status_text += 'indefinitely.';
+    }
+    clear_button.disabled = false;
+  } else {
+    status_text = 'Not Overridden';
+    clear_button.disabled = true;
+  }
+  var status_span = document.getElementById('override_status');
+  status_span.value = status_text;
+  if (reschedule) {
+    setTimeout(refresh_status, 5000);
+  }
+}
+
+function focusElementById(id) {
+  var elem = document.getElementById(id);
+  elem.focus();
+  elem.select();
+}
+
+function overrideViaEnter(evt) {
+  evt = (evt) ? evt : event;
+  var charCode = (evt.charCode) ? evt.charCode :
+    ((evt.which) ? evt.which : evt.keyCode);
+  if(charCode == 13 || charCode == 3) {
+    doOverride();
+	return false;
+  }
+  return true;
+}
+
+function isValidInput() {
+  var mySuccess = false;
+  var myUnitsArray;
+  var infoElem = opener.OverridablePointGetElement(opener.OverridablePointDialogWin.elem,'div','info');
+  var myNewValue = document.getElementById('newvalue').value;
+  var myUnits = infoElem.getAttribute('units');
+  if (myUnits.length > 0) {
+    if (myUnits.indexOf(',') == -1) { 
+	  myDisplayType = 'single';
+    } else { 
+      myUnitsArray = myUnits.split(',');
+	  myDisplayType = 'multiple';
+    }
+  } else {
+    myDisplayType = 'none';
+  }
+  
+  switch(myDisplayType) {
+	case 'multiple':
+	  for (var i = 0; i < myUnitsArray.length; i ++) {
+	    if (myNewValue.toUpperCase() == myUnitsArray[i].toUpperCase()) {
+          opener.OverridablePointDialogWin.newValue = i;
+		  mySuccess = true;
+		  break;
+		}
+	  }
+	  break;
+    case 'single':
+	case 'none':
+      if(isNaN(myNewValue) == false) {
+        opener.OverridablePointDialogWin.newValue = myNewValue;
+		mySuccess = true;
+	  }
+	  break;
+  }
+  var unit_element = document.getElementById('time_unit');
+  var unit_index = unit_element.selectedIndex;
+  var unit_option = unit_element.options[unit_index];
+  var time_unit = unit_option.value || unit_option.text;
+  if (time_unit != 'Indefinite') {
+    var time_period = document.getElementById('time_period').value;
+    if (!time_period.length || isNaN(time_period)) {
+      alert("Numeric period must be entered for unit " + time_unit + ".");
+      opener.OverridablePointDialogWin.override_period = '';
+      mySuccess = false;
+    } else {
+      var multipliers = {Hours: 60 * 60, Minutes: 60, Seconds: 1};
+      var override_period = Number(time_period) * multipliers[time_unit];
+      opener.OverridablePointDialogWin.override_period = String(override_period);
+    }
+  } else {
+    opener.OverridablePointDialogWin.override_period = '';
+  }
+  return mySuccess;
+}
+
+function doOverride() {
+  if(opener && !opener.closed && opener.OverridablePointDialogWin) {
+    if(isValidInput()) {
+	  opener.OverridablePointDialogWin.ovrFunc();
+	  window.close();
+	}
+	else {
+	  alert("Missing or incorrect input, please re-enter value.");
+      setTimeout('focusElementById("newvalue")',250);
+	}
+  }
+  else {
+    alert("Application window closed.\n\nClosing override window" +
+	  "without override.");
+	window.close();
+  }
+}
+
+function doPulse() {
+  if(opener && !opener.closed && opener.OverridablePointDialogWin) {
+    if(isValidInput()) {
+	  opener.OverridablePointDialogWin.pulseFunc();
+	  window.close();
+	}
+	else {
+	  alert("Missing or incorrect input, please re-enter value.");
+      setTimeout('focusElementById("newvalue")',250);
+	}
+  }
+  else {
+    alert("Application window closed.\n\nClosing override window" +
+	  "without override.");
+	window.close();
+  }
+}
+
+function doClear() {
+  if(opener && !opener.closed && opener.OverridablePointDialogWin) {
+	opener.OverridablePointDialogWin.clrFunc();
+	window.close();
+  }
+  else {
+    alert("Application window closed.\n\nClosing override window" +
+	  "without override.");
+	window.close();
+  }
+}
+</script>
+</head>
+
+<body topmargin="0" leftmargin="0" marginheight="0" marginwidth="0" bgcolor="#999999"
+  onload='javascript:initOverride(); if(opener && opener.OverridablePointBlockEvents) opener.OverridablePointBlockEvents()'
+  onunload='if(opener && opener.OverridablePointUnblockEvents) opener.OverridablePointUnblockEvents()'>
+<table border="0" cellspacing="5px" cellpadding="0">
+  <tr>
+    <td>Point: </td>
+    <td colspan="2">
+      <input id="node" type="text" size="40" disabled="disabled" />
+    </td>
+  </tr>
+  <tr>
+    <td>State: </td>
+    <td>
+      <input id="override_status" type="text" size="20" disabled="disabled" />
+    </td>
+    <td>
+      <input id="clear_btn" type="button" value="Clear" onClick="javascript:doClear()" />
+    </td>
+  </tr>
+  <tr>
+    <td>Value: </td>
+    <td>
+      <input id="newvalue" onkeypress="return overrideViaEnter(event)" type="text" size="20" />
+    </td>
+    <td>
+      <input id="override_btn" type="button" value="Override" onClick="javscript:doOverride()" />
+    </td>
+  </tr>
+  <tr>
+    <td>Period: </td>
+    <td>
+      <input id="time_period" type="text" value="" size="20" />
+    </td>
+    <td>
+      <select name="time_unit" id="time_unit">
+        <option>Indefinite</option>
+        <option>Hours</option>
+        <option>Minutes</option>
+        <option>Seconds</option>
+      </select>
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

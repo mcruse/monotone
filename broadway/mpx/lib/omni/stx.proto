@@ -1,0 +1,3 @@
+class start_byte {
+    uint8 stx1 = 0x68;
+}

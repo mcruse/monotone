@@ -1,0 +1,16 @@
+class setregister {
+    uint8 cmd = 0x01;
+    uint16 regno;
+    uint16 value;
+}
+
+class setregisterresponse {
+    uint8 cmdecho = 0x81;
+    uint16 regno;
+    uint16 value;
+    # Response code is 0 if no error, and
+    # non-zero if there was a problem setting
+    # the register.
+    uint8 responsecode;
+}
+    

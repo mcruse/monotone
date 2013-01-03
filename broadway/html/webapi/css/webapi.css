@@ -1,0 +1,452 @@
+
+/**************************
+* Copyright (c) 2005 Richards-Zeta
+* $Id: webapi.css 20101 2011-03-06 16:02:15Z bhagn $
+* Outer table
+**************************/
+table.toolbar_outer_table{
+  width:200px
+}
+
+table.toolbar_outer_table td{
+  background:#FFFFFF;
+}
+/**************************
+* Inner table
+**************************/
+table.toolbar {
+  width:100%
+}
+
+table.toolbar td{
+ background: #999999;
+ color:#FFFFFF;
+ text-align:center;
+ font-size:16px;
+ font-weight:bold;
+} 
+
+td.page_header{ 
+  height:110px;
+  text-align:left;
+  vertical-align:top;
+  background:#FFFFFF
+ }
+
+td.footer{ 
+ background:#999999;
+ text-align:right;
+ color:#FFFFFF;
+ font-size:15px; 
+ }
+a{ 
+  text-decoration:none;
+  font-size:16px;
+  font-weight:bold;
+  color:#0000FF; 
+ }
+
+a:hover{ 
+  color:#7e1d31;
+ }
+
+td.header_bottom{ 
+  background:#7e1d31;
+ }
+
+
+
+td.toolbar_heading{ 
+
+ font-size:20px;
+
+ font-weight:bold;
+
+ text-align:center;
+
+ color:#FFFFFF;
+
+ background:#666666;
+
+} 
+
+
+
+table.toolbar td.side{
+
+ background: #7e1d31;
+
+ width:25px;
+
+ text-align:center;
+
+}
+
+
+
+table.toolbar td.selected{
+
+   color:#FFFFFF;
+
+   background:#7e1d31;    
+
+}
+
+	
+
+table.toolbar a { 
+
+  display:block;
+
+  text-decoration:none; 
+
+}
+
+
+
+
+
+table.toolbar a:link{ 
+
+ color: #FFFFFF;
+
+} 
+
+
+
+table.toolbar a:visited{ 
+
+ color: #FFFFFF;
+
+} 
+
+
+
+table.toolbar a:hover{  
+
+  background: #dddddd; 
+
+  color: #000000;
+
+}
+
+/**********************
+
+* documentation
+
+**********************/
+
+
+
+td.outer_color{ 
+
+ background:#CCCCCC;
+
+ }
+
+
+
+td.inner_color{ 
+
+background:#FFFFFF;
+
+ }
+
+
+
+.param{ 
+
+ color: #005500;
+
+ }
+
+
+
+td.param{ 
+
+ color: #005500;
+
+ text-align:right;
+
+ background:#FFFFFF
+
+} 
+
+td.return{ 
+
+  background:#FFFFFF;
+
+ }
+
+
+
+td.label{ 
+
+ color: #005555;
+
+ text-align:right;
+
+ font-weight:bold;
+
+ background:#FFFFFF;
+
+} 
+
+
+
+td.param_def{ 
+
+ color: #666666;
+
+ text-align:left;
+
+ background:#FFFFFF
+
+} 
+
+
+
+.function { 
+
+ color:#000000;
+
+ font-weight:bold;
+
+ }
+
+
+
+a.function{ 
+
+ color:#000000;
+
+ font-weight:bold;
+
+ text-decoration:none;  
+
+} 
+
+
+
+a.function:hover{ 
+
+ color:#0000FF;
+
+ font-weight:bold;
+
+ text-decoration:none;
+
+}  
+
+
+
+.method { 
+
+ color:#000000;
+
+ font-weight:bold;
+
+ }
+
+
+
+a.method{ 
+
+ color:#000000;
+
+ font-weight:bold;
+
+ text-decoration:none;  
+
+} 
+
+
+
+a.method:hover{ 
+
+ color:#0000FF;
+
+ font-weight:bold;
+
+ text-decoration:none;
+
+}  
+
+
+
+td.object { 
+
+ color:#000000;
+
+ font-weight:bold;
+
+ font-size:18px;
+
+ }
+
+
+
+
+
+.object { 
+
+ color:#000000;
+
+ font-weight:bold;
+
+ }
+
+
+
+a.object{ 
+
+ color:#000000;
+
+ font-weight:bold;
+
+ text-decoration:none;  
+
+} 
+
+
+
+a.object:hover{ 
+
+ color:#0000FF;
+
+ font-weight:bold;
+
+ text-decoration:none;
+
+}  
+
+
+
+td.property_name{ 
+
+  color: #009900;
+
+ font-size:16px;
+
+ text-align:right;
+
+ }
+
+
+
+td.webapi_header{ 
+
+ color: #FFFFFF;
+
+ font-size:18px;
+
+ text-align:left;
+
+ background:#666666; 
+
+}
+
+
+
+td.method_def{ 
+
+  background:#FFFFFF;
+
+} 
+
+
+
+td.property_desc{ 
+
+ color: #aaaaaa;
+
+ font-size:16px;
+
+ text-align:left;
+
+ }
+
+
+
+td.function_header{ 
+
+  background:#dddddd }
+
+ }
+
+
+
+td.method_header{ 
+
+  background:#dddddd }
+
+ }
+
+
+
+td.function_def{
+
+ color: #aaaaaa;
+
+ font-size:18px;
+
+ text-align:left;
+
+  }
+
+
+
+td.note{
+
+ color: #550000;
+
+ font-size:16px;
+
+ text-align:left;
+
+ width:100%;
+
+ background:#FFFFFF;
+
+}
+
+
+
+td.documentation_header{ 
+
+  background:#FFFFFF;
+
+  color:#000000;
+
+  font-size:25px;
+
+  text-align:center;
+
+ }
+
+
+
+span.example{ 
+
+  color:#004400;
+
+  font-size:15px;
+
+  font-style:italic
+
+  background:#FFFFFF;
+
+ }
+
+/**********************
+
+* maincontent
+
+**********************/
+
+table.maincontent{ 
+
+  height:590px;
+
+ }
+

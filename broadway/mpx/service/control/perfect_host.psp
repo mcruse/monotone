@@ -1,0 +1,23 @@
+<%
+from mpx.lib.node import as_node
+from mpx import properties
+
+if request.get_protocol() == 'http':
+    root = properties.HTTP_ROOT
+else:
+    root = properties.HTTPS_ROOT
+
+#set query string defaults
+qs = request.get_query_dictionary()
+live = 0
+if qs.has_key('app'):
+    app= '%s' % qs['app']
+if qs.has_key('drawing'):
+    drawing = '%s' % qs['drawing']
+if qs.has_key('live'):
+    live = int(qs['live'])
+
+node = as_node('/services/control/'+app+'/'+drawing)
+psp.write(node.as_html(live))
+%>
+

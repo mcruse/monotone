@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flexLibProperties version="1">
+<includeClasses>
+<classEntry path="com.cisco.nbm.globalsetpoints.event.ReleaseOverrideEvent"/>
+<classEntry path="com.cisco.nbm.globalsetpoints.DummyClass"/>
+<classEntry path="com.cisco.nbm.globalsetpoints.entity.EntitySubscriber"/>
+<classEntry path="com.cisco.nbm.globalsetpoints.KnownPointType"/>
+<classEntry path="com.cisco.nbm.globalsetpoints.entity.EntityMapManager"/>
+<classEntry path="com.cisco.nbm.globalsetpoints.entity.DiscoveryManager"/>
+<classEntry path="com.cisco.nbm.globalsetpoints.entity.EntitySubscriberEvent"/>
+<classEntry path="com.cisco.nbm.globalsetpoints.SetpointDatatype"/>
+<classEntry path="com.cisco.nbm.globalsetpoints.Configuration"/>
+<classEntry path="com.cisco.nbm.globalsetpoints.entity.DiscoveryResultNavigator"/>
+<classEntry path="com.cisco.nbm.globalsetpoints.ui.ProgressPopup"/>
+<classEntry path="com.cisco.nbm.globalsetpoints.ui.ProgressPopupBase"/>
+<classEntry path="com.cisco.nbm.globalsetpoints.event.ListEvent"/>
+</includeClasses>
+<includeResources/>
+<namespaceManifests/>
+</flexLibProperties>

@@ -1,0 +1,294 @@
+#!/usr/bin/env python
+#*-Python-*-
+
+import os
+import sys
+import commands
+import shutil
+from xml.dom.minidom import Document
+import stat
+
+repo_url_dict = {\
+"GlobalNavigator/com.cisco.globalnavigator":"https://wwwin-svn-sjc.cisco.com/cbsbu/webtools-apps",\
+"GlobalNavigator/nbmnavigator-java":"https://wwwin-svn-sjc.cisco.com/cbsbu/nbmnavigator",\
+"NBMSchedulesEditor":"https://wwwin-svn-sjc.cisco.com/cbsbu/webtools-schedule_editor",\
+"webtools-core":"https://wwwin-svn-sjc.cisco.com/cbsbu/webtools-core",\
+"webtools-enterprise_nav":"https://wwwin-svn-sjc.cisco.com/cbsbu/webtools-enterprise_nav",
+"webtools-global_setpoint_editor":"https://wwwin-svn-sjc.cisco.com/cbsbu/webtools-global_setpoint_editor"};
+
+
+build_dir = {"webtools-core":"webtools-core",
+        "webtools-enterprise_nav":"webtools-enterprise_nav",
+        "webtools-global_setpoint_editor":"webtools-global_setpoint_editor",
+        "GlobalNavigator/com.cisco.globalnavigator":"GlobalNavigator/com.cisco.globalnavigator",
+        "GlobalNavigator/nbmnavigator-java":"GlobalNavigator/GlobalNavigator/nbmnavigator-java/nbmnavigator",
+        "NBMSchedulesEditor":"NBMSchedulesEditor"}
+
+files_src_dest_list = [["webtools-enterprise_nav/com.cisco.nbm.navigator/entityNavigator.swf","entityViewer"],\
+                ["webtools-enterprise_nav/com.cisco.nbm.navigator/AC_OETags.js","entityViewer"],\
+                ["webtools-enterprise_nav/com.cisco.nbm.navigator/playerProductInstall.swf","entityViewer"],\
+                ["webtools-core/com.cisco.nbm.entityViewer/bin-release/NBMAlarmViewerWidget.swf","entityViewer"],\
+                ["webtools-core/com.cisco.nbm.entityViewer/bin-release/NBMLogViewerWidget.swf","entityViewer"],\
+                ["webtools-core/com.cisco.nbm.entityViewer/bin-release/NBMPropertyViewerWidget.swf","entityViewer"],\
+                ["webtools-core/com.cisco.nbm.entityViewer/bin-release/NBMScheduleViewerWidget.swf","entityViewer"],\
+                ["NBMSchedulesEditor/NBMSchedulesEditor/bin-release/scheduleEditor.swf","scheduleEditor"],\
+                ["webtools-global_setpoint_editor/com.cisco.nbm.globalsetpoints.widget/bin-release/globalSetpointsManager.swf","globalSetpoints"],\
+                ["GlobalNavigator/nbmnavigator-java/nbmnavigator/target/GlobalNavigation.war","nbmnavigator"],\
+                ["GlobalNavigator/nbmnavigator-java/nbmnavigator/manager_db.sql","nbmnavigator"]]
+
+
+dirs_src_dest_list = [["webtools-enterprise_nav/com.cisco.nbm.navigator/history","entityViewer/history"],\
+                ["webtools-enterprise_nav/com.cisco.nbm.navigator/js","entityViewer/js"]]
+
+repos_config={}
+
+omega_dir_path = os.getcwd()
+build_dir_path = os.getcwd() + "/build"
+broadway_root_path = ""
+
+toRelease = 0
+
+def read_prop_file():
+        #Read the uiBuild.properties for repo congiration
+        propfile_name= omega_dir_path + "/uiBuild.properties"
+#        repos_config={}
+        propfile_ptr = open(propfile_name,'r')
+
+        line = propfile_ptr.readline()
+
+        while(line):
+                toks = line.split("=")
+                repos_config[toks[0]] = toks[1].split("\n")[0]
+                line = propfile_ptr.readline()
+
+#Setting up the repos
+
+def set_checkout_dir(component):
+        if(os.path.isdir("build") == False):
+                os.makedirs("build")
+        dir_name = "build/" + component
+        os.chdir(build_dir_path)
+        state=repos_config[component]
+        print component + ": " + state
+        try:
+                if(state == "Local"):
+                        if(component != "webtools-core"):
+                                if(os.path.isdir(component) == False):
+                                        raise IOError
+                        else:
+                                if(not os.getenv("WEBTOOLS_CORE_HOME")):
+                                        raise Exception('Environment Variable not Found:', 'WEBTOOLS_CORE_HOME')
+                elif(state == "None"):
+                        #Do nothing
+                        do_nothing = 1 
+		elif(state == "Update"):
+                	if(os.path.isdir(component) == False):
+                                raise IOException
+                        else:
+                                os.chdir(component)
+                                cmd = "svn update"
+                                run_command(cmd)
+		elif(state == "Trunk"):                        
+                        if os.path.exists(component):
+                                shutil.rmtree("./" + component)
+
+                        os.makedirs(component)
+                        os.chdir(component)
+                        cmd = "svn co " + repo_url_dict[component] + "/trunk ./"
+                        run_command(cmd) 
+                else: #The system assumes that the ID given other than the above three is a branch name
+                        if os.path.exists(component):
+                                shutil.rmtree(component)
+                        os.makedirs(component)
+                        os.chdir(component)
+                        cmd = "svn co " + repo_url_dict[component] + "/branches/" + state + " ./"
+                        run_command(cmd)
+                
+                os.chdir(omega_dir_path)
+	except IOError:
+		print component + " directory not found. Option {" + state + "} might be wrongly set."
+                                             
+
+def run_command(cmd):
+        status = 0
+        try:
+#        status, output = commands.getstatusoutput(cmd)
+#        print output
+#        return status
+                std = os.popen(cmd)
+                line = std.readline()
+                while(line):
+                        print line,
+                        line = std.readline()
+                status = std.close()
+        except:
+                print "Error executing: " + cmd
+        
+        if(status == 256):
+                print "Could not run the command: " + cmd + ".\nExiting..."
+                sys.exit(1)
+def build():
+        os.chdir(build_dir_path)
+        print "Starting building from: " + os.getcwd()
+        status = run_command("ant -f build.xml")
+        if(status != 0):
+                sys.exit(1)
+        if(repos_config["GlobalNavigator/nbmnavigator-java"] != "None"):
+                if(repos_config["GlobalNavigator/com.cisco.globalnavigator"] != "None"):
+                        shutil.copy(build_dir_path + "/GlobalNavigator/com.cisco.globalnavigator/com.cisco.globalnavigator/build/release/navigator.swf",\
+                                                                        build_dir_path + "/GlobalNavigator/nbmnavigator-java/nbmnavigator/src/main/webapp")
+
+                os.chdir(build_dir_path + "/GlobalNavigator/nbmnavigator-java/nbmnavigator")
+                status =  run_command("mvn package")
+                if(status != 0):
+                        sys.exit(1)
+                os.chdir(build_dir_path)
+        os.chdir(omega_dir_path)
+
+def do_dojo_build():
+        dojo_dir_name = "dojonbm"
+        state = repos_config["dojonbm"]
+        try:
+                if(state != "None"):
+                        os.chdir("../../../../../")
+                        broadway_root_path = os.getcwd()
+                        if(state == "Local"):
+                                if(os.path.isdir(dojo_dir_name) == False):
+                                        print "Directory \"dojonbm\" doesn't exist. Option Local wrongly set"
+                                        raise IOError
+		        elif(state == "Update"):
+                	        if(os.path.isdir(dojo_dir_name) == False):
+                                        raise IOException
+                                else:
+                                        os.chdir(dojo_dir_name)
+                                        cmd = "svn update"
+                                        run_command(cmd)
+                                        os.chdir("..")
+		        elif(state == "Trunk"):                        
+                                if os.path.exists(dojo_dir_name):
+                                        shutil.rmtree("./" + dojo_dir_name)
+        
+                                os.makedirs(dojo_dir_name)
+                                cmd = "svn co https://wwwin-svn-sjc.cisco.com/cbsbu/dojonbm/trunk/dojonbm/ dojonbm/"
+                                run_command(cmd) 
+                        else: #The system assumes that the ID given other than the above three is a branch name
+                                print os.getcwd()
+                                if os.path.exists(dojo_dir_name):
+                                        shutil.rmtree(dojo_dir_name)
+                                os.makedirs(dojo_dir_name)
+                                cmd = "svn co https://wwwin-svn-sjc.cisco.com/cbsbu/dojonbm/branches/"+ state +"/dojonbm dojonbm/"
+                                run_command(cmd)
+                        broadway_root = os.getcwd()
+                        os.chdir("dojonbm/util/buildscripts/")
+                        os.system("./dojobuild.sh")
+                        os.chdir(broadway_root)
+                        shutil.rmtree(dojo_dir_name)
+	except IOError:
+		print dojo_dir_name + " directory not found. Option {" + state + "} might be wrongly set."
+                
+                        
+def generate_main_build_xml():
+        try:
+                build_xml = open(build_dir_path + "/build.xml",'w')
+                ignore_repos = ["GlobalNavigator/nbmnavigator-java","webtools-core"]
+                # Create the minidom document
+                doc = Document()
+                # Create the <project> base element
+                project = doc.createElement("project")
+                project.setAttribute("name","build-ui-comps")
+                project.setAttribute("default","all")
+                project.setAttribute("basedir",".")
+                doc.appendChild(project)
+           
+                # Create the all <target> element
+                target = doc.createElement("target")
+                target.setAttribute("name", "all")
+                project.appendChild(target)
+                
+                ant_node = doc.createElement("ant")
+                ant_node.setAttribute("dir",build_dir["webtools-core"])
+                if(toRelease == 1):
+                        ant_node.setAttribute("target","release")
+                target.appendChild(ant_node)                
+
+                for key in build_dir.iterkeys():
+                        if(key not in ignore_repos and repos_config[key] != "None"):
+                                dir = build_dir[key]
+                                ant_node = doc.createElement("ant")
+                                ant_node.setAttribute("dir",dir)
+                                if(toRelease == 1):
+                                        ant_node.setAttribute("target","release")
+                                target.appendChild(ant_node)                
+                # Print our newly created XML
+                doc.writexml(build_xml, indent="   ",addindent="   " ,newl="\n")  
+        finally:
+                build_xml.close()
+
+def copy_release_files_in_broadway():
+                for src_dest in files_src_dest_list:
+                        shutil.copy(build_dir_path + "/" + src_dest[0], omega_dir_path + "/" + src_dest[1])
+                for src_dest in dirs_src_dest_list:
+                        if(os.path.exists(omega_dir_path + "/" + src_dest[1])):
+                                shutil.rmtree(omega_dir_path + "/" + src_dest[1], ignore_errors=False)
+                        shutil.copytree(build_dir_path + "/" + src_dest[0], omega_dir_path + "/" + src_dest[1]) 
+
+def display_help():
+        print 'Usage: uibuild [options]'
+        print 'Options:'
+        print '  help                 displays this help message'
+        print '  build                do a build'
+        print '  release    tag       do a build, tag the repos and bump versions'
+        print '--------------------------------------------------------------------------'
+        print '--------------------------------------------------------------------------'
+        print '--------------------------------------------------------------------------'
+        print '  NOTE: Append uiBuild.properties file for individual repository settings.'
+        print '  USAGE: You can give following options - '
+        print '         - None         : Do nothing.'
+        print '         - Local        : Build a repo with the existing code source. (Throws error if directory structure not present).'
+        print '         - Update       : Update the existing repo. (Throws error if directory structure not present).'
+        print '         - Branch/Trunk : Branch Name or "Trunk" to checkout the code from.'
+        print '  Any other text given against any repo will be considered as a branch name and will throw error if not found.'
+
+
+        
+#############################M A I N#######################################################
+
+try:
+        if(sys.argv[1] == "help"):
+                print_help_data()
+                sys.exit(0)
+        elif(sys.argv[1] == "build"):
+                toRelease = 0
+        elif(sys.argv[1] == "release"):
+                toRelease = 1
+        else:
+                print "Incorrect Usage of uibuild"
+                print "----------------------------------"
+                print_help_data()
+                sys.exit(1)
+except Exception:
+        print 'ERROR: There was an error getting the options'
+        print '\n'
+        display_help()
+        sys.exit( 1 ) 
+
+
+read_prop_file()
+generate_main_build_xml()
+#print os.getcwd()
+#print repos_config
+set_checkout_dir("webtools-core")
+set_checkout_dir("NBMSchedulesEditor")
+set_checkout_dir("webtools-enterprise_nav")
+set_checkout_dir("webtools-global_setpoint_editor")
+set_checkout_dir("GlobalNavigator/com.cisco.globalnavigator")
+set_checkout_dir("GlobalNavigator/nbmnavigator-java")
+build()
+copy_release_files_in_broadway()
+do_dojo_build()
+if(toRelease == 1):
+        os.chdir(broadway_root_path)
+        status = run_command("svn ci -m \"CSCtq34246 - Committing SWFs and DOJO build files\"")
+        if (status != 0):
+                sys.exit(1)
+os.chdir(omega_dir_path)

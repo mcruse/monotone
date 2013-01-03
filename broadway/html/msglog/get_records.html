@@ -1,0 +1,165 @@
+<!--
+Copyright (C) 2002 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<html>
+<script language="javascript">
+
+var MAXROWS = 10;
+function Record(seq,timestamp,application,type,message){
+    this.seq = seq;
+    this.timestamp = timestamp;
+    this.application = application;
+    this.type = type;
+    this.message = message;
+}
+
+var records = new Array();
+$$RECORDS$$
+
+
+function update_cell(cell_index,record,cls,type,row){
+     row.cells[cell_index].setAttribute("class",type);
+
+     if (cell_index == 0){
+        row.cells[cell_index].setAttribute('width','10');
+        row.cells[cell_index].innerHTML = '<span class="' + cls + '" seq="' + record.seq + '">' + record.seq + '</span>';
+     }
+     else if (cell_index == 1){
+        row.cells[cell_index].innerHTML = '<span class="' + cls + '">' + record.timestamp + '</span>';
+     }
+     else if(cell_index == 2){
+        row.cells[cell_index].innerHTML = '<span class="' + cls + '">' + record.application + '</span>';
+     }
+     else if(cell_index == 3){
+        row.cells[cell_index].innerHTML = '<span class="' + cls + '">' + record.type + '</span>';
+     }
+     else if(cell_index == 4){
+        row.cells[cell_index].innerHTML = '<span class="' + cls + '">' + record.message + '</span>';
+     }
+     
+}
+
+function get_row_type(tbl){
+    var cell;
+    var row_index = 0;
+    e = this.parent.msglog.document.getElementById('sort_order');
+    if (e.value.toLowerCase() == 'ascending'){
+       row_index = tbl.rows.length - 1;
+    }
+    
+    else{
+       row_index = 1;
+    }
+    
+    type = tbl.rows[row_index].cells[0].getAttribute('class');   
+    return type;
+}
+
+
+function get_class(record){
+  var record_type;
+  record_type = record.type + '_text';
+  return record_type
+
+}
+
+function update_records(){
+  if(this.parent.control.document.getElementById("status")){
+      this.parent.control.document.getElementById("status").innerHTML = "Updating records...";
+  }
+  
+  var tbl = this.parent.msglog.document.getElementById("msg_table");
+  var type = get_row_type(tbl)
+  if (type == 'odd_row'){
+     type = 'even_row';
+  }
+  else{
+     type = 'odd_row'
+  }
+  var e = this.parent.msglog.document.getElementById('sort_order');
+  for (x=0;x<records.length;x++){
+     index = 1
+     if(e.value == 'descending'){
+        r_index = records.length-(x+1);
+        index = 1;
+     }
+     else{
+        index = tbl.rows.length;
+        r_index = x;
+     }
+     cls = get_class(records[r_index]);
+     tbl.insertRow(index);
+     var row = tbl.rows[index];
+     row.insertCell(0);
+     row.insertCell(1);
+     row.insertCell(2);
+     row.insertCell(3);
+     row.insertCell(4);
+     
+     update_cell(0,records[r_index],cls,type,row);
+     
+     update_cell(1,records[r_index],cls,type,row);
+     update_cell(2,records[r_index],cls,type,row);
+     update_cell(3,records[r_index],cls,type,row);
+     update_cell(4,records[r_index],cls,type,row);
+     
+     if (type == 'odd_row'){
+         type = 'even_row';
+      }
+      else{
+         type = 'odd_row'
+      }
+     if (tbl.rows.length > MAXROWS){
+         if(e.value == 'descending'){
+           tbl.deleteRow(tbl.rows.length-1);       
+         }
+         else{
+            tbl.deleteRow(1);     
+     
+         }
+     }
+          
+  }
+  this.parent.done_updating();
+  if(this.parent.control.document.getElementById("status")){
+      this.parent.control.document.getElementById("status").innerHTML = "";
+  }
+  
+}
+
+
+update_records();
+
+
+</script>
+<body>
+</bodY>
+</html>

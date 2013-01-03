@@ -1,0 +1,183 @@
+<!--
+Copyright (C) 2009 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" href="/public/styles/page.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/tabs.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/tables.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/pagination.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/events.css" type="text/css">
+        <link rel="stylesheet" href="/public/styles/configuration.css" type="text/css">
+
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dojo/resources/dojo.css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dijit/themes/dijit.css" />
+        <link rel="stylesheet" type="text/css" href="/dojoroot/dijit/themes/tundra/tundra.css" />
+        <link rel="stylesheet" type="text/css" href="/cues/themes/kubrick/layout.css" />
+        <link rel="stylesheet" type="text/css" href="/cues/themes/kubrick/tabs.css" />
+        <link rel="stylesheet" href="/public/styles/messageBox.css" type="text/css">
+        <link rel="stylesheet" href="/public/nbmweb/edit/themes/Node.css" type="text/css" />
+        <style type="text/css">
+        .nodeEditTable th, .nodeEditTable td {
+            padding: 2px !important;
+        }
+        </style>
+        <script type="text/javascript">
+            djConfig = {
+                isDebug: false,
+                debugAtAllCosts: false,
+                parseOnLoad: true,
+                baseUrl: "/dojoroot/dojo/",
+                modulePaths: {
+                    mpx: '/mpx',
+                    cues: '/cues',
+                    utils: '/public/utils'
+                }
+            };
+        </script>
+        <script type="text/javascript" src="/dojoroot/dojo/dojo.js"></script>
+<!--        <script type="text/javascript" src="/public/utils/debug.js"></script>-->
+<!--        <script type="text/javascript" src="/public/utils/style.js"></script>-->
+		<script type="text/javascript" src="/dojoroot/dojoconfig/mediator_layer.js"></script>
+        <script type="text/javascript">
+    		dojo.require("utils.style");
+            /*dojo.require("dojox.dtl._HtmlTemplated");
+            dojo.require("dojo.parser");
+            dojo.require("dijit.form.Button");
+            dojo.require("dijit.layout.TabContainer");
+            dojo.require("dijit.layout.ContentPane");
+            dojo.require('dojox.uuid.generateRandomUuid');
+            dojo.require("utils.select.nodes");
+            dojo.require("utils.select.files"); */
+        </script>
+        <script language="JavaScript" type="text/javascript" src="/public/utils/loader.js"></script>
+        <script language="JavaScript" type="text/javascript" src="/public/utils/formtools.js"></script>
+        <script language="JavaScript" type="text/javascript">
+
+            function paneLoaded(response, ioArgs) {
+                var node = dojo.create("div");
+                node.innerHTML = response;
+                
+                if(dojo.query(".loginform", node).length) {
+                    /*this is a hack, as 302 responses are handled directly  
+                      by the client. Browsers send a GET request to the 
+                      location in 302 response immediately after getting it.
+                      302 responses cannot be intercepted.
+                    */
+                    console.warn("Redirecting to Login page");
+                    window.location = "/login";
+                }
+            }
+        </script>
+
+
+<title>Cisco Network Building Mediator</title>
+</head>
+    <body class="kubrick tundra">
+        <div id="background">
+            <img src="/public/images/pageBackground.jpg" />
+        </div>
+        <div id="header">
+            <h1 class="title">Network Building Mediator</h1>
+            <ul class="actions">
+                <li><a href="">About</a></li>
+                <li>
+                    <a id="logout" href="/logout">
+                        Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div id="primary-tabs"
+            title=""
+            class="primary-tabs"
+            href="/public/templates/primary.html"
+            extractContent="false"
+            preventCache="false"
+            dojoType="dijit.layout.ContentPane"
+            onDownloadEnd="dojo.addClass('security-tab-button', 'selected');" >
+        </div>
+        <div id="stage">
+            <div id="contentarea" class="pane">
+                <div id="mainTabContainer"
+                    persist="true"
+                    dojoType="dijit.layout.TabContainer"
+                    style="width: 100%; height: 100%;">
+                    <div id="tab1"
+                        title="Overview"
+                        dojoType="dijit.layout.ContentPane">
+                        <ul class="information">
+                            <li>Define roles if none have been defined.</li>
+                            <li>
+                                Define users and assign them
+                                appropriate roles.
+                            </li>
+                            <li>
+                                Define one or more policies, mapping
+                                permissions to roles as appropriate.
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="tab2"
+                        title="Roles"
+                        contentType="forms"
+                        preventCache="true"
+                        extractContent="true"
+                        href="/securityconfig?manager=Roles"
+                        dojoType="dijit.layout.ContentPane"
+                        onLoad="setup_forms(this);">
+                    </div>
+                    <div id="tab3"
+                        title="Users"
+                        contentType="forms"
+                        preventCache="true"
+                        extractContent="true"
+                        href="/securityconfig?manager=Users"
+                        dojoType="dijit.layout.ContentPane"
+                        ioArgs="{handle: paneLoaded}"
+                        onLoad="setup_forms(this);">
+                    </div>
+                    <div id="tab4"
+                        title="Policies"
+                        contentType="forms"
+                        preventCache="true"
+                        extractContent="true"
+                        href="/securityconfig?manager=Policies"
+                        dojoType="dijit.layout.ContentPane"
+                        onLoad="setup_forms(this);">
+                    </div>
+                </div>
+            </div>
+            </div>
+    </body>
+</html>

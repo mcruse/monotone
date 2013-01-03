@@ -1,0 +1,33 @@
+Flashing /dev/sda to boot on a machine that will actually boot /dev/hda
+requires the following preamble in lilo.conf:
+
+*** BEGIN:  LILO.CONF PREAMBLE ***
+
+disk=/dev/sda # The disk as accessed by the production system.
+    bios=0x80 # This disk maps to the 'first' BIOS disk at boot time.
+
+boot=/dev/sda # Link boot to the disk specified above.
+
+*** END:  LILO.CONF PREAMBLE ***
+
+From this point on, the lilo.conf file should look "normal":
+
+*** BEGIN:  LILO.CONF THE REST OF THE FILE ***
+
+map=/boot/map
+install=/boot/boot.b
+prompt
+timeout=50
+serial=0,9600n8
+message=/boot/message
+
+image=/boot/vmlinuz
+	label=linux
+	root=/dev/hda1
+	append="console=ttyS0,9600"
+	password=yzfr1
+	restricted
+
+*** END:  LILO.CONF THE REST OF THE FILE ***
+
+Flash.py now creates a correct preamble.

@@ -1,0 +1,76 @@
+#!/bin/bash
+#-*-Shell-Script-*- Hint to [X]Emacs on colorization, etc...
+
+proot () {
+    echo $(dirname $0)
+}
+
+. $(proot)/tools/penvironment.rc
+
+HELP_MESSAGE='pmissing [options] REGEX ...
+
+  Scans the source tree to locate files that match REGEX and that are not
+  in any package.flist file and prints them to standard out.  The commands
+  error code is the number of matching files not in any package.
+
+  OPTIONS:
+    -h or --help                Display this message.
+    -D or --debug               Outputs all script commands being parsed and
+                                executed.
+  EXAMPLES:
+    [mevans@fearfactory broadway]$ touch xxx.install yyy.install 
+    [mevans@fearfactory broadway]$ ./pmissing "*.install"
+    ./xxx.install
+    ./yyy.install
+    [mevans@fearfactory broadway]$ echo $?
+    2
+    [mevans@fearfactory broadway]$ rm -f xxx.install yyy.install 
+    [mevans@fearfactory broadway]$ ./pmissing "*.install"
+    [mevans@fearfactory broadway]$ echo $?
+    0
+    [mevans@fearfactory broadway]$ 
+'
+
+# @fixme Tool to find missing install scripts, etc?
+
+while [ "$1" != "" ]
+do
+    if [ "$1" == "--debug" ] || [ "$1" == "-D" ]
+    then
+	set -v -x
+	shift
+	continue
+    fi
+    if [ "$1" == "--help" ] || [ "$1" == "-h" ]
+    then
+	echo "$HELP_MESSAGE" | more
+	exit 0
+    fi
+    break # If statements that match must continue.
+done
+if [ "${1:0:1}" == "-" ]
+then
+    echo "Unknown option \"$1\", use pfind --help for valid options." >&2
+    exit 1
+fi
+
+export P=''
+export F=''
+export REGEX=$1
+export ERRORFILE=$(echo /tmp/$$.pmissing)
+
+echo 0 >$ERRORFILE
+while [ "$REGEX" != "" ]
+do
+    find . -name "$REGEX" | while read P
+    do
+        F=$(basename $P) && \
+        grep $F $(find . -name "*.flist") >/dev/null 2>&1 || (echo $P &&
+	    echo $(($(cat $ERRORFILE) + 1)) >$ERRORFILE)
+    done
+    shift
+    REGEX=$1
+done
+ERRORCODE=$(cat $ERRORFILE)
+rm -f $ERRORFILE
+exit $(($ERRORCODE>255?255:$ERRORCODE))

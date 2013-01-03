@@ -1,0 +1,54 @@
+To add SNMP support to a Mediator:
+==================================
+
+From the configTool, select /services/network and add SNMP. 
+
+To add a Remote Agent and get access to it's values:
+====================================================
+
+From the configTool, select /services/network/SNMP/Remote Agents and add
+an "SNMP Remote Agent."
+
+* Set the name of the remote agent, this has no effect operationally but for
+  organizational purposes the agent should be given a meaningful name.
+* Configure the IP address of the Remote Agent.
+* Add the MIBs used by the Remote Agent.  These must be PySNMP build in MIBs
+  or pre-compiled mpx/lib/snmp/mibs/ MIBs.
+
+Add the appropriate "protocol" configuration child Node to the Remote Agent:
+----------------------------------------------------------------------------
+
+Select one of SNMPv1, SNMPv2c or SNMPv3 and set the appropriate configuration
+data.
+
+NOTES:  This node must be named to match it's type, which should happen by
+        default.
+
+	More than one protocol Node can be present, but only one can be
+        enabled at a time.
+
+To Log Traps:
+=============
+
+1. Ensure that /services/network/SNMP/Default Traps is enabled and configured.
+2. Add an "SNMP Trap Log" to /services/logger.
+   NOTE:  This MUST be named "SNMP Trap Log"
+
+To export SNMP Traps as email messages:
+---------------------------------------
+
+1. To /services/logger/SNMP Trap Log/exporters add an "SNMP Event Based Trap
+   Exporter" (trap_exporter)
+2. In /services/logger/SNMP Trap Log/exporters/trap_exporter (or whatever you
+   named it) configure:
+
+      smtp_formatter
+   and
+      smtp_transporter
+
+===============================================================================
+
+OTHER NOTES:
+
+1. smtp_formatter and smtp_transporter probably should not be inherent children
+   of the trap_exporter.

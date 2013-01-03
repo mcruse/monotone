@@ -1,0 +1,105 @@
+@CHARSET "UTF-8";
+
+.configureNodesTable {
+    width: 100%;
+    color: #000000;
+    outline: none;
+    padding: 0;
+    font-size: 12px; 
+    margin: 0 0 auto 0;
+    background: transparent;
+    background-color: #E9E9E9;
+    border-spacing: 0;
+    border-right: 1px solid #A2B9C9;
+    border-left: 1px solid #A2B9C9;
+    border-bottom: 1px solid #A2B9C9;
+}
+
+.configureNodesTable tr {
+    height: 21px;
+    margin-left: 4px;
+}
+
+.configureNodesTable tr.table-title {
+    height: 23px;
+    background-color: #A2B9C9;    
+}
+
+.configureNodesTable tr.table-header {
+    height: 19px;
+    background-color: #D9E3E9;
+}
+
+.configureNodesTable tr.table-header th {
+    padding: 3px 3px 2px 3px;
+    text-align: left;
+    vertical-align: top;
+    overflow: hidden;
+    background: #D9E3E9;
+    color: #000000 !important;
+    border: 1px solid #A2B9C9 !important;
+    border-color: white #ACA899 #919191 white;
+}
+
+.configureNodesTable tr.table-header th.control {
+    text-align: center;
+}
+
+.configureNodesTable th.control, .configureNodesTable td.control {
+    text-align: center;
+}
+
+.configureNodesTable tr.light, .configureNodesTable tr.even {
+    background-color: #FFFFFF; 
+}
+
+.configureNodesTable tr.dark, .configureNodesTable tr.odd {
+    background-color: #EBEBEB; 
+}
+
+.configureNodesTable tr.selected {
+    color: #FFFFFF;
+    background: #ADD050 url(/public/images/events/accordionGreen.png) bottom left repeat-x;
+}
+
+/* Applies to div inside table-headers for sort-able columns. */
+.configureNodesTable tr.table-header th.sortHeader .sortIcon {
+    width: 8px;
+    height: 7px;
+    float: right;
+    margin: 3px 0;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    background-position: top right;
+}
+
+.configureNodesTable tr.table-header th.sortHeader .sortNone {
+    background-image: none;
+}
+
+.configureNodesTable tr.table-header th.sortHeader .sortAscending {
+    background-image: url(/public/images/events/sort_arrow_up.png);
+}
+
+.configureNodesTable tr.table-header th.sortHeader .sortDescending {
+    background-image: url(/public/images/events/sort_arrow_down.png);
+}
+
+/**************
+    Footer row cells all merged into one with 
+    acknowledge button floated to the left, pagination 
+    and navigation controls centered under the table.
+**************/
+.configureNodesTable tr.table-footer {
+    height: 29px;
+    padding: 4px;
+    background-color: #D9E3E9;
+}
+
+.configureNodesTable tr.table-footer td div { 
+    display: inline;
+}
+
+.configureNodesTable tr.table-footer .create {
+    float: left;
+}

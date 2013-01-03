@@ -1,0 +1,244 @@
+<html>
+<head>
+<!-- Copyright (c) 2004 Richards-Zeta -->
+<!-- $Name: mediator_3_1_2_branch $ -->
+<!-- $Id: logger.psp 20101 2011-03-06 16:02:15Z bhagn $ -->
+<style type="text/css">
+body,td {
+font-size:12px;
+color:#000000;
+  }
+tr.row{
+color:#990000;
+}
+td.info{
+  color:green;
+}
+
+td.unknown{
+  color:#444444;
+}
+
+td.error{
+  color:red;
+}
+
+td.warning{
+  color:#660066;
+}
+td.debug{
+  color:blue;
+}
+
+td.header{
+background-color:#ffffff;
+font-weight:bold;
+}
+
+td.evenrow{
+padding-left:5px;
+padding-right:5px;
+background-color:#efefef;
+
+}
+
+td.oddrow{
+padding-left:5px;
+padding-right:5px;
+background-color:#ffffff;
+}
+
+tr.row:hover{
+color:#000066;
+}
+
+input.btn {
+width:90px;
+font-size:14px;
+color:#ffffff;
+font-wieght:bold;
+background-color:#9999dd;
+
+}
+
+input.btn:hover {
+width:90px;
+font-size:14px;
+color:#9999dd;
+font-wieght:bold;
+background-color:#ffffff;
+
+}
+</style>
+</head>
+<body>
+<form name="logger" action="logger.psp" method="get">
+<%
+import time
+from mpx.lib.exceptions import ENoSuchName
+from mpx.lib.node import as_node
+#from html.lib.tags import Span,Table,Tr,Td
+logger = as_node('/services/logger')
+qs = request.get_query_dictionary()
+log = ''
+logname = ''
+columns = ''
+number_per_page = 25
+if qs.has_key('log'):
+    logname = qs['log']
+    try:
+        log = as_node('/services/logger/%s' % logname)        
+    except ENoSuchName,e:
+        log = None
+
+if qs.has_key('number_per_page'):
+    number_per_page = int(qs['number_per_page'])
+%>
+
+<p>
+<B>Time:&nbsp;<%=time.strftime('%m/%d/%y %H:%M:%S',time.localtime())%><b>
+<p>
+Logs: <select id="log" name="log" onchange="get_log()">
+<option value="">&lt;Select a Log&gt;</option>
+<%
+logs =  logger.children_names()
+logs.sort()
+for c in logs:
+    if logname == c:
+        psp.write('<option value="%s" selected>%s</option>' % (c,c))
+    else:
+        psp.write('<option value="%s">%s</option>' % (c,c))
+%>
+</select>
+<p>
+<input class="btn" type="button" value="Refresh" onclick="refresh()">
+<input class="btn" type="button" value="Graph" onclick="graph()">
+<%
+if log:
+    %>
+    <p>    
+    <center><input type="button" class="btn" value="Previous" onclick="javascript:previous()">&nbsp;
+    &nbsp;<input type="button" class="btn" value="Next" onclick="javascript:next()"></center>
+    <br>
+    <div style="background-color:#666666;width:100%">
+    <table style="width:100%" cellspacing="1" cellpadding="0" >
+    <%
+    cls = 'oddrow'
+    seq = None
+    start = None
+    end = None
+    if qs.has_key('start'):
+        start = int(qs['start'])
+        end = int(qs['end'])        
+        s = log.get_slice('_seq',start,end,1)    
+    else: 
+        s =  log[-number_per_page:]
+    if len(s) >0:
+       seq = s[0]['_seq']
+       start = int(seq) - number_per_page
+       end = int(seq)
+    number = 0
+    cn = log.get_column_names()  
+    if  len(s) > 0:       
+        for c in cn:
+            psp.write('<td class="header">%s</td>\n' % c)
+            if c != 'timestamp':
+                columns += '%s,' % c
+        columns = columns[:-1]
+        psp.write('</tr>')
+    for r in s:
+        number +=1
+        psp.write('<tr onmouseover="highlight(this)" onmouseout="unhighlight(this)"  >')        
+        for c in cn:
+            if c == 'timestamp':
+                if r.has_key(c):
+                    psp.write('<td class="%s" style="width:125px">%s</td>\n' % \
+                    (cls,time.strftime('%m/%d/%y %H:%M:%S',time.localtime(r[c]))))
+                else:
+                    psp.write('<td class="%s">N/A</td>\n' % cls)       
+            else:
+                if r.has_key(c):
+                    psp.write('<td class="%s">%s</td>\n' % (cls,psp.entity_replacement(r[c])))       
+                else:
+                    psp.write('<td class="%s">N/A</td>\n' % cls)       
+               
+        psp.write('</tr>')
+        if cls == 'evenrow':
+           cls = 'oddrow'
+        else:
+           cls = 'evenrow'    
+    while number < number_per_page:
+        number+=1
+        psp.write('<tr>') 
+        for c in cn:  
+            psp.write('<td class="%s" >&nbsp</td>\n' % cls)
+        psp.write('</tr>')    
+        if cls == 'evenrow':
+           cls = 'oddrow'
+        else:
+           cls = 'evenrow'    
+    %>
+    </table>
+    </div>    
+    <input type="hidden"  id="seq" value="<%=seq%>">
+    <input type="hidden" name="end" id="end" value="<%=end%>">
+    <input type="hidden" name="start" id="start" value="<%=start%>">
+    <center><br><input type="button" class="btn" value="Previous" onclick="javascript:previous()">&nbsp;    
+    &nbsp;<input type="button" class="btn" value="Next" onclick="javascript:next()"></center>
+    <br>
+    
+</form>
+
+</body>
+<script type="text/javascript">
+function get_log(){   
+    window.location = 'logger.psp?log=' + document.getElementById('log').value;
+}
+
+function previous(){
+    document.forms[0].submit();
+}
+
+function next(){
+    //var npp = parseInt(document.getElementById('number_per_page').value)*2
+    //start =  parseInt(document.getElementById('start').value) + npp;
+    //end =  parseInt(document.getElementById('end').value) + npp;
+    //document.getElementById('start').value = start;
+    //document.getElementById('end').value = end;
+    document.forms[0].submit();
+}
+
+function refresh(){
+   window.location = 'logger.psp?log=' + document.getElementById('log').value;
+}
+
+var current_color;
+function highlight(e){
+   current_color = e.cells[0].style.backgroundColor;
+   var x;
+   for (x=0;x<e.cells.length;x++){
+    e.cells[x].style.backgroundColor = '#ffff00';
+    e.cells[x].style.color = 'blue';
+   }
+   
+}
+
+function unhighlight(e){
+   var x;
+   for (x=0;x<e.cells.length;x++){
+    e.cells[x].style.backgroundColor = current_color;
+    e.cells[x].style.color = 'black';
+   }
+  
+}
+function graph(){
+<%
+if columns:
+   %>
+   window.location = 'graph.psp?log=<%=logname%>&columns=<%=columns%>';
+
+}
+
+
+</script>
+</html>

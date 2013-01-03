@@ -1,0 +1,84 @@
+@CHARSET "UTF-8";
+
+/* @import url("/dojoroot/dojox/form/resources/DropDownSelect.css"); */
+
+div.editDialog {
+    padding: 10px !important;
+    background: #D9E3E9 none !important;
+}
+
+div.editDialog .dijitDialogTitleBar {
+    margin: 0 !important;
+    padding: 0 !important;
+    border-bottom-style: none !important;
+    background: transparent none !important;
+}
+
+div.editDialog .dijitDialogPaneContent {
+    margin: 0 !important;
+    padding: 0 !important;
+    border-top-style: none !important;
+    background: transparent none !important;
+}
+
+table.nodeEditTable {
+    padding: 0;
+    width: auto;
+    height: auto;
+    margin: 10px 0 0 0;
+    border-style: none;
+    border-spacing: 1px;
+}
+
+table.nodeEditContent {
+    padding: 10px;
+    border: 1px solid #8499A2;
+    background-color: #FFFFFF;
+}
+
+table.nodeEditContent td.inputRowCell {
+    padding: 0 0 5px 0;
+}
+
+table.nodeEditTable tr {
+    margin: 0;
+    padding: 0;
+    height: auto;
+}
+
+table.nodeEditContent tr.tableHeader {
+    height: 19px;
+    display: none;
+    font-weight: bold;
+    background-color: transparent;
+}
+
+table.nodeEditFooter {
+    background-color: transparent;
+}
+
+table.nodeEditTable tr.even {
+    padding: 5px 0 0 0;
+    background-color: transparent;
+}
+
+table.nodeEditTable tr.odd {
+    padding: 5px 0 0 0;
+    background-color: transparent;
+}
+
+table.nodeEditContent td {
+    padding: 0;
+}
+
+table.nodeEditTable th {
+    padding: 0;
+}
+
+table.nodeEditTable .inputRowValue .dijitButtonNode {
+    padding: 0;
+}
+
+.dojoxDropDownSelectMenu {
+    width: auto;
+}

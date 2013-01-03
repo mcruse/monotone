@@ -1,0 +1,167 @@
+aerocomm server functional spec
+
+Reference documents (can be found in mpx/lib/aerocomm/doc/):
+    
+Aerocomm Driver Product Specification.doc    
+CSAFE Product Specification v3.doc
+IEMS Spec.doc
+InSite Performance Specification 111803.DOC
+
+Physical setup:  
+
+An Aerocomm wireless transceiver operating in API mode is connected to a RS-232 port of the Mediator.
+This transceiver is a server for additional client mode transceivers.
+The client transceivers are configured to operate in Transparent pass through mode.
+The transceivers can be configured using a Windows program supplied by Aerocomm.
+Channel number and System ID need to be set identically in all transceivers used on a network.
+Other networks within wireless range need to be set to a different channel number.
+The server baud rate shall be 115k.
+
+Node tree organization:
+    
+A node representing the Server transceiver is placed as a child of a com port.  The Server node
+can discover the client transceivers if they transmit something to it and place them as children. 
+Client nodes can also be pre-configured as children(as is the case in the Precor application).
+
+The node's get() value is described below in the event section.
+
+A server node has two inherent child nodes: eeprom_parameters and server_status.  These
+children serve to group child nodes of similar function.
+
+The eeprom_parameters node has the following inherent child nodes 
+(called EEPROM parameters in the Aerocomm manual):
+
+        'version'          'Software Version Number'
+        'address'          'IEEE MAC Address'
+        'channel'          'Channel'
+        'transmit_attempts''Transmit Attempts'
+        'rxmode'           'Receive Mode'
+        'range_refresh'    'Range Refresh'
+        'mode'             'Client/Server Mode'
+        'system_id'        'System ID Number'
+        'serial_speed'     'Baud Rate'
+        'serial_mode'      'Serial Interface Mode'
+        'RTS_enable'       'RTS Handshaking 1=enable, 0=disable'
+        'modem_mode'       'Modem Mode 1=enable lines'
+        'power_down'       'Power Down Sleep Mode 1=enable'
+        'txmode'           'Transmit Mode'
+        'read_switches'    'Read Switches 1=enable read'
+        'end_type'         'End Type (transparent mode only)'
+        'limit_rf_buffer'  'Limit RF Buffers to 1'
+        'rf_priority'      'RF Interrupt Priority'
+        'mixed_mode'       'Allow transparent client to operate with server in API mode'
+        'interface_timeout''Interface Timeout wait before transmitting'
+        'broadcast_attempts''Number of times to broadcast packets'
+        'turbo_mode'       'Disable random backoff CSMA if 1'
+        'baud_rate_double' 'Doubles Baud Rate if true'
+        '485_rts'          'TX/RX Enable for RS-485 systems'
+        'in_range_select'  'Select pin for In-Range'
+        'auto_destination' 'Auto Destination for Transparent mode'
+        'destination_mac'  'Destination IEEE MAC Address for Transparent modes'
+        'sleep_time'       'Sleep Time for client sleep walk mode'
+        'wait_time'        'Wait Time for client sleep walk mode'
+
+In practice, only the channel number and system_id numbers will vary between systems.  Detailed info
+on the meaning of the various parameters is available in the PDF manual from Aerocomm and they
+are present to facilitate troubleshooting and the possible future configuration of clients transceiver by
+a mediator.
+
+The server_status node has the following inherent children:
+     'time'      Transceiver's run time in 250ms intervals, 24 bit value
+     'txfail'    Number of TX failures, 32 bit
+     'txretry'   Number of TX retries, 32 bit (after transmit_attempts retries, count as txfail)
+     'rxfail'    Number of RX crc errors
+     'rxretry'   Number of RX retries requested
+     'count'     Number of active clients
+     'devices'   A list of tuples representing each client containing:
+         mac address,  Six byte mac address string
+         time_stamp,   24 bit run time in 250 ms intervals
+         packet_count, 32 bit count of packets TX and RX
+
+The server also has child nodes representing client transceivers that are either discovered or pre-configured
+Discovered Child nodes are named with a string representation of their MAC address. (ie '12_34_56_78_9A_BC')
+Pre-configured child clients may be named anything that does not conflict with an inherent child.
+
+Interface methods:
+    get()    The server node's get() value is the current state of the server's driver.
+        Possible state values are:
+        0    'stopped'
+        1    'transceiver_not_responding'
+        2    'transceiver_responding',
+        3    'exception_in_xmit'
+        This state is updated by an independent thread running in the driver.
+    get_status()  Returns a dictionary with the following key/value pairs:
+     'time'      Transceiver's run time in 250ms intervals, 24 bit value
+     'txfail'    Number of TX failures, 32 bit
+     'txretry'   Number of TX retries, 32 bit (after transmit_attempts retries, count as txfail)
+     'rxfail'    Number of RX crc errors
+     'rxretry'   Number of RX retries requested
+     'count'     Number of active clients
+     'devices'   A list of tuples representing each client containing:
+         mac address,  Six byte mac address string
+         time_stamp,   24 bit run time in 250 ms intervals
+         packet_count, 32 bit count of packets TX and RX
+The info in the 'devices' list is also available in the client child's children.
+
+Events generated:
+    The server node will generate a Change Of Value event when ever the transceiver state changes.  
+    This state is updated by an independent thread running in the driver and may occur at any time.
+    The node's get() method will return the current value of the state
+
+Aerocomm Client functional spec:
+    
+Physical setup:
+    Client Aerocomm transceivers operate in Transparent mode.  The baud rate is set to match the equipment
+    connected to the client.  Aerocomm provides a Windows based program to configure client devices.
+    
+Node tree organization:
+    The node representing the Aerocomm Client device is located as a child of the Aerocomm Server
+    The client node has the following inherent child nodes:
+       'time_stamp'      24 bit run time in 250 ms intervals
+       'packet_count'    32 bit count of packets Tx'd and Rx'd
+    The client node supports the Port interface which allows most serial protocols to be added as
+    a child of the Client (exceptions are those that use line disciplines.
+
+Interface methods:
+    get()   Returns current state of client device:
+        0    'stopped'
+        1    'transceiver_not_responding'
+        2    'transceiver_responding'
+        3    'exception_in_xmit'
+        
+Events generated:
+    The server node will generate a Change Of Value event when ever the transceiver state changes.  
+    This state is updated by an independent thread running in the driver and may occur at any time.
+    The node's get() method will return the current value of the state
+
+FEU/CSafe Functional spec:
+
+Physical setup:
+    The Fitness Equipment is connected to an Aerocomm transceiver or directly to a com port on the 
+    mediator.
+    
+Node tree organization:
+   The FEU is represented by a node that resides under a Aerocomm client or a com port.  The node
+   has the following children:
+            'Version'             A two element tuple, first element a mandatory 5 byte string,
+                                  the second element is an optional string
+            'Serial_Number'       Typically an ascii string of the serial number, binary is optional
+            'List'                Binary string of batched commands
+            'Utilization'         Hours since manufacture, 24 bit integer
+            'Odometer'            tuple of Odometer value (32 bit integer) and units string
+            'Error_Code'          Equipment error code, 24 bit integer
+            'Workout_Time'        :('\xa0', self.unpack_time),
+            'Horizontal_Distance' :('\xa1', self.unpack_int16_units),
+            'Vertical_Distance'   :('\xa2', self.unpack_int16_units),
+            'Calories'            :('\xa3', self.unpack_int16),
+            'Program'             :('\xa4', self.unpack_2_bytes),
+            'Speed'               :('\xa5', self.unpack_int16_units),
+            'Grade'               :('\xa8', self.unpack_int16_units),
+            'Gear'                :('\xa9', self.unpack_1_byte),
+            'Uplist'              :('\xaa', self.hexdump),
+            'User_Information'    :('\xab', self.unpack_user_data),
+            'Current_Heart_Rate'  :('\xb0', self.unpack_1_byte),
+            'Time_in_HR_Zone'     :('\xb2', self.unpack_time),
+            'Power'               :('\xb4', self.unpack_int16_units),
+            'Average_HR'          :('\xb5', self.unpack_1_byte),
+            'Maximum_HR'          :('\xb6', self.unpack_1_byte),

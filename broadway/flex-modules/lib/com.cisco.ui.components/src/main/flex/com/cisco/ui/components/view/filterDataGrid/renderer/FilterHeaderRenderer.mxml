@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GenericRenderer xmlns="com.cisco.ui.components.view.renderer.*"
+			xmlns:mx="http://www.adobe.com/2006/mxml"
+			width="100%"
+			height="40"
+			direction="vertical"
+			horizontalGap="0"
+			verticalGap="0"
+			horizontalScrollPolicy="off"
+			verticalScrollPolicy="off"
+			xmlns:controls="com.sap.xapps.analytics.scpm.common.view.controls.*"
+	creationComplete="init()" xmlns:view="com.cisco.ui.components.view.*">
+
+	<mx:Script>
+		<![CDATA[
+			import com.cisco.ui.components.view.filterDataGrid.vo.FilterVO;
+			import com.cisco.ui.components.event.UIDataEvent;
+			import com.cisco.ui.components.view.filterDataGrid.vo.FilterItemVO;
+			import com.cisco.ui.components.view.filterDataGrid.FilterDataGrid;
+			import com.cisco.ui.components.view.filterDataGrid.vo.FilterDataGridListData;
+			import mx.controls.listClasses.BaseListData;
+		
+			private var filter:FilterVO;
+			
+			[Bindable]
+			private var searchMode:Boolean = false;
+			
+			protected function init():void
+			{
+				owner.addEventListener(FilterDataGrid.EVENT_FILTER_CHANGED,filterChangeHandler);
+				owner.addEventListener(FilterDataGrid.EVENT_RESET_FILTERS,resetAll);
+			}
+			
+			override public function set listData(value:BaseListData):void {
+				if ( value == null || value is FilterDataGridListData ) {
+					super.listData = value;
+				}
+			}
+			
+			override protected function extractListData():void
+			{
+				filter = (listData as FilterDataGridListData).filter;
+				labelField.text = filter.headerText;
+				searchMode = filter.searchMode;
+				if (searchMode)
+				{
+					searchField.text = filter.searchString;
+					searchField.styleName = "BlackLabel";
+					searchField.setFocus();
+				}
+				else
+				{
+					filtersDropDown.dataProvider = filter.filterItems;
+					filtersDropDown.selectedItem = filter.filterItems.find(filter.selectedItem.name);
+					filtersDropDown.invalidateProperties();
+					filtersDropDown.invalidateDisplayList();
+				}
+				if ( filter.manualFilterRefresh ) {
+					filter.manualFilterRefresh = false;
+					//if ( filter.getFilterItem(filter.selectedItem.name )!= null )
+						dispatchEvent(new UIDataEvent(FilterDataGrid.EVENT_FILTER_CHANGED,filter,true));
+				}
+			}
+			
+			protected function resetAll(event:UIDataEvent):void
+			{
+				if (filter != null)
+				{
+					filter.resetAll();
+					filtersDropDown.selectedIndex = -1;
+					filter.searchString = ""; //[348604] - In My KPIs, when you refresh the text entered in the filter will not disapper
+				}
+			}
+			
+			protected function filterChangeHandler(event:UIDataEvent):void
+			{
+				if (filter != null)
+				{
+					filter.reset();
+				}
+				if ( filter == event.data as FilterVO ) {
+					filtersDropDown.selectedItem = filter.selectedItem;
+				}
+			}
+			
+			protected function selectionChangeHandler(event:Event):void {
+				filter.selectedItem = filtersDropDown.selectedItem as FilterItemVO;
+				event.stopPropagation();
+				event.stopImmediatePropagation();
+				dispatchEvent(new UIDataEvent(FilterDataGrid.EVENT_FILTER_CHANGED,filter,true));
+			}
+			
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void
+			{
+				super.updateDisplayList(unscaledWidth,unscaledHeight);
+				
+				filtersDropDown.setActualSize(unscaledWidth-6,filtersDropDown.height);
+				filtersDropDown.move(3,unscaledHeight-filtersDropDown.height);
+				
+				box.y = filtersDropDown.y;
+				box.height = filtersDropDown.height;
+
+				//searchField.y = filtersDropDown.y;
+				searchField.height = filtersDropDown.height;
+			}
+			
+			protected function changeHandler(event:MouseEvent=null):void {
+				if (event)
+					clickHandler(event);
+				if ( searchField.inSearchMode ) {
+					filter.searchString = searchField.text;
+				} else {
+					filter.searchString = "";
+				}
+				dispatchEvent(new UIDataEvent(FilterDataGrid.EVENT_FILTER_CHANGED,filter,true));
+			}
+			
+			protected function clickHandler(event:MouseEvent):void {
+				//event.preventDefault();
+				event.stopPropagation();
+				event.stopImmediatePropagation();
+			}
+			
+			protected function searchKeyDownHandler(event:KeyboardEvent):void {
+				if (event.keyCode == Keyboard.ENTER ) {
+					// The user pressed the Escape key.
+					changeHandler();
+				}
+			}
+			
+		]]>
+	</mx:Script>
+
+	<mx:Label id="labelField"/>
+	<mx:HBox id="box" width="100%" height="100%" horizontalGap="0" visible="{searchMode}" includeInLayout="{searchMode}" horizontalAlign="left" verticalAlign="middle"
+		paddingLeft="2" paddingRight="2" verticalGap="0" paddingTop="0">
+		<view:FilterTextInput width="100%" height="100%" id="searchField" mouseUp="clickHandler(event)" keyDown="searchKeyDownHandler(event)"/>
+		<mx:LinkButton icon="@Embed(source='assets/search_1068_16.png')" click="changeHandler(event)" 
+			useHandCursor="true"  mouseUp="clickHandler(event)" toolTip="Search"/>
+	</mx:HBox>
+	<view:ComboBox id="filtersDropDown" width="100%" change="selectionChangeHandler(event)" labelField="name"  visible="{!searchMode}" includeInLayout="{!searchMode}"
+		 mouseUp="clickHandler(event)"/>
+</GenericRenderer>

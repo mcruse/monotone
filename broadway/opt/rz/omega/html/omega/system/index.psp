@@ -1,0 +1,35 @@
+<%
+import os
+import sys
+from mpx import properties
+
+if request.get_protocol() == 'http':
+    root = properties.HTTP_ROOT
+else:
+    root = properties.HTTPS_ROOT
+
+qs = request.get_query_dictionary()
+
+qs_keys = qs.keys()
+for key in qs_keys:
+    if key == 'cmd':
+        what = qs[key]
+        del qs[key]
+        if what == 'reset_omega':
+            from mpx.lib import rzcache
+            from mpx.lib import rzutils
+            from opt.rz.omega.lib import genwebexpress
+            from opt.rz.omega.lib import genwebscheduler
+            from opt.rz.omega.lib import genwebsitebuilder
+            reload(rzcache)
+            reload(rzutils)
+            reload(genwebexpress)
+            reload(genwebscheduler)
+            reload(genwebsitebuilder)
+
+index_html = open(os.path.join(root,
+                  os.path.dirname(request.get_path())[1:],
+                  "index.html"))
+psp.write('\n'.join(index_html.readlines()))
+index_html.close()
+%>

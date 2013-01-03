@@ -1,0 +1,159 @@
+<%    
+# Copyright (c) 2005 Richards-Zeta
+# $Name: mediator_3_1_2_branch $
+# $Id: preview.psp 20101 2011-03-06 16:02:15Z bhagn $
+import os
+import sys
+import errno
+import shutil
+import commands
+from mpx.lib.http import MultipartCollector
+from mpx import properties
+
+if request.get_protocol() == 'http':
+    root = properties.HTTP_ROOT
+else:
+    root = properties.HTTPS_ROOT
+        
+m = MultipartCollector(request)
+previewdir = 'preview'
+previewimagesdir = 'preview/images'
+
+def mkdirs(newdir, mode=0777):
+    try:
+        oldmask = os.umask(0)
+        try:
+            os.makedirs(newdir, mode)
+        except OSError, err:
+            if err.errno != errno.EEXIST or not os.path.isdir(newdir):
+                raise
+    finally:
+        os.umask(oldmask)
+
+mkdirs(os.path.join(root,previewimagesdir), 0755)
+
+if m.has_key('logo'):
+    fn = os.path.join(root,previewimagesdir,'logo.gif')        
+    if m['logo'].file:           
+        try:
+            fileitem = m['logo']                                                       
+            tmpFile = open(fn,'w')
+            tmpFile.write(fileitem.value)
+            tmpFile.close()
+        except Exception,e:
+            psp.write('Error: %s' % e)
+    else:
+        psp.write('No File<br>')     #
+else:
+    psp.write('Form did not have correct file element<br>')
+    
+if m.has_key('banner'):
+    fn = os.path.join(root,previewimagesdir,'banner.gif')        
+    if m['banner'].file:           
+        try:
+            fileitem = m['banner']                                                       
+            tmpFile = open(fn,'w')
+            tmpFile.write(fileitem.value)
+            tmpFile.close()
+        except Exception,e:
+            psp.write('Error: %s<br>' % e)
+    else:
+        psp.write('No File<br>')     #
+else:
+    psp.write('Form did not have correct file element<br>')
+
+def installSiteBuilderFile(fromfile, tofile):
+    fullfromfile = os.path.normpath(os.path.join(root, fromfile))
+    fulltofile = os.path.normpath(os.path.join(root, tofile))
+
+    if not os.path.exists(fullfromfile):
+        response.send_error(404, 'Not Found')
+    else:
+        if not os.path.exists(fulltofile):
+            shutil.copy2(fullfromfile, fulltofile)
+
+installSiteBuilderFile('omega/sitebuilder/home_main.html', os.path.join(previewdir, 'home_main.html'))
+installSiteBuilderFile('omega/sitebuilder/home_bottom.html', os.path.join(previewdir, 'home_bottom.html'))
+
+nf_top = os.path.join(root,previewdir,'home_top.html')
+newfile_top = open(nf_top,'w')
+newfile_top.write('<DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n')
+newfile_top.write('<html>\n')
+newfile_top.write('<head>\n')
+newfile_top.write('    <title>O M E G A  ::: [ Web Sitebuilder | Preview ]</title>\n')
+newfile_top.write('    <script src="/omega/includes/js/global.js" type="text/javascript"></script>\n')
+newfile_top.write('    <script language="JavaScript" src="/webapi/js/sdk2.js"></script>\n')
+newfile_top.write('    <link rel="stylesheet" href="/omega/includes/css/home.css">\n')
+newfile_top.write('</head>\n')
+newfile_top.write('<body marginheight="0" marginwidth="0" topmargin="0" leftmargin="0">\n')
+newfile_top.write('<img border="0" src="/omega/media/images/pxl.gif" width="1" height="15"><br>\n')
+newfile_top.write('<div id="logo"><img src="images/logo.gif" width="150" height="75" alt=""></div>\n')
+newfile_top.write('<div id="banner"><img src="images/banner.gif" width="420" height="75" alt=""></div>\n')
+newfile_top.write('<div id="activehardware">\n')
+newfile_top.write('<table cellpadding="0" cellspacing="0">\n')
+newfile_top.write('<tr>\n')
+newfile_top.write('<th>Active Hardware</th>\n')
+newfile_top.write('</tr>\n')
+newfile_top.write('<tr>\n')
+newfile_top.write('<td><iframe src="/webapi/psp/mediatorname.psp?hostname=' + m['hostname'].value + '&ipaddress=' + m['ipaddress'].value + '&location=' + m['location'].value +'" name="nameframe" width="184" marginwidth="0" height="49" marginheight="0" scrolling="no" frameborder="0"></iframe></td>\n')
+newfile_top.write('</tr>\n')
+newfile_top.write('</table>\n')
+newfile_top.write('</div>\n')
+newfile_top.write('</body>\n')
+newfile_top.write('</html>\n')
+newfile_top.close()
+
+nf_nav = os.path.join(root,previewdir,'home_nav.html')
+newfile_nav = open(nf_nav,'w')
+newfile_nav.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n')
+newfile_nav.write('<html>\n')
+newfile_nav.write('<head>\n')
+newfile_nav.write('    <title>O M E G A  ::: [ Web Sitebuilder | Preview ]</title>\n')
+newfile_nav.write('    <script src="/omega/includes/js/global.js" type="text/javascript"></script>\n')
+newfile_nav.write('    <script language="JavaScript" src="/webapi/js/sdk2.js"></script>\n')
+newfile_nav.write('    <link rel="stylesheet" href="/omega/includes/css/home.css">\n')
+newfile_nav.write('</head>\n')
+newfile_nav.write('<body bgcolor="#f5f5f5" marginheight="0" marginwidth="0" topmargin="0" leftmargin="0">\n')
+newfile_nav.write('<div id="leftnav">\n')
+newfile_nav.write('<div class="top"><a class="lighter" href="#" target="_top"><span class="arrow">&raquo;</span> home</a></div>\n')
+if m.has_key('assigned'):
+    if isinstance(m['assigned'], list):
+        for x in m['assigned']:
+            temp = x.value.split('|');
+            href = temp[0];
+            title = temp[1];
+            newfile_nav.write('<div class="leftNav-level1"><a href="/' + href + '" target="main" onclick="this.style.textDecoration=\'underline\';this.style.color=\'#336666\'"><span class="arrow">&raquo;</span> ' + title + '</a></div>')
+    else:
+        temp = m['assigned'].value.split('|');
+        href = temp[0];
+        title = temp[1];
+        newfile_nav.write('<div class="leftNav-level1"><a href="/' + href + '" target="main" onclick="this.style.textDecoration=\'underline\';this.style.color=\'#336666\'"><span class="arrow">&raquo;</span> ' + title + '</a></div>')
+newfile_nav.write('</div>\n')
+newfile_nav.write('<br>\n')
+newfile_nav.write('<br>\n')
+newfile_nav.write('</body>\n')
+newfile_nav.write('</html>\n')
+newfile_nav.close()
+%>
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" 
+    "http://www.w3.org/TR/html4/frameset.dtd">
+    
+<html>
+<head>
+    <title>O M E G A  ::: [ Web Sitebuilder | Preview ]</title>
+</head>
+
+<frameset rows="90,*,60" framespacing="0" frameborder="0">
+    <frame name="top" src="/preview/home_top.html" scrolling="no">
+    <frameset cols="150, *" framespacing="0" frameborder="0">
+        <frame name="nav" src="/preview/home_nav.html">
+        <frame name="main" src="/preview/home_main.html">
+    </frameset>
+    <frame name="bottom" src="/preview/home_bottom.html">
+    <noframes>
+        Unfortunately, you need a frameset capable browser to view this site.
+    </noframes>
+</frameset>
+
+</html>

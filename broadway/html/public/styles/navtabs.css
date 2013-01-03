@@ -1,0 +1,93 @@
+@CHARSET "UTF-8";
+
+
+/****************************
+    Style tab-buttons
+****************************/
+div.nav-tabs ul.tabs {
+	height: 100%;
+	margin: 0 10px;
+    font-size: 11px;
+    list-style: none;
+    font-weight: inherit;
+    font-style: inherit;
+	list-style-type: none;
+    background: url(/public/images/primary_tabs.png);
+}
+
+div.nav-tabs li.tab-button {
+    position: relative;
+	float: left;
+    height: 23px;
+    color: #FFFFFF;
+    margin: 4px 8px;
+    font-weight: bold;
+    background: transparent;
+}
+
+div.nav-tabs li.tab-button a {
+    color: inherit;
+    height: 9px;
+    margin: 0 10px;
+    display: block;
+    padding: 7px 4px;
+    text-decoration: none;
+    background: transparent;
+}
+
+div.nav-tabs li.tab-button img {
+    position: absolute;
+    top: 0;
+    bottom: auto;
+    width: 10px;
+    height: 23px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;    
+}
+
+div.nav-tabs li.tab-button img.prefix {
+    right: auto;
+    left: 0;
+}
+
+div.nav-tabs li.tab-button img.suffix {
+    right: 0;
+    left: auto;
+}
+
+div.nav-tabs li.tab-button.selected {
+    font-weight: bold;
+}
+
+div.nav-tabs li.tab-button.selected a {
+    background: url(/public/images/tabs/tab_primary_selected.png);
+}
+
+div.nav-tabs li.tab-button.selected a img.prefix {
+    background: url(/public/images/tabs/tab_primary_selected_left.png);    
+}
+
+div.nav-tabs li.tab-button.selected a img.suffix {
+    background: url(/public/images/tabs/tab_primary_selected_right.png);    
+}
+
+div.nav-tabs li.tab-button a:hover {
+    color: #000000;
+    background: url(/public/images/tabs/tab_primary_hvr.png);
+}
+
+div.nav-tabs li.tab-button a:hover img.prefix {
+    background: url(/public/images/tabs/tab_primary_hvr_left.png);    
+}
+
+div.nav-tabs li.tab-button a:hover img.suffix {
+    background: url(/public/images/tabs/tab_primary_hvr_right.png);    
+}
+
+
+
+
+
+

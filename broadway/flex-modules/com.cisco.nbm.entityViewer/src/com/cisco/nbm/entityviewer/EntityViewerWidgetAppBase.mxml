@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="vertical">
+	<mx:Style>
+		
+		.debugBox
+		{
+			padding-bottom: 5;
+			padding-left: 5;
+			padding-right: 5;
+			padding-top: 5;
+			background-color: #ffcccc;
+			vertical-align: middle;
+		}
+	</mx:Style>
+</mx:Application>

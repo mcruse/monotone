@@ -1,0 +1,113 @@
+#!/bin/bash
+#-*-Shell-Script-*- Hint to [X]Emacs on colorization, etc...
+
+proot () {
+    echo $(dirname $0)
+}
+
+. $(proot)/tools/penvironment.rc
+
+HELP_MESSAGE='pfind [options] REGEX ...
+
+  Scans the source tree to locate files that the match REGEXs and displays
+  filename names that matched the REGEX, the name of the package that
+  contained the file, and the flist file in which it was found:
+
+  For files that can not located in a package, a message is
+  printed to STDERR and an error code that is the number of files that
+  could not be found is returned:
+
+  OPTIONS:
+    -h or --help                Display this message.
+    -D or --debug               Outputs all script commands being parsed and
+                                executed.
+
+  EXAMPLES:
+
+    [mevans@fearfactory broadway]$ ./pfind tag.so
+    bacnet/tag.so broadway.core ./mpx/lib/broadway.core.flist
+    [mevans@fearfactory broadway]$ echo $?
+    0
+    [mevans@fearfactory broadway]$ ./pfind "*.so"
+    host/eth/_eth.so broadway.ion ./mpx/ion/broadway.ion.flist
+    bacnet/lib.so broadway.core ./mpx/lib/broadway.core.flist
+    bacnet/npdu.so broadway.core ./mpx/lib/broadway.core.flist
+    bacnet/tag.so broadway.core ./mpx/lib/broadway.core.flist
+    bacnet/data.so broadway.core ./mpx/lib/broadway.core.flist
+    bacnet/_bvlc.so broadway.core ./mpx/lib/broadway.core.flist
+    _debug_memory.so broadway.core ./mpx/lib/broadway.core.flist
+    [mevans@fearfactory broadway]$ echo $?
+    0
+    [mevans@fearfactory broadway]$ ./pfind _test_case_property.pyc
+    ERROR: ./mpx/lib/bacnet/_test_case_property.pyc not in any package.
+    [mevans@fearfactory broadway]$ echo $?
+    1
+    [mevans@fearfactory broadway]$
+'
+
+while [ "$1" != "" ]
+do
+    if [ "$1" == "--debug" ] || [ "$1" == "-D" ]
+    then
+	set -v -x
+	shift
+	continue
+    fi
+    if [ "$1" == "--help" ] || [ "$1" == "-h" ]
+    then
+	echo "$HELP_MESSAGE" | more
+	exit 0
+    fi
+    break # If statements that match must continue.
+done
+if [ "${1:0:1}" == "-" ]
+then
+    echo "Unknown option \"$1\", use pfind --help for valid options." >&2
+    exit 1
+fi
+
+# @fixme Tool to find missing install scripts?
+# @fixme Option to suppress error messages...
+# @fixme ./pfind __init__.pyc seems to recurse forever...  Or at least
+#        it keeps finding the same files over and over.
+
+export P='' # Path
+export F='' # File
+export D='' # Directory
+export E='' # Error
+export REGEX=$1
+export ERRORFILE=$(echo /tmp/$$.pfind.errcode)
+export RESULTFILE=$(echo /tmp/$$.pfind.result)
+
+echo 0 >$ERRORFILE
+while [ "$REGEX" != "" ]
+do
+    find . -name "$REGEX" | while read P
+    do
+        F=$(basename $P)
+	D=$(dirname $P)
+	E=""
+        if grep -H $F $(find . -name "*.flist") >$RESULTFILE 2>/dev/null
+	then
+	    # \1 == flist dir
+	    # \2 == package name
+	    # \3 == .flist
+	    # \4 == filename derived from REGEX
+	    # Output:  \4 \2 \1\2\3
+	    cat $RESULTFILE |
+		sed "s#^\(.*/\)\([^/]*\)\(\.flist\):\(.*\)\$#\4 \2 \1\2\3#g"
+	else
+	    E="ERROR:  $P not in any package."
+	fi
+	if [ "$E" != "" ]
+	then
+	    echo $E >&2
+	    echo $(($(cat $ERRORFILE) + 1)) >$ERRORFILE
+	fi
+    done
+    shift
+    REGEX=$1
+done
+ERRORCODE=$(cat $ERRORFILE)
+rm -f $ERRORFILE $RESULTFILE
+exit $(($ERRORCODE>255?255:$ERRORCODE))

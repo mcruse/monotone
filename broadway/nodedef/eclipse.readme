@@ -1,0 +1,15 @@
+Notes on using eclipse in managing node definition editing.
+
+1  Select master.script, master.properties and master.data, right-click, team | Edit
+
+2  Use Envenergy Legacy Configuration Tool to edit node definitions, configuring tool to 
+   go to "[workspace]/broadway/nodedef/master" if needed.
+   
+   http://bgl11-filer05a-web.cisco.com/projects/cbsbu-eng/ConfigTool/installers/legacy/install.htm
+   
+3  Exit Configuration Tool
+
+4  Go to node definition folder in command prompt and run:
+   "./normalize_nodedefs master.script"
+   
+5  Select nodedef subfolder in Eclipse, refresh, commit

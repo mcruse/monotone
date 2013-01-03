@@ -1,0 +1,88 @@
+/*
+Purpose: Generic Label widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: GenericLabel.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+function GenericLabel(){
+  this.base = Widget;
+  this.base();
+  this._name = 'GenericLabel';
+  this._z_index = '1000';
+  this._text = 'Label';
+  this._text_color = 'black';
+  this.color_selector_text_color = 'true';
+  this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+  this._text_font_size = '12px';
+  this._text_font_weight = 'normal';
+ }
+
+GenericLabel.prototype = new Widget;
+
+GenericLabel.prototype.init = function(element) {
+  this._name = 'GenericLabel';
+  this._z_index = element.getAttribute('zindex');
+  var labelspan = this.get_element(element,'span','label');
+  this._text = labelspan.innerHTML
+  if(labelspan.currentStyle) {
+    this._text_color = labelspan.currentStyle['color'];
+    this._text_font_family = labelspan.currentStyle['fontFamily'];
+    this._text_font_size = labelspan.currentStyle['fontSize'];
+    // IE bug ... this._text_font_weight = labelspan.currentStyle['fontWeight'];
+    this._text_font_weight = labelspan.style.fontWeight;
+  }
+  else if(window.getComputedStyle) {
+    var compStyle = window.getComputedStyle(labelspan,"");
+    this._text_color = compStyle.getPropertyValue('color');
+    this._text_font_family = compStyle.getPropertyValue('font-family');
+    this._text_font_size = compStyle.getPropertyValue('font-size');
+    this._text_font_weight = compStyle.getPropertyValue('font-weight');
+  }
+  else {
+    this._text_color = 'black';
+    this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+    this._text_font_size = '12';
+    this._text_font_weight = 'normal';
+  }
+}
+
+GenericLabel.prototype.init_element = function (){
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version','1_0_dev_2');
+  this.element.setAttribute('zindex', this._z_index);
+  //this.element.setAttribute('overflow', 'visible');
+  this.element.style.position = 'absolute';
+  this.element.style.zIndex = this._z_index;
+  var labelspan = document.createElement('span');
+  labelspan.setAttribute('element', 'label');
+  labelspan.innerHTML = this._text;
+  if(this._text_color != ''){
+    labelspan.style.color = this._text_color;
+  }
+  if(this._text_font_family != ''){
+    labelspan.style.fontFamily = this._text_font_family;
+  }  
+  if(this._text_font_size != ''){
+    labelspan.style.fontSize = this._text_font_size;
+  }
+  if(this._text_font_weight != ''){
+    labelspan.style.fontWeight = this._text_font_weight;
+  }  
+  this.element.appendChild(labelspan);
+}
+
+
+GenericLabel.prototype.create = function (){
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function GenericLabel_factory(){
+  return new GenericLabel()
+}
+
+var GenericLabel_loaded = true;

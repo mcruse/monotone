@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties version="1">
+  <includeClasses>
+    <classEntry path="com.cisco.nbm.scheduler.events.ScheduleEvent"/>
+    <classEntry path="com.cisco.nbm.scheduler.components.TimeEditor"/>
+    <classEntry path="com.cisco.nbm.scheduler.components.DailyHourRuler"/>
+    <classEntry path="com.cisco.nbm.scheduler.HierarchicalSchedule"/>
+    <classEntry path="com.cisco.nbm.scheduler.components.WeekdayTimeValueEditorEvent"/>
+    <classEntry path="com.cisco.nbm.scheduler.ScheduleExceptionEntry"/>
+    <classEntry path="com.cisco.nbm.scheduler.jobs.SaveScheduleJob"/>
+    <classEntry path="com.cisco.nbm.scheduler.EventMetaData"/>
+    <classEntry path="com.cisco.nbm.scheduler.HierarchicalScheduleManager"/>
+    <classEntry path="com.cisco.nbm.scheduler.components.ColorEditor"/>
+    <classEntry path="com.cisco.nbm.scheduler.SchedulerObjectNode"/>
+    <classEntry path="com.cisco.nbm.scheduler.ScheduleProperty"/>
+    <classEntry path="com.cisco.nbm.scheduler.components.WeekdayTimeValueEditor"/>
+    <classEntry path="com.cisco.nbm.scheduler.DailyEntry"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>

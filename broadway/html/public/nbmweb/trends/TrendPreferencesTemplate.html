@@ -1,0 +1,195 @@
+<!--
+Copyright (C) 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<div dojoType="dijit.layout.ContentPane" style="width:100%; height:100%">
+    <form id="trendPreferencesForm" dojoType="dijit.form.Form" action="/trendmanager" method="post">
+        <table class="nodeEditTable nodeEditContent" style="width:100%">
+            <tr style="background:#D9E3E9;height:20px;text-indent:5px;">
+                <td colspan="4">
+                    <b>General Preferences</b>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Display Name
+                </td>
+                <td>
+                    <input dojoType="dijit.form.ValidationTextBox" id="displayname" invalidMessage="Enter a valid value" name="displayname"/>
+                </td>
+                <td>
+                </td>
+                <td>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Width
+                </td>
+                <td>
+                    <input dojoType="dijit.form.ValidationTextBox" id="width" regExp="^[1-9]+[0-9]*$" required="true" name="width"/>
+                </td>
+                <td>
+                    Height
+                </td>
+                <td>
+                    <input dojoType="dijit.form.ValidationTextBox" id="height" regExp="^[1-9]+[0-9]*$" required="true" name="height"/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Text Size
+                </td>
+                <td>
+                    <input dojoType="dijit.form.ValidationTextBox" id="textsize" regExp="^[1-9]+[0-9]*$" required="true" name="textsize"/>
+                </td>
+                <td>
+                    Text Font
+                </td>
+                <td>
+                    <input dojoType="dijit.form.ValidationTextBox" id="textfont" required="true" name="textfont"/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Initial Timespan
+                </td>
+                <td>
+                    <input dojoType="dijit.form.ValidationTextBox" id="timespanvalue" regExp="^[1-9]+[0-9]*$" required="true" name="timespanvalue" style="width:50px"/>
+                    <select size="1" id="timespanunit" name="timespanunit" dojoType="dijit.form.FilteringSelect" style="width:120px">
+                        <option selected="" value="samples">samples</option>
+                        <option value="hours">hours</option>
+                        <option value="minutes">minutes</option>
+                        <option value="seconds">seconds</option>
+                    </select>
+                </td>
+                <td>
+                Time Reference
+                <td>
+                    <select size="1" id="timereference" name="timereference" dojoType="dijit.form.FilteringSelect">
+                        <option value="Mediator">Mediator</option>
+                        <option value="UTC">UTC</option>
+                        <option value="Browser">Browser</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Background Color
+                </td>
+                <td>
+                    <input dojoType="dijit.form.ValidationTextBox" id="backgroundcolor" regExp="^\#([a-fA-F0-9]{6})$" onchange="change_button_color('backgroundcolor', 'backgroundcolorbutton');" required="true" name="backgroundcolor"/>
+                    <button onclick="open_color_selector('backgroundcolor', 'backgroundcolorbutton');" style="height: 20px;cursor:pointer;" id="backgroundcolorbutton" class="color" type="button" name="backgroundcolorbutton">
+                    </button>
+                </td>
+                <td>
+                    Text Color
+                </td>
+                <td>
+                    <input dojoType="dijit.form.ValidationTextBox" id="textcolor" regExp="^\#([a-fA-F0-9]{6})$" onchange="change_button_color('textcolor', 'textcolorbutton'); required="true" name="textcolor"/>
+                    <button onclick="open_color_selector('textcolor', 'textcolorbutton');" style="height: 20px;cursor:pointer;" id="textcolorbutton" class="color" type="button" name="textcolorbutton">
+                    </button>
+                </td>
+            </tr>
+        </table>
+        <table class="nodeEditTable nodeEditContent" id="pointPreferencesTable" style="display:none;width:100%">
+            <tr style="background:#D9E3E9;height:20px;text-indent:5px;">
+                <td colspan="4">
+                    <b>Point Preferences</b>
+                </td>
+            </tr>
+            <tr style="font-weight: 800;">
+                <td>#</td>
+                <td>Point Name</td>
+                <td>Color</td>
+                <td>Axis</td>
+            </tr>
+        </table>
+            <table class="nodeEditTable nodeEditContent" style="width:100%">
+                <tr style="background:#D9E3E9;height:20px;text-indent:5px;">
+                    <td colspan="4">
+                        <b>Axis Preferences</b>
+                    </td>
+                </tr>
+                <tr style="font-weight:800;">
+                    <td>Axis</td>
+                    <td>Status</td>
+                    <td>Range</td>
+                    <td>Type</td>
+                </tr>
+                <tr>
+                <td style="background:#D9E3E9;text-align:center">1</td>
+                <td>
+                    <select size="1" id="enableaxis1" name="enableaxis1" dojoType="dijit.form.FilteringSelect">
+                        <option selected="" value="1">enabled</option>
+                        <option value="0">disabled</option>
+                    </select>
+                </td>
+                <td>
+                    <label>From:</label>
+                    <input dojoType="dijit.form.ValidationTextBox" id="fromaxis1" value="auto" required="true" name="fromaxis1" style="width:75px"/>
+                    <label>To:</label>
+                    <input dojoType="dijit.form.ValidationTextBox" id="toaxis1" value="auto" required="true" name="toaxis1" style="width:75px"/>
+                </td>
+                </td>
+                <td>
+                    <select size="1" id="typeaxis1" name="typeaxis1" dojotype="dijit.form.FilteringSelect">
+                        <option selected="" value="numeric">numeric</option>
+                        <option value="binary">binary</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td style="background:#D9E3E9;text-align:center">2</td>
+                <td>
+	                <select size="1" id="enableaxis2" name="enableaxis2" dojoType="dijit.form.FilteringSelect">
+	                    <option selected="" value="0">disabled</option>
+	                    <option value="1">enabled</option>
+	                </select>
+				</td>
+                <td>
+                    <label>From:</label>
+                    <input dojoType="dijit.form.ValidationTextBox" id="fromaxis2" value="auto" required="true" name="fromaxis2" style="width:75px"/>
+                    <label>To:</label>
+                    <input dojoType="dijit.form.ValidationTextBox" id="toaxis2" value="auto" required="true" name="toaxis2" style="width:75px"/>
+                </td>
+                <td>
+                    <select size="1" id="typeaxis2" name="typeaxis2" dojotype="dijit.form.FilteringSelect">
+                        <option selected="" value="numeric">numeric</option>
+                        <option value="binary">binary</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+        <input type="hidden" name="commitpreferences" value="Commit"/>
+		<input id="trend" type="hidden" name="trend" value=""/>
+        
+    </form>
+</div>

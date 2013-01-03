@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" 
+	width="400" height="300">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.core.IFlexDisplayObject;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.core.UIComponent;
+			import mx.events.CloseEvent;
+			import mx.core.Application;
+			import mx.managers.ISystemManager;
+			import mx.controls.Alert;
+			import com.cisco.ui.components.DialogCloseReason;
+			
+			
+			[Bindable]
+			public var scheduleName:String;
+			
+			[Bindable]
+			public var actionName:String;
+			
+			private function handleNo():void
+			{
+				dispatchEvent(new CloseEvent(CloseEvent.CLOSE, false, false, Alert.NO));
+			}
+			
+			private function handleYes():void
+			{
+				dispatchEvent(new CloseEvent(CloseEvent.CLOSE, false, false, Alert.YES));
+			}
+			
+			private function handleCancel():void
+			{
+				dispatchEvent(new CloseEvent(CloseEvent.CLOSE, false, false, Alert.CANCEL));
+			}
+			
+			public static function show(actionName:String, scheduleName:String, parent:Sprite=null, closeHandler:Function=null):ConfirmSavePopup
+			{
+				 if (!parent)
+		        {
+		            var sm:ISystemManager = ISystemManager(Application.application.systemManager);
+		            if (sm.useSWFBridge())
+		                parent = Sprite(sm.getSandboxRoot());
+		            else
+		                parent = Sprite(Application.application);
+		        }
+		        
+		        
+		        var popup:ConfirmSavePopup = new ConfirmSavePopup();
+		        
+		        popup.title = "Confirm Save Schedule"; // TODO Better name
+		        popup.actionName = actionName;
+		        popup.scheduleName = scheduleName;
+		        
+		        if (closeHandler != null)
+		        {
+		        	popup.addEventListener(CloseEvent.CLOSE, closeHandler);
+		        }
+		        
+		        if (parent is UIComponent)
+        			popup.moduleFactory = UIComponent(parent).moduleFactory;
+		        
+		        
+		        PopUpManager.addPopUp(popup, parent, true);
+		        
+		        popup.setActualSize(popup.getExplicitOrMeasuredWidth(),
+                            popup.getExplicitOrMeasuredHeight());
+		        
+		        return popup;
+			}
+			
+			private static function static_creationCompleteHandler(event:FlexEvent):void
+		    {
+		        if (event.target is IFlexDisplayObject && event.eventPhase == EventPhase.AT_TARGET)
+		        {
+		            event.target.removeEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+		            PopUpManager.centerPopUp(IFlexDisplayObject(event.target));
+		        }
+		    }
+		]]>
+	</mx:Script>
+	<mx:HBox width="100%" height="100%">
+	<mx:TextArea wordWrap="true" width="100%" height="100%" 
+		text="The schedule {scheduleName} has been modified.  Would you like to save it before you {actionName}.\nClick No to discard the changes and {actionName}\n, Click Yes to save the schedule and {actionName},\nor click Cancel to return to editing the current schedule." 
+			/> 
+	</mx:HBox>
+	<mx:HBox width="100%">
+		<mx:Button label="Yes" click="handleYes()" />
+		<mx:Button label="No" click="handleNo()" />
+		<mx:Button label="Cancel" click="handleCancel()" />
+	</mx:HBox>
+</mx:Panel>

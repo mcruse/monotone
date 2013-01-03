@@ -1,0 +1,594 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%"
+		   xmlns:uicomponents="com.cisco.ui.components.*"
+		   xmlns:components="com.cisco.nbm.globalsetpoints.widget.components.*"
+		   xmlns:entityui="com.cisco.nbm.globalsetpoints.widget.entity.*"
+		   creationComplete="init();">
+	
+	<mx:Metadata>
+		[ Event( name="onClose", type="flash.events.Event") ]
+	</mx:Metadata>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.cisco.nbm.entities.Entity;
+			import com.cisco.nbm.entities.EntityManager;
+			import com.cisco.nbm.globalsetpoints.ui.ProgressPopup;
+			import com.cisco.nbm.globalsetpoints.widget.entity.AddEntity;
+			import com.cisco.nbm.globalsetpoints.widget.renderers.*;
+			import com.cisco.nbm.xmlrpc.v2.MediatorNode;
+			import com.cisco.nbm.xmlrpc.v2.MediatorNodeCall;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.XMLListCollection;
+			import mx.controls.Alert;
+			import mx.effects.easing.Bounce;
+			import mx.events.CloseEvent;
+			import mx.logging.ILogger;
+			import mx.logging.Log;
+			import mx.managers.PopUpManager;
+			import mx.utils.ObjectUtil;
+			import mx.utils.UIDUtil;
+			
+			private var progressPanel:ProgressPopup;
+			private var logger:ILogger = Log.getLogger("cisco.globalsetpoints.widget");
+			private var addNewSetPointDialogue:AddSetpoint;
+			private var deleteSetpointDialogue:DeleteSetpointConfirm;
+			private var pushID:String
+			private var releaseOverridePoints:ArrayCollection;
+			
+			public var _entityManager:EntityManager;
+			public var entitypath:String;
+			public var node:MediatorNode;
+			public var subscriptionNode:MediatorNode;
+			
+			public var selectedGroup:String;
+			public var pathInfo:String;
+			
+			[Embed(source="/assets/icons/alert_minor_2002_48.png")]
+			private var iconAlert:Class;
+			
+			[Embed(source="/assets/icons/alert_major_2001_16.png")]
+			private var iconAlertMajor:Class;
+			
+			[Embed(source="/assets/icons/state_red_16.png")]
+			private var iconRed:Class;
+			
+			[Embed(source="/assets/icons/refreshIcon.png")]
+			private var refreshIcon:Class;
+			
+			[Bindable]
+			public var configData:ArrayCollection;
+			
+			private var configBackup:Array;
+			
+			[Bindable]
+			private var showPushError:Boolean;
+			private var isPushed:Boolean;
+			
+			private function init():void{
+				// Show progress bar
+				var progress:ProgressPopup = getProgressPopup();
+				progress.text ="Retrieving configuration for '" + selectedGroup + "'";
+				progress.canCancel = false;
+				
+				// Set group name
+				setpointLabel.text = selectedGroup;
+				if(pathInfo) pathInfoDisplay.text = pathInfo+":";
+				
+				// Start loading group config
+				loadConfig();
+				
+				releaseOverridePoints = new ArrayCollection();
+			}
+			
+			
+			// Start loading config info for selected setpoint
+			public function loadConfig():void
+			{
+				var call:MediatorNodeCall = node.execute("get_group", [entitypath, selectedGroup]);
+				call.addCallback(handleLoadConfigResult, handleCreatePolledError);
+			}
+			
+			// On group loaded
+			private function handleLoadConfigResult(method:MediatorNodeCall, result:Object):void
+			{
+				configBackup = ObjectUtil.copy(result as Array) as Array;
+				configData = new ArrayCollection(result as Array);
+				
+				// Start loading entity maps
+				entityTable.getEntityMapping();
+				
+				if(progressPanel != null){
+					var progress:ProgressPopup = getProgressPopup();
+					destroyProgressPopup(progress); 
+				}
+			}
+			
+			// UPDATE CONFIG
+			private function updateGroup():void{
+				/* var gconfig:Array = [];
+				var gspitem1:Object = {'setpoint_id':'handleforgspitem1', 'name':'Supply air sp', 'data_type':{'Numeric':{'min':50.0, 'max':90.0}}, 'value':70.0, 'point_type':'heat_unocc', 'priority':4};
+				var gspitem2:Object = {'setpoint_id':'handleforgspitem2', 'name':'occ command', 'data_type':{'Numeric':{'min':0.0, 'max':1.0}}, 'value':1, 'point_type':'heat_occ', 'priority':4};
+				var gspitem3:Object = {'setpoint_id':'handleforgspitem3', 'name':'occ command', 'data_type':{'Enumerated':{'label1':'value1', 'label2':'value2'}}, 'value':'value2', 'point_type':'heat_occ', 'priority':4};
+				gconfig = [gspitem1, gspitem2, gspitem3]; */
+				
+				// Show progress bar
+				var progress:ProgressPopup = getProgressPopup();
+				progress.text ="Updating configuration for '" + selectedGroup + "'";
+				progress.canCancel = false;
+				
+				// Update group
+				var call:MediatorNodeCall = node.execute("update_group", [entitypath, selectedGroup, configData.source]);
+				call.addCallback(handleUpdateGroupResult, handleCreatePolledError);
+			}
+			
+			// On group UPDATE is completed
+			private function handleUpdateGroupResult(method:MediatorNodeCall, result:Object):void
+			{
+				// Release overrides if any deleted setpoints
+				releaseDeletedSetpointsOverride();
+				
+				// Update entity in entiy table
+				entityTable.updateEnityMap();
+				
+				if(progressPanel != null){
+					var progress:ProgressPopup = getProgressPopup();
+					destroyProgressPopup(progress); 
+				}
+				
+				
+			}
+			
+			//
+			private function handleCreatePolledError(method:MediatorNodeCall, result:Object):void
+			{
+				Alert.show("Failed = "+result.toString());
+				logger.error("handleCreatePolledError: {0}", result);
+				
+				// Destroy progress bar if error
+				if(progressPanel != null){
+					var progress:ProgressPopup = getProgressPopup();
+					destroyProgressPopup(progress); 
+				}
+				if(!pushValueButton.enabled && configData != null) pushValueButton.enabled = true;
+			}
+			
+			// Dummy HIERARCHICAL Data for testing entity maps
+			
+			private function onClose():void{
+				try {
+					cleanup();
+					// Dispatch save event
+					var onCloseEvent:Event = new Event( "onClose" );
+					dispatchEvent( onCloseEvent );
+					
+					
+				} catch(e:Error){}
+			}
+			
+			/**
+			 * Called when the view is closing
+			 */
+			private function cleanup():void {
+				
+				if (configData != null) entityTable.cleanup();
+			}
+			
+			// State change on EDIT/SAVE
+			private function onEdit():void{
+				showPushError = false;
+				isPushed = false;
+				if(currentState == 'Edit'){
+					// Validate
+					for(var i:int = 0; i<configData.length; i++){
+						if(configData.getItemAt(i).value == null || configData.getItemAt(i).value.toString() == ""){
+							Alert.show("Value of '" +configData.getItemAt(i).name + "' is empty." ,
+								"Error saving setpoint", Alert.OK, this, null, iconAlert, Alert.OK);
+							setpointsTableDatagrid.selectedIndex = i;
+							return;
+						}
+					}
+					// If valid update group
+					updateGroup();
+				} else {
+					// Reset rlease override point list
+					releaseOverridePoints = new ArrayCollection();
+				}
+				currentState = currentState == 'Edit' ? '':'Edit';
+			}
+			
+			// Ask for confirmation on cancel
+			private function cancelEdit():void{
+				Alert.show("All the modifications will be lost. Do you want to continue?","Cancel Edit", Alert.OK | Alert.CANCEL, this, cancelEditConfirm, iconAlert, Alert.OK);
+			}
+			
+			// Cancel EDIT. Revert original values
+			private function cancelEditConfirm(eventObj:CloseEvent):void{
+				if (eventObj.detail==Alert.OK) {
+					configData = new ArrayCollection(configBackup);
+					currentState = '';
+					// Cancel entities as well
+					entityTable.cancel();
+					
+					// Reset rlease override point list
+					releaseOverridePoints = new ArrayCollection();
+				}
+			}
+			
+			// ADD new setpoint
+			private function onAddNewSetPoint():void{
+				addNewSetPointDialogue = new AddSetpoint();
+				addNewSetPointDialogue.addEventListener("onSave", saveNewSetpoint);
+				addNewSetPointDialogue.configData = configData;
+				PopUpManager.addPopUp(addNewSetPointDialogue, this, true);
+				PopUpManager.centerPopUp(addNewSetPointDialogue);
+			}
+			
+			// Edit setpoint
+			private function onEditSetPoint():void{
+				addNewSetPointDialogue = new AddSetpoint();
+				addNewSetPointDialogue.EditMode = true;
+				addNewSetPointDialogue.configData = configData;
+				addNewSetPointDialogue.setPoint = configData.getItemAt(setpointsTableDatagrid.selectedIndices[0]);
+				addNewSetPointDialogue.addEventListener("onSave", saveNewSetpoint);
+				PopUpManager.addPopUp(addNewSetPointDialogue, this, true);
+				PopUpManager.centerPopUp(addNewSetPointDialogue);
+			}
+			
+			// Save new set point
+			private function saveNewSetpoint( event:Event ):void {
+				if(event.currentTarget.EditMode){
+					// Edit existing
+					var selectedIndex:Number = setpointsTableDatagrid.selectedIndices[0];
+					setpointsTableDatagrid.dataProvider.removeItemAt(selectedIndex);
+					configData.addItemAt(event.currentTarget.setPoint,selectedIndex);
+				} else {
+					// New
+					var newObject:Object = event.currentTarget.setPoint;
+					// Add default priority as 1
+					newObject.priority = 1;
+					// Generate unique setpoint ID
+					var uidFound:Boolean;
+					var uidkey:String = UIDUtil.createUID();
+					while (!uidFound && configData.length > 0){
+						for(var i:int=0; i<configData.length; i++){
+							if("gspitem"+uidkey != configData.getItemAt(i).setpoint_id){
+								uidFound = true;
+								break;
+							}
+							
+						}
+						uidkey = UIDUtil.createUID();
+					} 
+					newObject.setpoint_id = "gspitem"+uidkey;
+					configData.addItem(newObject);
+					// Select newly added
+					setpointsTableDatagrid.selectedIndex = configData.length - 1;
+					entityTable.selectedSetpoint = configData.getItemAt(setpointsTableDatagrid.selectedIndices[0]).setpoint_id;
+				}
+			}
+			
+			private function onRemoveSetpoint(event:Event):void{
+				/* var alertMessage:String;
+				if(setpointsTableDatagrid.selectedIndices.length > 1){
+				alertMessage = "Are you sure you want to remove selected setpoints?";
+				} else {
+				alertMessage= "Are you sure you want to remove selected setpoint?";
+				}
+				Alert.show(alertMessage,"Remove Setpoint", Alert.OK | Alert.CANCEL, this, RemoveSetpointConfirm, iconAlert, Alert.OK); */
+				
+				deleteSetpointDialogue = new DeleteSetpointConfirm();
+				deleteSetpointDialogue.addEventListener("onConfirm", RemoveSetpointConfirm);
+				deleteSetpointDialogue.addEventListener("onCancel", RemoveDeleteSetpointDialogue);
+				PopUpManager.addPopUp(deleteSetpointDialogue, this, true);
+				PopUpManager.centerPopUp(deleteSetpointDialogue);
+			}
+			
+			private function RemoveSetpointConfirm(event:Event):void{
+				// Remove selected set point
+				for(var i:int = 0, e:int = setpointsTableDatagrid.selectedIndices.length; i < e; ++i) {
+					// Add setpoints to list of points to release overrides
+					if(deleteSetpointDialogue.ReleaseOverride){
+						var remObj:Object = new Object();
+						remObj.setpoint_id = configData.getItemAt(setpointsTableDatagrid.selectedIndices[0]).setpoint_id;
+						remObj.priority = configData.getItemAt(setpointsTableDatagrid.selectedIndices[0]).priority;
+						releaseOverridePoints.addItem(remObj);
+					}
+					
+					// Remove associated Entity Map
+					entityTable.removeSetpointMap(configData.getItemAt(setpointsTableDatagrid.selectedIndices[0]).setpoint_id);
+					
+					// Remove Setpoint Item
+					setpointsTableDatagrid.dataProvider.removeItemAt(setpointsTableDatagrid.selectedIndices[0]);
+				}
+				
+				// Remove Dialogue
+				if(deleteSetpointDialogue != null) PopUpManager.removePopUp(deleteSetpointDialogue);
+				entityTableViewStack.selectedChild = entityTableDisabledView;
+			}
+			
+			private function RemoveDeleteSetpointDialogue(event:Event):void{
+				// Remove Dialogue
+				if(deleteSetpointDialogue != null) PopUpManager.removePopUp(deleteSetpointDialogue);
+			}
+			
+			// PUSH values
+			private function pushValues():void{
+				for(var i:int = 0; i<configData.length; i++){
+					if(!entityTable.isEntityPresent(configData.getItemAt(i).setpoint_id)){
+						Alert.show("Setpoint '" + configData.getItemAt(i).name + "' has no entities defined.", "Push Error");
+						return;
+					}
+				}
+				showPushError = false;
+				isPushed = false;
+				// Disable push value button
+				pushValueButton.enabled = false;
+				
+				// Show progress bar
+				var progress:ProgressPopup = getProgressPopup();
+				progress.text ="Pushing setpoint values for group'" + selectedGroup + "'";
+				progress.canCancel = false;
+				//Start PUSH
+				var call:MediatorNodeCall = node.execute("push_values", [entitypath, selectedGroup]);
+				call.addCallback(handlePushStartResult, handleCreatePolledError);
+			}
+			
+			// On PUSH id is recived
+			private function handlePushStartResult(method:MediatorNodeCall, result:Object):void
+			{
+				pushID = result as String;
+				if(progressPanel != null){
+					var progress:ProgressPopup = getProgressPopup();
+					destroyProgressPopup(progress); 
+				}
+				
+				// Call for push progress value
+				updatePushProgressBar(0);
+				getPushProgress();
+			}
+			
+			// Get push progress
+			private function getPushProgress():void{
+				var call:MediatorNodeCall = node.execute("get_push_values_progress", [entitypath, selectedGroup, pushID]);
+				call.addCallback(handlePushProgressResult, handleCreatePolledError);
+			}
+			
+			// On PUSH id is recived
+			private function handlePushProgressResult(method:MediatorNodeCall, result:Object):void
+			{
+				// handle progress result
+				//completed, success, percent_completed
+				if(result.completed){
+					pushValueButton.enabled = true;
+					isPushed = true;
+					updatePushProgressBar(100);
+					if(!result.success){
+						ShowPushError(result.report_items);
+					}
+				} else {
+					updatePushProgressBar(Number(result.percent_complete));
+					getPushProgress();
+				}
+			}
+			
+			private function ShowPushError(repotItems:Array):void
+			{
+				var errorMessage:String = "";
+				for(var i:int = 0; i<repotItems.length; i++){
+					if(i > 0) errorMessage += '\n';
+					errorMessage += "[" + i + "] " + repotItems[i].description;
+				}
+				
+				errorMessage = unescape(errorMessage).toString();
+				
+				var errorPopUp:ErrorPopUp = new ErrorPopUp();
+				errorPopUp.errorTitle = "Error pushing values.";
+				errorPopUp.errorMessage = errorMessage;
+				PopUpManager.addPopUp(errorPopUp, this, true);
+				PopUpManager.centerPopUp(errorPopUp);
+			}
+			
+			// Update PUSh progress bar
+			private function updatePushProgressBar(per_complete){
+				PushProgressBar.visible = true;
+				PushProgressBar.label = "Pushing values..."+ per_complete + "% complete";
+				PushProgressBar.setProgress(per_complete,PushProgressBar.maximum);
+				if(per_complete >= 100){
+					PushProgressBar.visible = false;
+					entityTable.updateSubscription();
+				}
+			}
+			
+			// EDIT Entity
+			private function editEntity():void{
+			}
+			
+			// Remove Entity(selected)
+			private function removeEntity():void{
+				entityTable.removeEntity();
+			}
+			
+			public function closeAllPopUps():void{
+				if(progressPanel != null){
+					var progress:ProgressPopup = getProgressPopup();
+					destroyProgressPopup(progress); 
+				}
+				entityTable.closeAllPopUps();
+				if(deleteSetpointDialogue != null) PopUpManager.removePopUp(deleteSetpointDialogue);
+				if(addNewSetPointDialogue != null) PopUpManager.removePopUp(addNewSetPointDialogue);
+			}
+			
+			private function getProgressPopup():ProgressPopup
+			{
+				if (progressPanel == null)
+				{
+					progressPanel = ProgressPopup.show();		
+				}
+				
+				return progressPanel;
+			}
+			private function destroyProgressPopup(popup:ProgressPopup):void
+			{
+				PopUpManager.removePopUp(popup);
+				popup.destroy();
+				
+				this.progressPanel = null;
+			}
+			
+			// Release overrides
+			private function releaseSelectedOverride():void{
+				var call:MediatorNodeCall = node.execute("release_setpoint", [entitypath, selectedGroup,
+					configData.getItemAt(setpointsTableDatagrid.selectedIndices[0]).setpoint_id,
+					configData.getItemAt(setpointsTableDatagrid.selectedIndices[0]).priority]);
+				call.addCallback(handleReleaseSetpointResult, handleCreatePolledError);
+				
+				// Show progress bar
+				var progress:ProgressPopup = getProgressPopup();
+				progress.text = "Releasing overrides for '" +
+					configData.getItemAt(setpointsTableDatagrid.selectedIndices[0]).name + "'";
+				progress.canCancel = false;
+			}
+			
+			// Release overrides for deleted setpoints
+			private function releaseDeletedSetpointsOverride():void{
+				//return;
+				for(var i:int = 0; i<releaseOverridePoints.length; i++) {
+					var call:MediatorNodeCall = node.execute("release_setpoint", [entitypath, selectedGroup,
+						releaseOverridePoints.getItemAt(i).setpoint_id,
+						releaseOverridePoints.getItemAt(i).priority]);
+					call.addCallback(handleReleaseSetpointResult, handleCreatePolledError);
+				}
+			}
+			
+			// On release success
+			private function handleReleaseSetpointResult(method:MediatorNodeCall, result:String):void
+			{
+				trace("Override release success: "+result);
+				if(progressPanel != null){
+					var progress:ProgressPopup = getProgressPopup();
+					destroyProgressPopup(progress); 
+				}
+			}
+			
+			private function checkForValueMismatch():void{
+				return; // Currently checking PUSH error by push progress return values.
+				// If the PUSH is failure, Alert is shown
+				if(entityTable.numOfValueMismatchEntries > 0 && isPushed){
+					showPushError = true;
+					isPushed = false;
+					pushErrorMessage.text = "Error pushing values to " + entityTable.numOfValueMismatchEntries
+						+ " of the entities.";
+				}
+				
+				if(entityTable.numOfValueMismatchEntries <= 0){
+					showPushError = false;
+				}
+			}
+			
+			private function refreshSubscription():void
+			{
+				entityTable.refreshSubscription();
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Resize id="ErrorShowEffect" target="{PushErrorDisplay}"  startDelay="5000" heightFrom="0" heightTo="22"/>
+	<mx:Resize id="ErrorHideEffect" target="{PushErrorDisplay}"  heightFrom="0" heightTo="0"/>
+	
+	<mx:states>
+		<mx:State name="Edit">
+			<mx:SetProperty target="{EntityEditControls}" name="visible" value="true"/>
+			<mx:SetProperty target="{SetpointEditControls}" name="visible" value="true"/>
+			<mx:SetProperty target="{editButton}" name="label" value="SAVE"/>
+			<!--<mx:SetProperty target="{setpointLabel}" name="editable" value="false"/>-->
+			<mx:SetProperty target="{pushValueButton}" name="enabled" value="false"/>
+		</mx:State>
+	</mx:states>
+	
+	<mx:VBox left="0" right="0" top="0" bottom="0"  backgroundColor="#E0E7EB" paddingLeft="10" paddingBottom="10" paddingRight="10" paddingTop="10">
+		<mx:HBox width="100%" verticalAlign="middle" horizontalGap="2">
+			<mx:Label id="pathInfoDisplay" text="" fontWeight="bold" fontSize="14" width="{pathInfoDisplay.text.length > 0 ? undefined:0}"/>
+			<mx:Label id="setpointLabel" width="100%" fontWeight="bold" fontSize="14"/>
+			<mx:HBox horizontalAlign="right">
+				<mx:Button label="Close" labelPlacement="left" click="onClose();"/>
+			</mx:HBox>
+		</mx:HBox>
+		
+		<!-- Set points table-->
+		<components:SetpointsTableDatagrid id="setpointsTableDatagrid" height="50%" width="100%" dataProvider="{configData}"
+										   itemClick="{entityTable.selectedSetpoint = configData.getItemAt(setpointsTableDatagrid.selectedIndices[0]).setpoint_id;
+										   entityTable.selectedPointType = configData.getItemAt(setpointsTableDatagrid.selectedIndices[0]).point_type};
+										   this.entityTableViewStack.selectedChild = entityTableEnabledView;"
+										   doubleClickEnabled="{currentState == 'Edit'}" release="releaseSelectedOverride()">
+		</components:SetpointsTableDatagrid>
+		
+		<mx:HBox width="100%" horizontalAlign="right" verticalAlign="middle" >
+			
+			<!-- Setpoint Edit Buttons -->
+			<mx:HBox id="SetpointEditControls" width="100%" visible="false">
+				<mx:Button id="deleteSetpointButton" label="Delete Setpoint" click="onRemoveSetpoint(event);" enabled="{setpointsTableDatagrid.selectedIndices.length > 0}"/>
+				<mx:Button id="editSetpointButton" label="Edit Setpoint" click="onEditSetPoint()" enabled="{setpointsTableDatagrid.selectedIndices.length == 1}"/>
+				<mx:Button id="addSetpointButton" label="Add Setpoint" click="onAddNewSetPoint();"/>
+			</mx:HBox>
+			
+			<!-- PUSH Progress bar -->
+			<mx:ProgressBar id="PushProgressBar" label="" labelPlacement="center" height="20" width="200" visible="false"
+							barColor="0x8DB71F" borderColor="#000000" trackHeight="18" textAlign="center" fontSize="11" fontStyle="normal" fontWeight="bold"
+							mode="manual" minimum="0" maximum="100" showEffect="Fade" hideEffect="Fade"/>
+			<mx:Button label="Refresh" click="refreshSubscription();" fontSize="9" fontWeight="normal" icon="{refreshIcon}" enabled="{!PushProgressBar.visible}"/>
+			<mx:HBox horizontalAlign="right" enabled="{configData.length > 0}">
+				<mx:Button id="pushValueButton" label="Push All Setpoint Values" click="pushValues();" enabled="{configData != null}"/>
+			</mx:HBox>
+			
+		</mx:HBox>
+		
+		<!-- PUSH Error Disaplay -->
+		<mx:HBox width="100%" id="PushErrorDisplay" color="#E9102A" fontWeight="bold"
+				 showEffect="{ErrorShowEffect}" hideEffect="{ErrorHideEffect}"
+				 horizontalAlign="right" verticalAlign="middle" horizontalGap="2" backgroundColor="#FFFF99"
+				 height="0" visible="{showPushError}">
+			<mx:Image width="22" height="16" source="{iconAlertMajor}" scaleContent="false" horizontalAlign="right"/>
+			<mx:Label text="Error." id="pushErrorMessage" textAlign="right" width="100%"/>
+			<mx:Label text="Check for the entites marked as"/>
+			<mx:Image source="{iconRed}" width="10" height="10"/>
+			<mx:Label text=" in table below."/>
+			<mx:LinkButton label="close" height="18" textAlign="center" color="#000000" textDecoration="underline"
+						   click="{showPushError = false; isPushed = false;}"/>
+		</mx:HBox>
+		
+		<mx:ViewStack id="entityTableViewStack" height="50%" width="100%" creationPolicy="all">
+			<mx:VBox id="entityTableDisabledView" height="100%" width="100%" horizontalAlign="center" verticalAlign="middle" borderStyle="solid" backgroundColor="#FFFFFF">
+				<mx:Label text="Setpoint not selected"/>
+			</mx:VBox>
+			
+			<mx:VBox id="entityTableEnabledView" height="100%" width="100%" horizontalAlign="right" verticalGap="4" verticalAlign="top">
+				
+				
+				
+				<!--Entity Table-->
+				<entityui:EntityTable id="entityTable" height="100%" width="100%" enabled="{setpointsTableDatagrid.selectedIndices.length == 1}"  
+									  entityManager="{_entityManager}" entitypath="{entitypath}" node="{node}" subscriptionNode="{subscriptionNode}"
+									  configData="{configData}" selectedGroup="{selectedGroup}" onUpdateEntityTable="checkForValueMismatch()"/>
+				
+			</mx:VBox>
+			
+		</mx:ViewStack>
+		
+		<!--Entity Table Control Buttons-->
+		<mx:HBox width="100%">
+			<mx:HBox width="100%" id="EntityEditControls" visible="false">
+				<mx:Button label="Remove Entity" enabled="{entityTable.selectedIndex > -1}" click="removeEntity()"/>
+				<!--<mx:Button label="Edit Entity"   enabled="{entityTable.selectedIndex > -1}" click="editEntity()"/>-->
+				<mx:Button label="Add Entity"    enabled="{entityTable.enabled}" click="entityTable.handleAddProperty();"/>
+				<mx:VRule height="20" width="20"/>
+				<mx:HBox width="100%" horizontalAlign="left">
+					<mx:Button label="Discover" enabled="{entityTable.enabled}" click="entityTable.discoverDevice();"/>
+				</mx:HBox>
+			</mx:HBox>
+			<mx:Button label="Cancel" width="100" click="cancelEdit()" visible="{currentState == 'Edit'}"/>
+			<mx:Button label="Edit" click="onEdit()" id="editButton"  width="100" enabled="{configData != null}"/>
+		</mx:HBox>
+	</mx:VBox>
+</mx:Canvas>

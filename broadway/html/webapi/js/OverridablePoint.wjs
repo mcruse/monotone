@@ -1,0 +1,1093 @@
+/*
+Purpose: perfectHOST Virtual Point widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: OverridablePoint.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+
+var tov_path = '/services/TOV';
+
+function OverridablePoint(){
+  this.base = Widget;
+  this.base();
+  this._name = 'OverridablePoint';
+  this._z_index = '1000';
+  this._node = '';
+  this._display_strings = 'false';
+  this.node_selector_node = 'true';
+  this._max_override = '8';
+  this._units = '';
+  this._precision = '2';
+  this._display_character_length = '10'; 
+  this._text_color = 'black';
+  this.color_selector_text_color = 'true';
+  this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+  this._text_font_size = '12px';
+  this._text_font_style = 'normal';
+  this._text_font_weight = 'normal';
+  this._upper_alarm_threshold = '100';
+  this._upper_warning_threshold = '100';
+  this._lower_warning_threshold = '0';
+  this._lower_alarm_threshold = '0';
+  this._offline_color = 'lightgrey';
+  this.color_selector_offline_color = 'true';
+  this._normal_color = 'green';
+  this.color_selector_normal_color = 'true';
+  this._warning_color = 'yellow';
+  this.color_selector_warning_color = 'true';
+  this._alarm_color = 'red';
+  this.color_selector_alarm_color = 'true';
+  this._override_color = 'blue';
+  this.color_selector_override_color = 'true';
+  this._pulse_length = '1000';
+  this._override_enabled = 'true';
+  this.override_active = false;
+  this.override_clears_at = '';
+ }
+
+OverridablePoint.prototype = new Widget;
+
+OverridablePoint.prototype.after_config_table = function() {
+  Widget_log('OverridablePoint.after_config_table(), at top');
+  document.getElementById('OverridablePoint_override_enabled').value = this._override_enabled;
+  document.getElementById('OverridablePoint_display_strings').value = this._display_strings;
+}
+
+OverridablePoint.prototype.get_max_override_defaults = function() {
+  var div = document.createElement('div');
+  var input = document.createElement('input');
+  input.setAttribute('id', 'OverridablePoint_max_override_value');
+  
+  var units_selector = document.createElement('select');
+  units_selector.setAttribute('id', 'OverridablePoint_max_override_units');
+  
+  var indefinite = document.createElement('option');
+  indefinite.value = 'Indefinite';
+  indefinite.innerHTML = 'Indefinite';
+  units_selector.appendChild(indefinite);
+	
+  var hours = document.createElement('option');
+  hours.value = 'Hours';
+  hours.innerHTML = 'Hours';
+  units_selector.appendChild(hours);
+  
+  var minutes = document.createElement('option');
+  minutes.value = 'Minutes';
+  minutes.innerHTML = 'Minutes';
+  units_selector.appendChild(minutes);
+  
+  var seconds = document.createElement('option');
+  seconds.value = 'Seconds';
+  seconds.innerHTML = 'Seconds';
+  units_selector.appendChild(seconds);
+  
+  div.appendChild(input);
+  div.appendChild(units_selector);
+  return div
+}
+
+OverridablePoint.prototype.get_display_strings_defaults = function(){
+  var s = document.createElement('select');
+  s.setAttribute('id', 'OverridablePoint_display_strings');
+  var o = document.createElement('option');
+
+  o.value = 'true';
+  o.innerHTML = 'true';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'false';
+  o.innerHTML = 'false';
+  s.appendChild(o);
+  return s;
+
+}
+
+OverridablePoint.prototype.get_override_enabled_defaults = function() {
+  var s = document.createElement('select');
+
+  s.setAttribute('id', 'OverridablePoint_override_enabled');
+
+  var o = document.createElement('option');
+
+  o.value = 'true';
+  o.innerHTML = 'true';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'false';
+  o.innerHTML = 'false';
+  s.appendChild(o);
+  return s;
+}
+
+OverridablePoint.prototype.init = function(element) {
+  this._name = 'OverridablePoint';
+  this._z_index = element.getAttribute('zindex');
+  var outercontainer = this.get_element(element,'div','outercontainer');
+  if(outercontainer.currentStyle) { //IE5 and later
+    this._text_color = outercontainer.currentStyle['color'];
+    this._text_font_family = outercontainer.currentStyle['fontFamily'];
+    this._text_font_size = outercontainer.currentStyle['fontSize'];
+    this._text_font_style = outercontainer.currentStyle['fontStyle'];
+    //this._text_font_weight = outercontainer.currentStyle['fontWeight'];
+    this._text_font_weight = outercontainer.style.fontWeight; // bug in IE?
+    //this._text_font_weight = 'normal';
+  }
+  else if(window.getComputedStyle) { //NN6
+    var compStyle = window.getComputedStyle(outercontainer,"");
+    this._text_color = compStyle.getPropertyValue('color');
+    this._text_font_family = compStyle.getPropertyValue('font-family');
+    this._text_font_size = compStyle.getPropertyValue('font-size');
+    this._text_font_style = compStyle.getPropertyValue('font-style');
+    this._text_font_weight = compStyle.getPropertyValue('font-weight');
+    this._text_font_weight = 'normal';
+  }
+  else {
+    this._text_color = 'black';
+    this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+    this._text_font_size = '12px';
+    this._text_font_style = 'normal';
+    this._text_font_weight = 'normal';
+  }
+  var nodedisplaydiv = this.get_element(element,'div','nodedisplay');
+  var node_path = nodedisplaydiv.getAttribute('node');
+  if (node_path.indexOf(tov_path) == 0) {
+  	node_path = node_path.slice(tov_path.length);
+  }
+  this._node = node_path;
+  var infospan = this.get_element(element,'div','info');
+  this._display_strings = this.get_span_attr(infospan, 'display_strings');
+  this._display_character_length = this.get_span_attr(infospan, 'display_character_length');
+  this._units = this.get_span_attr(infospan, 'units');
+  this._precision = this.get_span_attr(infospan, 'precision');
+  this._upper_alarm_threshold = this.get_span_attr(infospan, 'upper_alarm_threshold');
+  this._upper_warning_threshold = this.get_span_attr(infospan, 'upper_warning_threshold');
+  this._lower_warning_threshold = this.get_span_attr(infospan, 'lower_warning_threshold');
+  this._lower_alarm_threshold = this.get_span_attr(infospan, 'lower_alarm_threshold');
+  this._offline_color = this.get_span_attr(infospan, 'offline_color');
+  this._normal_color = this.get_span_attr(infospan, 'normal_color');
+  this._warning_color = this.get_span_attr(infospan, 'warning_color');
+  this._alarm_color = this.get_span_attr(infospan, 'alarm_color');
+  this._override_color = this.get_span_attr(infospan, 'override_color');
+  this._pulse_length = this.get_span_attr(infospan, 'pulse_length');
+  this._override_enabled = this.get_span_attr(infospan, 'override_enabled');
+  this.override_active = this.get_span_attr(infospan, 'override_active');
+  this.override_clears_at = this.get_span_attr(infospan, 'override_clears_at');  
+}
+
+OverridablePoint.prototype.init_element = function (){
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version','1_0_dev_2');
+  //this.element.setAttribute('auto_resize','false');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  this.element.style.position = 'absolute';
+  this.element.style.zIndex = this._z_index;
+
+  var outercontainer = document.createElement('div');
+  outercontainer.setAttribute('element','outercontainer');
+  outercontainer.style.position = 'relative';
+  outercontainer.style.verticalAlign = 'middle';
+  outercontainer.style.height = 'auto';
+  outercontainer.style.width = 'auto';
+  if(this._text_color != ''){
+    outercontainer.style.color = this._text_color; //inherited by children
+  }
+  if(this._text_font_family != ''){
+    outercontainer.style.fontFamily = this._text_font_family; //inherited by children
+  }  
+  if(this._text_font_size != ''){
+    outercontainer.style.fontSize = this._text_font_size; //inherited by children
+  }  
+  if(this._text_font_style != ''){
+    outercontainer.style.fontStyle = this._text_font_style; //inherited by children
+  }
+  if(this._text_font_weight != ''){
+    outercontainer.style.fontWeight = this._text_font_weight; //inherited by children
+  }
+  if(this._normal_color != '') {
+    outercontainer.style.backgroundColor = this._normal_color;
+  }
+  outercontainer.style.textAlign = 'center'; //inherited by children
+  outercontainer.style.top = '0';
+  outercontainer.style.left = '0';
+  outercontainer.style.zIndex = '0';
+
+  var textcontainer = document.createElement('div');
+  textcontainer.setAttribute('element','textcontainer');
+  textcontainer.style.position = 'relative';
+  textcontainer.style.verticalAlign = 'middle';
+  textcontainer.style.height = 'auto';
+  textcontainer.style.width = 'auto';
+  textcontainer.style.backgroundColor = 'transparent';
+  textcontainer.style.top = '0';
+  textcontainer.style.left = '0';
+  textcontainer.style.zIndex = '1';
+
+  var placeholderdiv = document.createElement('div');
+  placeholderdiv.setAttribute('element', 'placeholder');
+  //placeholderdiv.style.position = 'absolute';
+  placeholderdiv.style.verticalAlign = 'middle';
+  placeholderdiv.style.backgroundColor = 'transparent';
+  var pstring = '';
+  for(var i = 0; i < parseInt(this._display_character_length); i++)
+	pstring += 'X';
+  placeholderdiv.innerHTML = pstring;
+  placeholderdiv.style.top = '0';
+  placeholderdiv.style.left = '0';
+  placeholderdiv.style.zIndex = '1';
+  placeholderdiv.style.visibility = 'hidden';
+  textcontainer.appendChild(placeholderdiv);
+  
+  var nodedisplaydiv = document.createElement('div');
+  nodedisplaydiv.setAttribute('element', 'nodedisplay');
+  nodedisplaydiv.setAttribute('node', tov_path.concat(this._node));
+  nodedisplaydiv.setAttribute('display_function', 'OverridablePointDisplayResult');
+  nodedisplaydiv.setAttribute('result_filter', '.');
+  nodedisplaydiv.style.position = 'absolute';
+  nodedisplaydiv.style.verticalAlign = 'middle';
+  nodedisplaydiv.style.backgroundColor = 'transparent';
+  nodedisplaydiv.style.top = '0';
+  nodedisplaydiv.style.left = '0';
+  nodedisplaydiv.style.zIndex = '2';
+
+  textcontainer.appendChild(nodedisplaydiv);
+
+  var infospan = document.createElement('div');
+  infospan.setAttribute('element','info');
+  infospan.setAttribute('type','hidden');  
+  infospan.setAttribute('display_character_length', this._display_character_length);  
+  infospan.setAttribute('units', this._units);
+  infospan.setAttribute('precision', this._precision);
+  infospan.setAttribute('display_strings', this._display_strings);
+  infospan.setAttribute('upper_alarm_threshold', this._upper_alarm_threshold);
+  infospan.setAttribute('upper_warning_threshold', this._upper_warning_threshold);
+  infospan.setAttribute('lower_warning_threshold', this._lower_warning_threshold);
+  infospan.setAttribute('lower_alarm_threshold', this._lower_alarm_threshold);
+  infospan.setAttribute('offline_color', this._offline_color);
+  infospan.setAttribute('normal_color', this._normal_color);
+  infospan.setAttribute('warning_color', this._warning_color);
+  infospan.setAttribute('alarm_color', this._alarm_color);
+  infospan.setAttribute('override_color', this._override_color);
+  infospan.setAttribute('pulse_length', this._pulse_length); 
+  infospan.setAttribute('override_enabled', this._override_enabled); 
+  infospan.setAttribute('override_active', this.override_active); 
+  infospan.setAttribute('override_clears_at', this.override_clears_at); 
+  //infospan.style.position = 'relative';
+  infospan.style.backgroundColor = 'transparent';
+  infospan.style.top = '0';
+  infospan.style.left = '0';
+  infospan.style.height = '1';
+  infospan.style.width = '1';
+  infospan.style.zIndex = '0';
+  infospan.style.visibility = 'hidden';
+  infospan.style.display = 'none';
+   
+  outercontainer.appendChild(infospan);
+
+  var hitareacontainer = document.createElement('div');
+  hitareacontainer.setAttribute('element','hitareacontainer');
+  var browserIE = new RegExp('internet explorer','gi');
+  if(browserIE.test(navigator.appName)) {
+    hitareacontainer.setAttribute('ondblclick','OverridablePointOpenOverrideDialog(event)');
+  }
+  else {
+    //hitareacontainer.setAttribute('onclick','OverridablePointOpenOverrideDialog(event)');
+    hitareacontainer.setAttribute('ondblclick','OverridablePointOpenOverrideDialog(event)');
+    //hitareacontainer.addEventListener('click',OverridablePointOpenOverrideDialog,true);
+  }
+  hitareacontainer.style.position = 'absolute';
+  hitareacontainer.style.verticalAlign = 'middle';
+  hitareacontainer.style.height = 'auto';
+  hitareacontainer.style.width = 'auto';
+  hitareacontainer.style.height = 'auto';
+  hitareacontainer.style.width = 'auto';
+  hitareacontainer.style.margin = '0px';
+  hitareacontainer.style.padding = '0px';
+  hitareacontainer.style.border = '0px';
+  if(window.parent && window.parent.WebExpressEditor) {  
+  	var mystring = "'url(" + window.parent.WebExpressProtocol + "//" + window.parent.WebExpressHostname + "/webapi/images/cleardot.gif)'";
+  }
+  else {
+  	var mystring = "'url(" + window.location.protocol + "//" + window.location.hostname + "/webapi/images/cleardot.gif)'";
+  }
+  hitareacontainer.style.backgroundImage = eval(mystring);
+  hitareacontainer.style.backgroundRepeat = 'repeat';
+  hitareacontainer.style.backgroundColor = 'transparent';
+  hitareacontainer.style.top = '0';
+  hitareacontainer.style.left = '0';
+  hitareacontainer.style.zIndex = '3';
+
+  var hitareadiv = document.createElement('div');
+  hitareadiv.setAttribute('element', 'hitarea');
+  //hitareadiv.style.position = 'absolute';
+  hitareadiv.style.verticalAlign = 'middle';
+  hitareadiv.style.backgroundColor = 'transparent';
+  var pstring = '';
+  for(var i = 0; i < parseInt(this._display_character_length); i++)
+	pstring += 'X';
+  hitareadiv.innerHTML = pstring;
+  hitareadiv.style.top = '0';
+  hitareadiv.style.left = '0';
+  hitareadiv.style.zIndex = '0';
+  hitareadiv.style.visibility = 'hidden';
+  hitareacontainer.appendChild(hitareadiv);
+
+  textcontainer.appendChild(hitareacontainer);
+  outercontainer.appendChild(textcontainer);
+  this.element.appendChild(outercontainer);
+}
+
+
+OverridablePoint.prototype.create = function (){
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function OverridablePoint_factory(){
+  return new OverridablePoint();
+}
+
+function OverridablePointDisplayNoErrors(v) {
+  try {    
+    var pattern1 = /\?/;      
+    var pattern2 = /error\:/;      
+    if (pattern1.exec(v.toString()) == null && pattern2.exec(v.toString()) == null) {
+      return 1;
+    }
+  }
+  catch(err) {
+    return 0;
+  }
+  return 0;
+}
+function OverridablePointDisplayStruct(e,v){
+  Widget_log("OverridablePointDisplayStruct(), at top");
+  var result = '';
+  for(var i in v) {
+    Widget_log("OverridablePointDisplayStruct(), v." + i + "=" + v[i]);
+  }
+  try{    
+    var myVal = v['value'];
+    var myStatus = v['status'];
+    if(OverridablePointDisplayNoErrors(myVal)) {
+      var celement = e.parentNode.parentNode;
+      var ielement = OverridablePointGetElement(celement,'div','info');
+      if(myVal.as_magnitude){
+        if(ielement.getAttribute('display_strings') == 'true'){
+          myVal = myVal.toString();
+        }
+        else{
+          myVal = myVal.as_magnitude();
+        }
+      }
+      if(myStatus != 0) {
+        ielement.setAttribute('override_active',true);
+        e.style.backgroundColor = ielement.getAttribute('override_color');
+      }
+      else {
+        ielement.setAttribute('override_active',false);
+        e.style.backgroundColor = 'transparent';
+      }
+      var myUnitsArray;
+      var myIndex;
+      var myUnits = ielement.getAttribute('units');
+      var places = parseInt(ielement.getAttribute('precision'));
+      if(isNaN(places)){
+        places = 2;
+      }
+      if(myUnits.length > 0) {
+        if(myUnits.indexOf(',') == -1) { //exactly one token
+  	  myDisplayType = 'single';
+        }
+        else { //multiple tokens
+          myUnitsArray = myUnits.split(',');
+  	  myDisplayType = 'multiple';
+        }
+      }
+      else { //no tokens
+        myDisplayType = 'none';
+      }
+      switch(myDisplayType) {
+        case 'multiple':
+          Widget_log("OverridablePointDisplayReal(), multiple case, myUnitsArray.length=" + myUnitsArray.length + ", myVal=" + myVal);
+          if(isNaN(myVal) == false) {
+            myIndex = Math.round(myVal);
+            if(myIndex < 0) {
+              myIndex = 0;
+            }
+            else if(myIndex > myUnitsArray.length - 1) {
+              myIndex = myUnitsArray.length - 1;
+            }
+            Widget_log("OverridablePointDisplayReal(), myIndex=" + myIndex + ", myUnitsArray[myIndex]=" + myUnitsArray[myIndex]);
+            if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+              e.innerHTML = myUnitsArray[myIndex];
+            }
+            else if(e.nodeName == "INPUT"){ 
+              e.value = myUnitsArray[myIndex];
+            }
+          }
+  	  break;
+        case 'single':
+          Widget_log("OverridablePointDisplayReal(), single case");
+          precision(e,myVal,places);
+          if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+            e.innerHTML = e.innerHTML + myUnits;
+          }
+          else if(e.nodeName == "INPUT"){ 
+            e.value = e.value + myUnits;
+          }
+  	  break;
+        case 'none':
+	  Widget_log("OverridablePointDisplayReal(), single case");
+          precision(e,myVal,places);
+  	  break;
+      }//end switch
+    }//end if no ???
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  Widget_log("OverridablePointDisplayReal(), e.parentNode element=" + e.parentNode.getAttribute('element'));
+  Widget_log("OverridablePointDisplayReal(), e.parentNode.parentNode element=" + e.parentNode.parentNode.getAttribute('element'));
+  try {
+    OverridablePointTextAlign(e);
+  }
+  catch(ex1) {
+    alert('Exception calling OverridablePointTextAlign: <b><i>' + ex1.name +
+        ', ' + ex1.description + '</i></b>');
+  }
+  try {
+    OverridablePointDisplayBackground(e,myVal);
+  }
+  catch(ex2) {
+    alert('Exception calling OverridablePointDisplayBackground: <b><i>' + ex2.name +
+        ', ' + ex2.description + '</i></b>');
+  }
+}
+
+function OverridablePointDisplayResult(element, result) {
+  var result_time = (new Date()).getTime();
+  Widget_log("OverridablePointDisplayResult(), at top");
+  var value = result['value'];
+  if(OverridablePointDisplayNoErrors(value)){
+    var celement = element.parentNode.parentNode;
+    var ielement = OverridablePointGetElement(celement,'div','info');
+    try{
+      if(value.as_magnitude){
+        if(ielement.getAttribute('display_strings') == 'false'){
+          value = value.as_magnitude();
+          OverridablePointDisplayRealOnly(element, value);
+        }
+      }else{
+      	var myUnitsArray;
+      	var myIndex;
+      	var myUnits = ielement.getAttribute('units');
+      	var places = parseInt(ielement.getAttribute('precision'));
+      	if(isNaN(places)){
+      		places = 2;
+      	}
+      	if(myUnits.length > 0) {
+      		if(myUnits.indexOf(',') == -1){
+      			myDisplayType = 'single';
+      		}else{
+      			myUnitsArray = myUnits.split(',');
+      			myDisplayType = 'multiple';
+      		}
+      	}else{
+      		myDisplayType = 'none';
+      	}
+      	switch(myDisplayType){
+        	case 'multiple':
+          	if(isNaN(value) == false){
+            	myIndex = Math.round(value);
+            	if(myIndex < 0){
+              	myIndex = 0;
+            	}else if(myIndex > myUnitsArray.length - 1){
+              	myIndex = myUnitsArray.length - 1;
+            	}
+            if(element.nodeName == "SPAN" || element.nodeName == "TD" || element.nodeName == "DIV") {
+              element.innerHTML = myUnitsArray[myIndex];
+            }
+            else if(e.nodeName == "INPUT"){ 
+              element.value = myUnitsArray[myIndex];
+            }
+          }
+  	  		break;
+        case 'single':
+          precision(element, value, places);
+          if(element.nodeName == "SPAN" || element.nodeName == "TD" || element.nodeName == "DIV") {
+            element.innerHTML = e.innerHTML + myUnits;
+          }
+          else if(e.nodeName == "INPUT"){ 
+            element.value = e.value + myUnits;
+          }
+  	  		break;
+        case 'none':
+          precision(element, value, places);
+  	  		break;
+  	  	} //end switch
+      }//end else 
+    }catch(error){
+      if(element.nodeName == "SPAN" || element.nodeName == "TD" || element.nodeName == "DIV"){
+        element.innerHTML = 'N/A';
+      }else if(element.nodeName == "INPUT"){ 
+        element.value = 'N/A';
+      }
+    }
+    try{
+      OverridablePointTextAlign(element);
+    }catch(ex1){
+        alert('Exception calling OverridablePointTextAlign: <b><i>' + ex1.name + ', ' + ex1.description + '</i></b>');
+    }
+    try{
+      OverridablePointDisplayBackground(element, value);
+    }catch(ex2){
+      alert('Exception calling OverridablePointDisplayBackground: <b><i>' + ex2.name + ', ' + ex2.description + '</i></b>');
+    }
+  }
+  var overridden = result['overridden'];
+  var override_clears_at = '';
+  var container_element = element.parentNode.parentNode;
+  var information_element = OverridablePointGetElement(container_element,'div','info');
+  if(overridden){
+    var timestamp = result['timestamp'];
+    var clears_at = result['clears_at'];
+    if(clears_at){
+      var seconds_to_clear = clears_at - timestamp;
+      override_clears_at = result_time + (seconds_to_clear * 1000);
+    }
+    information_element.setAttribute('override_active', true);
+    element.style.backgroundColor = information_element.getAttribute('override_color');
+  }else{
+    information_element.setAttribute('override_active', false);
+    element.style.backgroundColor = 'transparent';
+  }
+  information_element.setAttribute('override_clears_at', override_clears_at);
+}
+
+function OverridablePointDisplayRealOnly(element, value) {
+  var celement = element.parentNode.parentNode;
+  var ielement = OverridablePointGetElement(celement,'div','info');
+  var myUnitsArray;
+  var myIndex;
+  var myUnits = ielement.getAttribute('units');
+  var places = parseInt(ielement.getAttribute('precision'));
+  if(isNaN(places)){
+    places = 2;
+  }
+  if(value.as_magnitude){
+    value = value.as_magnitude();
+  }
+  if(myUnits.length > 0) {
+    if(myUnits.indexOf(',') == -1) { //exactly one token
+      myDisplayType = 'single';
+    } else { //multiple tokens
+      myUnitsArray = myUnits.split(',');
+      myDisplayType = 'multiple';
+    }
+  }
+  else { //no tokens
+    myDisplayType = 'none';
+  }
+  switch(myDisplayType) {
+    case 'multiple':
+        Widget_log("OverridablePointDisplayReal(), multiple case, myUnitsArray.length=" + myUnitsArray.length + ", value=" + value);
+        if(isNaN(value) == false) {
+          myIndex = Math.round(value);
+        if(myIndex < 0) {
+          myIndex = 0;
+        }
+        else if(myIndex > myUnitsArray.length - 1) {
+          myIndex = myUnitsArray.length - 1;
+        }
+        Widget_log("OverridablePointDisplayReal(), myIndex=" + myIndex + ", myUnitsArray[myIndex]=" + myUnitsArray[myIndex]);
+        if(element.nodeName == "SPAN" || element.nodeName == "TD" || element.nodeName == "DIV") {
+          element.innerHTML = myUnitsArray[myIndex];
+        }
+        else if(element.nodeName == "INPUT") { 
+          element.value = myUnitsArray[myIndex];
+        }
+        }
+      break;
+    case 'single':
+      Widget_log("OverridablePointDisplayReal(), single case");
+        precision(element,value,places);
+        if (element.nodeName == "SPAN" || element.nodeName == "TD" || element.nodeName == "DIV") {
+        element.innerHTML = element.innerHTML + myUnits;
+        } else if(element.nodeName == "INPUT") { 
+        element.value = element.value + myUnits;
+        }
+      break;
+    case 'none':
+      Widget_log("OverridablePointDisplayReal(), single case");
+      precision(element,value,places);
+      break;
+  }
+}
+
+function OverridablePointDisplayReal(e,v){
+  Widget_log("OverridablePointDisplayReal(), at top");
+  var myNodeStr = e.getAttribute('node');
+  var myStatusIndex = myNodeStr.lastIndexOf('/_status');
+  //if(/_status/.test(myNodeStr.slice(myStatusIndex + 1))) {
+  if(myStatusIndex != -1) {
+    if(myStatusIndex == myNodeStr.lastIndexOf('/')) {
+      OverridablePointDisplayStruct(e,v);
+      return;
+    }
+  }
+  try{    
+    if(OverridablePointDisplayNoErrors(v)) {
+      var celement = e.parentNode.parentNode;
+      var ielement = OverridablePointGetElement(celement,'div','info');
+      var myUnitsArray;
+      var myIndex;
+      var myUnits = ielement.getAttribute('units');
+      var places = parseInt(ielement.getAttribute('precision'));
+      if(isNaN(places)){
+        places = 2;
+      }
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      if(myUnits.length > 0) {
+        if(myUnits.indexOf(',') == -1) { //exactly one token
+  	  myDisplayType = 'single';
+        }
+        else { //multiple tokens
+          myUnitsArray = myUnits.split(',');
+  	  myDisplayType = 'multiple';
+        }
+      }
+      else { //no tokens
+        myDisplayType = 'none';
+      }
+      switch(myDisplayType) {
+        case 'multiple':
+          Widget_log("OverridablePointDisplayReal(), multiple case, myUnitsArray.length=" + myUnitsArray.length + ", v=" + v);
+          if(isNaN(v) == false) {
+            myIndex = Math.round(v);
+            if(myIndex < 0) {
+              myIndex = 0;
+            }
+            else if(myIndex > myUnitsArray.length - 1) {
+              myIndex = myUnitsArray.length - 1;
+            }
+            Widget_log("OverridablePointDisplayReal(), myIndex=" + myIndex + ", myUnitsArray[myIndex]=" + myUnitsArray[myIndex]);
+            if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+              e.innerHTML = myUnitsArray[myIndex];
+            }
+            else if(e.nodeName == "INPUT"){ 
+              e.value = myUnitsArray[myIndex];
+            }
+          }
+  	  break;
+        case 'single':
+          Widget_log("OverridablePointDisplayReal(), single case");
+          precision(e,v,places);
+          if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+            e.innerHTML = e.innerHTML + myUnits;
+          }
+          else if(e.nodeName == "INPUT"){ 
+            e.value = e.value + myUnits;
+          }
+  	  break;
+        case 'none':
+	  Widget_log("OverridablePointDisplayReal(), single case");
+          precision(e,v,places);
+  	  break;
+      }//end switch
+    }//end if no ???
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+  }
+  Widget_log("OverridablePointDisplayReal(), e.parentNode element=" + e.parentNode.getAttribute('element'));
+  Widget_log("OverridablePointDisplayReal(), e.parentNode.parentNode element=" + e.parentNode.parentNode.getAttribute('element'));
+  try {
+    OverridablePointTextAlign(e);
+  }
+  catch(ex1) {
+    alert('Exception calling OverridablePointTextAlign: <b><i>' + ex1.name +
+        ', ' + ex1.description + '</i></b>');
+  }
+  try {
+    OverridablePointDisplayBackground(e,v);
+  }
+  catch(ex2) {
+    alert('Exception calling OverridablePointDisplayBackground: <b><i>' + ex2.name +
+        ', ' + ex2.description + '</i></b>');
+  }
+}
+
+function OverridablePointTextAlign(e) {
+  Widget_log("OverridablePointTextAlign(), at top");
+  var phelement = OverridablePointGetElement(e.parentNode.parentNode,'div','placeholder');
+  var ielement = OverridablePointGetElement(e.parentNode.parentNode,'div','info');
+  var myOffsetWidth = parseInt(e.offsetWidth);
+  var myOffsetLeft = parseInt(e.offsetLeft);
+  var myParentOffsetWidth = parseInt(e.offsetParent.offsetWidth);
+  var myParentOffsetLeft = parseInt(e.offsetParent.offsetLeft);
+  var myAlign = 'left';//Fred change
+  var myLeftPad = 0;
+  var myRightPad = 0;
+  var myHorizontalPad = myLeftPad + myRightPad;
+  var placeHolderContentSize = parseInt(phelement.offsetWidth) - myHorizontalPad;
+  if(document.compatMode == 'BackCompat') { //IE6 in backward compatibility mode (IE6 default)
+    e.style.left = Math.round(((myParentOffsetWidth / 2) - myOffsetLeft) - (((myOffsetWidth + myHorizontalPad) / 2) - myOffsetLeft)) + 'px';
+  }
+  else { // CSS1Compat
+    e.style.left = Math.round(myParentOffsetWidth / 2 - myOffsetWidth / 2);
+  }
+  e.style.left = 0;//Fred change
+}
+
+function OverridablePointDisplayBackground(e,v){
+  Widget_log("OverridablePointDisplayBackground(), at top");
+  Widget_log('OverridablePointDisplayBackground(), e.element=' + e.getAttribute('element') + ', v=' + v);
+  var celement = e.parentNode.parentNode;
+  var ielement = OverridablePointGetElement(celement,'div','info');
+  if(v.as_magnitude){
+    v = v.as_magnitude();
+  }
+  if(OverridablePointDisplayNoErrors(v)) {
+    var myColor = ielement.getAttribute('normal_color');
+    var myValue = parseInt(v);
+    for(var i = 0; i < 4; i++) {
+      switch(i) {
+        case 0:
+          myWarningThreshold = ielement.getAttribute('upper_alarm_threshold');
+          break;
+        case 1:
+          myWarningThreshold = ielement.getAttribute('upper_warning_threshold');
+          break;
+        case 2:
+          myWarningThreshold = ielement.getAttribute('lower_alarm_threshold');
+          break;
+        case 3:
+          myWarningThreshold = ielement.getAttribute('lower_warning_threshold');
+          break;
+      } // end switch
+      if(i < 2) {
+        if(myWarningThreshold != '' && isNaN(myWarningThreshold) == false && myValue >= parseInt(myWarningThreshold)) {
+          switch(i) {
+            case 0:
+              myColor = ielement.getAttribute('alarm_color');
+              break;
+            case 1:
+              myColor = ielement.getAttribute('warning_color');
+              break;
+          } // end switch
+          break; // break for loop
+        }
+      }
+      else {
+        if(myWarningThreshold != '' && isNaN(myWarningThreshold) == false && myValue <= parseInt(myWarningThreshold)) {
+          switch(i) {
+            case 2:
+              myColor = ielement.getAttribute('alarm_color');
+              break;
+            case 3:
+              myColor = ielement.getAttribute('warning_color');
+              break;
+          } // end switch
+          break; // break for loop
+        }
+      }
+    } // end for
+    Widget_log("OverridablePointDisplayBackground(), new color = " + myColor);
+    celement.style.backgroundColor = myColor;
+  }
+  else{ //offline
+    Widget_log("OverridablePointDisplayBackground(), using offline color");
+    celement.style.backgroundColor = ielement.getAttribute('offline_color');
+  }
+}
+
+function OverridablePointGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e
+}
+
+/* override window support stuff */
+
+var OverridablePointNav4 = ((navigator.appName == "Netscape") && (parseInt(navigator.appVersion) == 4));
+
+var OverridablePointDialogWin = new Object();
+
+function OverridablePointDeadEnd () {
+  if(OverridablePointDialogWin.win && !OverridablePointDialogWin.win.closed) {
+    OverridablePointDialogWin.win.focus();
+    return false;
+  }
+}
+
+var OverridablePointLinkClicks;
+
+function OverridablePointDisableForms() {
+  Widget_log("OverridablePointDisableForms() entered");
+  OverridablePointLinkClicks = new Array();
+  for(var i = 0; i < document.forms.length; i++) {
+    for(var j = 0; j < document.forms[i].elements.length; j++) {
+      document.forms[i].elements[j].disabled = true;
+    }
+  }
+  for(i = 0; i < document.links.length; i++) {
+    OverridablePointLinkClicks[i] = {click:document.links[i].onclick, up:null};
+    OverridablePointLinkClicks[i].up = document.links[i].onmouseup;
+    document.links[i].onclick = OverridablePointDeadEnd;
+    document.links[i].onmouseup = OverridablePointDeadEnd;
+    document.links[i].disabled = true;
+  }
+  window.onfocus = OverridablePointCheckModal;
+  document.onclick = OverridablePointCheckModal;
+}
+
+function OverridablePointEnableForms() {
+  Widget_log("OverridablePointEnableForms() entered");
+  for(var i = 0; i < document.forms.length; i++) {
+    for(var j = 0; j < document.forms[i].elements.length; j++) {
+      document.forms[i].elements[j].disabled = false;
+    }
+  }
+  for(i = 0; i < document.links.length; i++) {
+    document.links[i].onclick = OverridablePointLinkClicks[i].click;
+    document.links[i].onmouseup = OverridablePointLinkClicks[i].up;
+    document.links[i].disabled = false;
+  }
+}
+
+function OverridablePointBlockEvents() {
+  Widget_log("OverridablePointBlockEvents() entered");
+  if(OverridablePointNav4) {
+    window.captureEvents(Event.CLICK | Event.MOUSEDOWN | Event.MOUSEUP | Event.FOCUS);
+    window.onclick = OverridablePointDeadEnd;
+  }
+  else {
+    OverridablePointDisableForms();
+  }
+  window.onfocus = OverridablePointCheckModal;
+}
+
+function OverridablePointUnblockEvents() {
+  Widget_log("OverridablePointUnblockEvents() entered");
+  if(OverridablePointNav4) {
+    window.releaseEvents(Event.CLICK | Event.MOUSEDOWN | Event.MOUSEUP | Event.FOCUS);
+    window.onclick = null;
+    window.onfocus = null;
+  }
+  else {
+    OverridablePointEnableForms();
+  }
+}
+
+function OverridablePointDoOverride() {
+  var override_id;
+  Widget_log("OverridablePointDoOverride() entered");
+  var override_value = OverridablePointDialogWin.newValue;
+  var override_period = OverridablePointDialogWin.override_period;
+  OverridablePointDialogWin.newValue = '';
+  if (override_value !== '' && !isNaN(override_value)) {
+    try {
+      var ielement = OverridablePointGetElement(OverridablePointDialogWin.elem,'div','info');
+      var ndelement = OverridablePointGetElement(OverridablePointDialogWin.elem,'div','nodedisplay');
+      var nodepath = ndelement.getAttribute('node');
+      var statusIndex = nodepath.lastIndexOf('/_status');
+      if(statusIndex != -1 && statusIndex == nodepath.lastIndexOf('/')) {
+        nodepath = nodepath.slice(0,statusIndex);
+      }
+      var node = MEDIATOR.get_node(nodepath, OverridableNode);
+      if(override_period !== '' && !isNaN(override_period)) {
+      	override_id = node.override(override_value, Number(override_period));
+      } else {
+      	override_id = node.override(override_value);
+      }
+    }
+    catch(err) {
+      alert('ERROR: ' + err.message + '\nPlease check node path for this widget.');
+    }
+  }
+  return override_id;
+}
+
+function OverridablePointDoPulse() {
+  var override_id;
+  Widget_log("OverridablePointDoPulse() entered");
+  var override_value = OverridablePointDialogWin.newValue;
+  OverridablePointDialogWin.newValue = '';
+  if(override_value !== '' && !isNaN(override_value)) {
+    try {
+      var ielement = OverridablePointGetElement(OverridablePointDialogWin.elem,'div','info');
+      var ndelement = OverridablePointGetElement(OverridablePointDialogWin.elem,'div','nodedisplay');
+      var nodepath = ndelement.getAttribute('node');
+      var statusIndex = nodepath.lastIndexOf('/_status');
+      if(statusIndex != -1 && statusIndex == nodepath.lastIndexOf('/')) {
+        nodepath = nodepath.slice(0,statusIndex);
+      }
+      var milliseconds = ielement.getAttribute('pulse_length');
+      var node = MEDIATOR.get_node(nodepath, OverridableNode);
+      override_id = node.override(override_value, milliseconds / 1000.0);
+      setTimeout("OverridablePointDoClear()", milliseconds);
+    }
+    catch(err) {
+      alert('ERROR: ' + err.message + '\nPlease check node path for this widget.');
+    }
+  }
+  return override_id;
+}
+
+function OverridablePointDoClear() {
+  Widget_log("OverridablePointDoClear() entered");
+  try {
+    var ielement = OverridablePointGetElement(OverridablePointDialogWin.elem,'div','info');
+    var ndelement = OverridablePointGetElement(OverridablePointDialogWin.elem,'div','nodedisplay');
+    var nodepath = ndelement.getAttribute('node');
+    var statusIndex = nodepath.lastIndexOf('/_status');
+    if(statusIndex != -1 && statusIndex == nodepath.lastIndexOf('/')) {
+      nodepath = nodepath.slice(0,statusIndex);
+    }
+    var node = MEDIATOR.get_node(nodepath, OverridableNode);
+    node.clear_override();
+  }
+  catch(err) {
+    alert('ERROR: ' + err.message + '\nPlease check node path for this widget.');
+  }
+}
+
+function OverridablePointOpenOverrideDialog(evt) {
+  Widget_log("OverridablePointOpenOverrideDialog() entered");
+  evt = (evt) ? evt : ((event) ? event : null);
+  if(evt.detail) {
+    Widget_log("OverridablePointOpenOverrideDialog(), evt.detail=" + evt.detail);
+  }
+  var elem = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null);
+  var myWidget = elem.parentNode.parentNode.parentNode; //topmost div of OverridablePoint widget
+  Widget_log("OverridablePointOpenOverrideDialog(), myWidget id = " + myWidget.getAttribute('id'));
+  var ielement = OverridablePointGetElement(myWidget,'div','info');
+  if(ielement.getAttribute('override_enabled') == 'false') {
+    Widget_log("OverridablePointOpenOverrideDialog(), early return");
+    return; //return if override disabled
+  }
+  if(!OverridablePointDialogWin.win || (OverridablePointDialogWin.win && OverridablePointDialogWin.win.closed)) {
+    Widget_log("OverridablePointOpenOverrideDialog(), window doesn't exist or is closed");
+    OverridablePointDialogWin.url = '/webapi/timed_override.html';
+    OverridablePointDialogWin.width = 500;
+    OverridablePointDialogWin.height = 200;
+    OverridablePointDialogWin.elem = myWidget;
+    OverridablePointDialogWin.ovrFunc = OverridablePointDoOverride;
+    OverridablePointDialogWin.pulseFunc = OverridablePointDoPulse;
+    OverridablePointDialogWin.clrFunc = OverridablePointDoClear;
+    OverridablePointDialogWin.args = '';
+    OverridablePointDialogWin.newValue = '';
+    OverridablePointDialogWin.override_period = '';
+    OverridablePointDialogWin.name = (new Date()).getSeconds().toString();
+    if(window.screenX) { //Navigator 4+
+      Widget_log("OverridablePointOpenOverrideDialog(), window.screenX defined, Navigator branch taken");
+      OverridablePointDialogWin.left = window.screenX +
+        ((window.outerWidth - OverridablePointDialogWin.width) / 2);
+      OverridablePointDialogWin.top = window.screenY +
+        ((window.outerHeight - OverridablePointDialogWin.height) / 2);
+      var attr = "screenX=" + OverridablePointDialogWin.left +
+        ",screenY=" + OverridablePointDialogWin.top + ",resizable=no,width=" +
+        OverridablePointDialogWin.width + ",height=" + OverridablePointDialogWin.height;
+    }
+    else if(window.screenLeft) { //Windows IE5+
+      Widget_log("OverridablePointOpenOverrideDialog(), window.screenLeft defined, Windows IE branch taken");
+      var CSSCompat = (document.compatMode && document.compatMode != "BackCompat");
+      Widget_log("OverridablePointOpenOverrideDialog(), CSSCompat=" + CSSCompat);
+      window.outerWidth = (CSSCompat) ? document.body.parentElement.clientWidth :
+        document.body.clientWidth;
+      window.outerHeight = (CSSCompat) ? document.body.parentElement.clientHeight :
+        document.body.clientHeight;
+      window.outerHeight -= 80;
+      OverridablePointDialogWin.left = parseInt(window.screenLeft +
+        ((window.outerWidth - OverridablePointDialogWin.width) / 2));
+      OverridablePointDialogWin.top = parseInt(window.screenTop +
+        ((window.outerHeight - OverridablePointDialogWin.height) / 2));
+      var attr = "left=" + OverridablePointDialogWin.left +
+        ",top=" + OverridablePointDialogWin.top + ",resizable=no,width=" +
+        OverridablePointDialogWin.width + ",height=" + OverridablePointDialogWin.height;
+    }
+    else {
+      Widget_log("OverridablePointOpenOverrideDialog(), generic branch taken");
+      OverridablePointDialogWin.left = (screen.width - OverridablePointDialogWin.width) / 2;
+      OverridablePointDialogWin.top = (screen.height - OverridablePointDialogWin.height) / 2;
+      var attr = "left=" + OverridablePointDialogWin.left + ",top=" +
+        OverridablePointDialogWin.top + ",resizable=no,width=" + OverridablePointDialogWin.width +
+        ",height=" + OverridablePointDialogWin.height;
+    }
+    Widget_log("OverridablePointOpenOverrideDialog(), after attr calc");
+    if(!OverridablePointDialogWin.win){
+      Widget_log("OverridablePointOpenOverrideDialog(), win not defined");
+    }
+    else {
+      Widget_log("OverridablePointOpenOverrideDialog(), win defined");
+    }
+    Widget_log("OverridablePointOpenOverrideDialog(), before window.open(), url=" + OverridablePointDialogWin.url +
+      ", name=" + OverridablePointDialogWin.name + ", attr=" + attr);
+    OverridablePointDialogWin.win = window.open(OverridablePointDialogWin.url, OverridablePointDialogWin.name, attr);
+    Widget_log("OverridablePointOpenOverrideDialog(), after window.open(), OverridablePointDialogWin.win.name=" + OverridablePointDialogWin.win.name);
+    setTimeout("OverridablePointDialogWin.win.focus()", 250);
+  }
+  else {
+    setTimeout("OverridablePointDialogWin.win.focus()", 250);
+  }
+}
+
+function OverridablePointCheckModal() {
+  Widget_log("OverridablePointCheckModal() entered");
+  setTimeout("OverridablePointFinishCheckModal()", 250);
+  return true;
+}
+
+function OverridablePointFinishCheckModal() {
+  Widget_log("OverridablePointFinishCheckModal() entered");
+  if(OverridablePointDialogWin.win && !OverridablePointDialogWin.win.closed) {
+    Widget_log("OverridablePointFinishCheckModal(), before focus");
+    OverridablePointDialogWin.win.focus();
+    Widget_log("OverridablePointFinishCheckModal(), after focus");
+  }
+}
+
+var OverridablePoint_loaded = true;

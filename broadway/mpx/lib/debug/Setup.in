@@ -1,0 +1,3 @@
+*shared*
+spam -Wall spam.c
+_debug_memory -Wall _debug_memory.c

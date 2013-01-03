@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="vertical" 
+	title="Change Name"
+	paddingTop="10" paddingBottom="10" paddingLeft="10" paddingRight="10"
+	creationComplete="init()">
+	<mx:Script>
+		<![CDATA[
+			import mx.core.Application;
+			import mx.managers.ISystemManager;
+			import mx.utils.StringUtil;
+			import mx.controls.Alert;
+			import mx.core.IFlexDisplayObject;
+			import mx.managers.PopUpManager;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.core.UIComponent;
+			private var _originalName:String;
+			
+			private var _newName:String;
+			
+			private var _invalidNames:Array;
+			
+			private var closeHandler:Function;
+			
+			private static const DEFAULT_HELP_TEXT:String = "Enter new schedule name";
+			
+			private static const DEFAULT_HELP_COLOR:int = 0x000000;
+			
+			[Bindable]
+			private var helpText:String = DEFAULT_HELP_TEXT;
+			
+			[Bindable]
+			private var helpTextColor:int = DEFAULT_HELP_COLOR;
+			
+			public function get newName():String
+			{
+				return _newName;
+			}
+			
+			public function set originalName(value:String):void
+			{
+				_originalName = value;
+				updateControls();
+			}
+			
+			private function init():void
+			{
+				updateControls();
+				validateName();
+			}
+			
+			private function updateControls():void
+			{
+				labelOriginalName.text = _originalName;
+				tiNewName.text = _originalName;
+			}
+			
+			private function validateName():void
+			{
+				var valid:Boolean = true;
+				
+				var fullValue:String = StringUtil.trim(tiNewName.text);
+				
+				var newHelpText:String = DEFAULT_HELP_TEXT;
+				var newHelpColor:int = DEFAULT_HELP_COLOR;
+				
+				if (fullValue.length == 0)
+				{
+					valid = false;
+					newHelpText = "New name cannot be empty";
+					newHelpColor = 0xFF0000;
+				}
+
+				if (fullValue == _originalName)
+				{
+					valid = false;
+				}
+				
+				if (fullValue.indexOf("/") != -1) {
+					valid = false;
+					newHelpText = "The name cannot contain '/'";
+					newHelpColor = 0xFF0000;
+				}
+				
+				if (fullValue.indexOf("#") != -1 ||
+					fullValue.indexOf("%") != -1 ||
+					fullValue.indexOf(";") != -1)
+				{
+					valid = false;
+					newHelpText = "The name cannot contain '#','%' or ';'";
+					newHelpColor = 0xFF0000;
+				}
+				
+				if (fullValue.indexOf("[") != -1 ||
+					fullValue.indexOf("]") != -1)
+				{
+					valid = false;
+					newHelpText = "The name cannot contain '[' or ']'";
+					newHelpColor = 0xFF0000;
+				}
+
+				if (_invalidNames != null && _invalidNames.length > 0 && fullValue.length > 0)
+				{
+					var found:Boolean = false;
+					for each (var name:String in _invalidNames)
+					{
+						if (fullValue == name)
+						{
+							newHelpText = "A schedule with that name already exists";
+							newHelpColor = 0xFF0000;
+							valid = false;
+							break;
+						}
+					}
+				}
+				
+				buttonOK.enabled = valid;
+				
+				helpText = newHelpText;
+				helpTextColor = newHelpColor;	
+			}
+			
+			private function handleCancel():void
+		    {
+		    	close(Alert.CANCEL);
+		    }
+		    
+		    private function handleOK():void
+		    {
+		    	close(Alert.OK);
+		    }
+		    
+		    private function close(reason:int):void
+		    {
+		    	_newName = StringUtil.trim(tiNewName.text);
+		    	
+		    	var event:CloseEvent = new CloseEvent(CloseEvent.CLOSE);
+		    	event.detail = reason;
+		    	
+		    	dispatchEvent(event);
+		    	
+		    	if (closeHandler != null)
+		    	{
+		    		removeEventListener(CloseEvent.CLOSE, closeHandler);
+		    	}
+		    	
+		    	destroy();
+		    }
+		    
+		    private function destroy():void
+		    {
+		    	PopUpManager.removePopUp(this);
+		    	_invalidNames = null;
+		    }
+			
+			/**
+			 * Create a dialog with the original name and the array of
+			 * names of all its sibblings.  This array must not contain 
+			 * the original name.
+			 */
+			public static function show(parent:DisplayObject, 
+				originalName:String, invalidNames:Array =null, 
+				closeHandler:Function=null):EditScheduleNameDialog
+			{
+				var panel:EditScheduleNameDialog = new EditScheduleNameDialog();
+				
+				panel._originalName = originalName;
+				panel._invalidNames = invalidNames;
+				
+				if (closeHandler != null)
+				{
+					panel.closeHandler = closeHandler;
+					panel.addEventListener(CloseEvent.CLOSE, closeHandler);
+				}
+				
+				 if (!parent)
+		        {
+		            var sm:ISystemManager = ISystemManager(Application.application.systemManager);
+		            if (sm.useSWFBridge())
+		                parent = Sprite(sm.getSandboxRoot());
+		            else
+		                parent = Sprite(Application.application);
+		        }
+		        
+				if (parent is UIComponent)
+        			panel.moduleFactory = UIComponent(parent).moduleFactory;
+        	
+        		panel.setActualSize(panel.getExplicitOrMeasuredWidth(),
+                            panel.getExplicitOrMeasuredHeight());
+        		panel.addEventListener(FlexEvent.CREATION_COMPLETE, 
+        			static_creationCompleteHandler);
+        	
+        		PopUpManager.addPopUp(panel, parent, true);
+				
+				return panel;
+			}
+			
+			private static function static_creationCompleteHandler(event:FlexEvent):void
+		    {
+		        if (event.target is IFlexDisplayObject && 
+		        	event.eventPhase == EventPhase.AT_TARGET)
+		        {
+		            event.target.removeEventListener(FlexEvent.CREATION_COMPLETE, 
+		            	static_creationCompleteHandler);
+		            PopUpManager.centerPopUp(IFlexDisplayObject(event.target));
+		        }
+		    }
+		]]>
+	</mx:Script>
+	<mx:VBox width="100%" height="100%">
+		<mx:VBox width="100%" backgroundColor="0xFFFFFF">
+			<mx:Label text="Rename Schedule" fontWeight="bold"  />
+			<mx:Label id="labelHelpText" paddingLeft="10" 
+				text="{helpText}" />
+		</mx:VBox>
+		<mx:HRule width="100%" />
+		<mx:VBox width="100%" 
+			paddingTop="10" paddingLeft="10" paddingRight="10" paddingBottom="10">
+			<mx:HBox width="100%">
+				<mx:Label width="100" text="Original Name:" textAlign="right"
+					fontWeight="bold"/>
+				<mx:Label id="labelOriginalName" fontWeight="bold" />			
+			</mx:HBox>
+			<mx:HBox width="100%">
+				<mx:Label width="100" text="New Name:" textAlign="right" 
+					fontWeight="bold"/>
+				<mx:TextInput id="tiNewName" 
+					change="validateName()"  restrict="^;%#?/]["/>
+			</mx:HBox>
+		</mx:VBox>
+		<mx:HRule width="100%" />
+		<mx:HBox width="100%" horizontalAlign="right">
+			<mx:Button label="Cancel" click="handleCancel()" />
+			<mx:Button id="buttonOK" label="OK" click="handleOK()" 
+				enabled="false" />
+		</mx:HBox>
+	</mx:VBox>
+</mx:Panel>

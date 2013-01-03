@@ -1,0 +1,99 @@
+<!--
+Copyright (C) 2009 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<table class="configuration">
+    <tbody>
+        <tr class="table-header">
+            <th>Attribute</th>
+            <th class="control">Value</th>
+        </tr>
+        <tr class="light">
+            <th>Name</th>
+            <td class="control">
+                <input dojoType="dijit.form.TextBox"
+                    type="text" name="name"/>
+            </td>
+        </tr>
+        <tr class="dark">
+            <th>Poll period</th>
+            <td class="control">
+                <input dojoType="dijit.form.TextBox"
+                    type="text" name="poll_period"/>
+            </td>
+        </tr>
+        <tr class="light">
+            <th>Hysteresis</th>
+            <td class="control">
+                <input dojoType="dijit.form.TextBox"
+                    type="text" name="hysteresis"/>
+            </td>
+        </tr>
+        <tr class="dark">
+            <th>Trigger Message</th>
+            <td class="control">
+                <input dojoType="dijit.form.TextBox"
+                    type="text" name="message"
+                    value="input is less than ${constant}"/>
+            </td>
+        </tr>
+        <tr class="light">
+            <td colspan="2">
+                Alarm when node
+                <input dojoType="dijit.form.TextBox"
+                    type="text" id="input-node" name="input"/>
+                <button type="button" dojoType="dijit.form.Button">
+                    <script type="dojo/method" event="onClick" args="evt">
+                        console.log("onClick()", this, evt);
+                        utils.select.nodes.open("input-node");
+                    </script>
+                    select
+                </button>
+                is
+                <select name="comparison"
+                    style="width: 55px;"
+                    dojoType="dijit.form.Select">
+                    <option value=""></option>
+                    <option value="greater_than">more</option>
+                    <option value="less_than">less</option>
+                </select>
+                than constant
+                <input
+                    type="text"
+                    id="constant"
+                    name="constant"
+                    style="width: 50px;"
+                    dojoType="dijit.form.TextBox" />
+            </td>
+        </tr>
+    </tbody>
+</table>
+<button dojoType="dijit.form.Button" type="button" id="cancel-button">cancel</button>
+<button dojoType="dijit.form.Button" type="button" id="commit-button">commit</button>

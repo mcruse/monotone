@@ -1,0 +1,291 @@
+/*
+Purpose: Generic ColorStatusBox widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: GenericColorStatusBox.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+function GenericColorStatusBox(){
+  this.base = Widget;
+  this.base();
+  this._name = 'GenericColorStatusBox';
+  this._z_index = '1000';
+  this._node = '';
+  this.node_selector_node = 'true';
+  this._status_box_width = '20px';
+  this._status_box_height = '20px';
+  this._level_trigger = 'rising';
+  this._offline_color = 'lightgrey';
+  this.color_selector_offline_color = 'true';
+  this._normal_color = 'lime';
+  this.color_selector_normal_color = 'true';
+  this._warning = 'off';
+  this._warning_threshold = '';
+  this._warning_color = 'yellow';
+  this.color_selector_warning_color = 'true';
+  this._alarm = 'off';
+  this._alarm_threshold = '';
+  this._alarm_color = 'red';
+  this.color_selector_alarm_color = 'true';
+}
+
+GenericColorStatusBox.prototype = new Widget;
+
+GenericColorStatusBox.prototype.after_config_table = function() {
+  Widget_log('GenericColorStatusBox.after_config_table(), at top');
+  document.getElementById('GenericColorStatusBox_level_trigger').value = this._level_trigger;
+  document.getElementById('GenericColorStatusBox_warning').value = this._warning;
+  document.getElementById('GenericColorStatusBox_alarm').value = this._alarm;
+}
+
+GenericColorStatusBox.prototype.get_level_trigger_defaults = function() {
+  var s = document.createElement('select');
+
+  s.setAttribute('id', 'GenericColorStatusBox_level_trigger');
+
+  var o = document.createElement('option');
+
+  o.value = 'rising';
+  o.innerHTML = 'rising';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'falling';
+  o.innerHTML = 'falling';
+  s.appendChild(o);
+  return s;
+}
+
+GenericColorStatusBox.prototype.get_warning_defaults = function() {
+  var s = document.createElement('select');
+
+  s.setAttribute('id', 'GenericColorStatusBox_warning');
+
+  var o = document.createElement('option');
+
+  o.value = 'on';
+  o.innerHTML = 'on';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'off';
+  o.innerHTML = 'off';
+  s.appendChild(o);
+  return s;
+}
+
+GenericColorStatusBox.prototype.get_alarm_defaults = function() {
+  var s = document.createElement('select');
+
+  s.setAttribute('id', 'GenericColorStatusBox_alarm');
+
+  var o = document.createElement('option');
+
+  o.value = 'on';
+  o.innerHTML = 'on';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'off';
+  o.innerHTML = 'off';
+  s.appendChild(o);
+  return s;
+}
+
+GenericColorStatusBox.prototype.init = function(element) {
+  Widget_log('GenericColorStatusBox.init(), at top');
+  this._name = 'GenericColorStatusBox';
+  this._z_index = element.getAttribute('zindex');
+
+  var placeholderdiv = this.get_element(element,'div','placeholder');
+  this._node = placeholderdiv.getAttribute('node');
+
+  var infospan = this.get_element(element,'div','info');
+  this._status_box_width = this.get_span_attr(infospan, 'status_box_width');
+  this._status_box_height = this.get_span_attr(infospan, 'status_box_height');
+  this._level_trigger = this.get_span_attr(infospan, 'level_trigger');
+  this._offline_color = this.get_span_attr(infospan, 'offline_color');
+  this._normal_color = this.get_span_attr(infospan, 'normal_color');
+  this._warning = this.get_span_attr(infospan, 'warning');
+  this._warning_threshold = this.get_span_attr(infospan, 'warning_threshold');
+  this._warning_color = this.get_span_attr(infospan, 'warning_color');
+  this._alarm = this.get_span_attr(infospan, 'alarm');
+  this._alarm_threshold = this.get_span_attr(infospan, 'alarm_threshold');
+  this._alarm_color = this.get_span_attr(infospan, 'alarm_color');
+}
+
+GenericColorStatusBox.prototype.init_element = function (){
+  Widget_log('GenericColorStatusBox.init_element(), at top');
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version', '1_0_dev_2');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  this.element.style.position = 'absolute';
+  this.element.style.fontSize = '1px';//'xx-small';
+  this.element.style.zIndex = this._z_index;
+
+  var innercontainer = document.createElement('div');
+  innercontainer.setAttribute('element','innercontainer');
+  innercontainer.style.position = 'relative';
+  innercontainer.style.verticalAlign = 'middle';
+  innercontainer.style.height = 'auto';
+  innercontainer.style.width = 'auto';
+  if(this._offline_color != ''){
+    innercontainer.style.backgroundColor = this._offline_color;
+  }
+  innercontainer.style.top = '0';
+  innercontainer.style.left = '0';
+  innercontainer.style.zIndex = '0';
+
+  var infospan = document.createElement('div');
+  infospan.setAttribute('element','info');
+  infospan.setAttribute('status_box_width', this._status_box_width);  
+  infospan.setAttribute('status_box_height', this._status_box_height);  
+  infospan.setAttribute('level_trigger', this._level_trigger);
+  infospan.setAttribute('offline_color', this._offline_color);
+  infospan.setAttribute('normal_color', this._normal_color);
+  infospan.setAttribute('warning', this._warning);
+  infospan.setAttribute('warning_threshold', this._warning_threshold);
+  infospan.setAttribute('warning_color', this._warning_color);
+  infospan.setAttribute('alarm', this._alarm);
+  infospan.setAttribute('alarm_threshold', this._alarm_threshold);
+  infospan.setAttribute('alarm_color', this._alarm_color);
+  //infospan.style.position = 'relative';
+  infospan.style.backgroundColor = 'transparent';
+  infospan.style.top = '0';
+  infospan.style.left = '0';
+  infospan.style.height = '1';
+  infospan.style.width = '1';
+  infospan.style.zIndex = '0';
+  infospan.style.visibility = 'hidden';
+  infospan.style.display = 'none';
+   
+  innercontainer.appendChild(infospan);
+
+  var placeholderdiv = document.createElement('div');
+  placeholderdiv.setAttribute('element', 'placeholder');
+  placeholderdiv.setAttribute('node', this._node);
+  placeholderdiv.setAttribute('display_function', 'GenericColorStatusBoxDisplay');
+  //placeholderdiv.style.position = 'absolute';
+  if(this._normal_color != '') {
+    placeholderdiv.style.backgroundColor = this._normal_color;
+  }
+  if(this._status_box_width != '') {
+  	placeholderdiv.style.width = this._status_box_width;
+  }
+  if(this._status_box_height != '') {
+  	placeholderdiv.style.height = this._status_box_height;
+  }
+  placeholderdiv.style.top = '0';
+  placeholderdiv.style.left = '0';
+  placeholderdiv.style.zIndex = '1';
+  innercontainer.appendChild(placeholderdiv);
+  
+  this.element.appendChild(innercontainer);
+}
+
+
+GenericColorStatusBox.prototype.create = function (){
+  Widget_log('GenericColorStatusBox.create(), at top');
+  //_msglog('GenericColorStatusBox.create(), arguments.length=' + arguments.length);
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function GenericColorStatusBox_factory(){
+  return new GenericColorStatusBox();
+}
+
+function GenericColorStatusBoxDisplayNoErrors(v) {
+  try {    
+    var pattern1 = /\?/;      
+    var pattern2 = /error\:/;      
+    if (pattern1.exec(v.toString()) == null && pattern2.exec(v.toString()) == null) {
+      return 1;
+    }
+  }
+  catch(err) {
+    return 0;
+  }
+  return 0;
+}
+
+function GenericColorStatusBoxDisplay(e,v){
+  Widget_log('GenericColorStatusBoxDisplay(), e.element=' + e.getAttribute('element') + ', v=' + v);
+  if(GenericColorStatusBoxDisplayNoErrors(v)){
+    //Widget_log('GenericColorStatusBoxDisplay(), e.parentNode.nodeType=' + e.parentNode.nodeType);
+    //Widget_log('GenericColorStatusBoxDisplay(), e.parentNode.element=' + e.parentNode.getAttribute('element'));
+    var celement = e.parentNode;
+    var ielement = GenericColorStatusBoxGetElement(celement,'div','info');
+    var myColor = ielement.getAttribute('normal_color');
+    var myValue;
+    if(v.as_magnitude){
+      myValue = v.as_magnitude();
+    }
+    else{
+      myValue = parseInt(v);
+    }
+    if(ielement.getAttribute('level_trigger') == 'rising') {
+      Widget_log('level_trigger == rising');
+      if(ielement.getAttribute('warning') == 'on') {
+        Widget_log('warning == on');
+        myWarningThreshold = ielement.getAttribute('warning_threshold');
+        if(myWarningThreshold != '' && isNaN(myWarningThreshold) == false && myValue >= parseInt(myWarningThreshold)) {
+          Widget_log('setting warning_color');
+          myColor = ielement.getAttribute('warning_color');
+        }
+      }
+      if(ielement.getAttribute('alarm') == 'on') {
+        Widget_log('alarm == on');
+        myWarningThreshold = ielement.getAttribute('alarm_threshold');
+        if(myWarningThreshold != '' && isNaN(myWarningThreshold) == false && myValue >= parseInt(myWarningThreshold)) {
+          Widget_log('setting alarm_color');
+          myColor = ielement.getAttribute('alarm_color');
+        }
+      }
+    }
+    else { // falling
+      Widget_log('level_trigger == falling');
+      if(ielement.getAttribute('warning') == 'on') {
+        Widget_log('setting warning_color');
+        myWarningThreshold = ielement.getAttribute('warning_threshold');
+        if(myWarningThreshold != '' && isNaN(myWarningThreshold) == false && myValue <= parseInt(myWarningThreshold)) {
+          Widget_log('setting warning_color');
+          myColor = ielement.getAttribute('warning_color');
+        }
+      }
+      if(ielement.getAttribute('alarm') == 'on') {
+        Widget_log('alarm == on');
+        myWarningThreshold = ielement.getAttribute('alarm_threshold');
+        if(myWarningThreshold != '' && isNaN(myWarningThreshold) == false && myValue <= parseInt(myWarningThreshold)) {
+          Widget_log('setting alarm_color');
+          myColor = ielement.getAttribute('alarm_color');
+        }
+      }
+    }
+    e.style.backgroundColor = myColor;
+    e.style.visibility = 'visible';
+  }
+  else{ //offline
+    e.style.visibility = 'hidden';
+  }
+}
+
+function GenericColorStatusBoxGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e
+}
+
+var GenericColorStatusBox_loaded = true;

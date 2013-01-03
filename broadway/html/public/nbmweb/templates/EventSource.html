@@ -1,0 +1,78 @@
+<!--
+Copyright (C) 2009 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<tr class="event-source configuration hide" style="display:none;">
+    <th class="source" style="display:none;">
+        <span dojoAttachPoint="nameNode"></span>
+        <input type="hidden" 
+               name="source" 
+               value=""
+               dojoAttachPoint="sourceNode" 
+               dojoType="dijit.form.TextBox" />
+    </th>
+    <td class="event all control" style="display: none;">
+        <input name="event" 
+               value="all" 
+               type="checkbox"
+               disabled="disabled" 
+               dojoAttachPoint="allNode"
+               dojoAttachEvent="onClick:updateAll"  
+               dojoType="dijit.form.CheckBox" />
+    </td>
+    <td class="event raised control">
+        <input name="event" 
+               value="raised"
+               type="checkbox"
+               dojoAttachPoint="raisedNode" 
+               dojoType="dijit.form.CheckBox" />
+    </td>
+    <td class="event accepted control">
+        <input name="event" 
+               value="accepted" 
+               type="checkbox" 
+               dojoAttachPoint="acceptedNode"  
+               dojoType="dijit.form.CheckBox" />
+    </td>
+    <td class="event cleared control">
+        <input name="event" 
+               value="cleared" 
+               type="checkbox"
+               dojoAttachPoint="clearedNode"  
+               dojoType="dijit.form.CheckBox" />
+    </td>
+    <td class="event closed control">
+        <input name="event" 
+               value="closed" 
+               type="checkbox"
+               dojoAttachPoint="closedNode" 
+               dojoType="dijit.form.CheckBox" />
+    </td>
+</tr>

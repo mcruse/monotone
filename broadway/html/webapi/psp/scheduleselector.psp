@@ -1,0 +1,132 @@
+<%
+# Copyright (c) 2004 Richards-Zeta
+# $Name: mediator_3_1_2_branch $
+# $Id: scheduleselector.psp 20101 2011-03-06 16:02:15Z bhagn $
+from mpx import properties
+import os
+import sys
+import time
+import inspect
+from mpx.lib.node import as_node
+
+if request.get_protocol() == 'http':
+    root = properties.HTTP_ROOT
+else:
+    root = properties.HTTPS_ROOT
+
+#set schedule editor query string items to defaults
+
+scheduleholder = '/services/time/local/time_schedules_1' #node path to top of schedule node subtree
+scheduleprefix = 'RZSched_' #prefix automatically attached to schedule name by editor
+
+#override with values from this page's query string
+
+qs = request.get_query_dictionary()
+if qs.has_key('scheduleholder'):
+    scheduleholder= '%s' % qs['scheduleholder']
+if qs.has_key('scheduleprefix'):
+    scheduleprefix= '%s' % qs['scheduleprefix']
+
+schedulelist = []
+mynode = as_node(scheduleholder)
+childlist = mynode.children_names()
+childlist.sort()
+plen = len(scheduleprefix)
+schedulelist = [name[plen:] for name in childlist if name.find(scheduleprefix) == 0]
+
+psp.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">\n')
+psp.write('<html>\n')
+psp.write('<head>\n')
+psp.write('<!-- Copyright (c) 2004 Richards-Zeta\n\n')
+psp.write('Purpose: provides schedule list for schedule selection\n')
+psp.write('Version:\n\n')
+psp.write('$Id: scheduleselector.psp 20101 2011-03-06 16:02:15Z bhagn $ -->\n')
+psp.write('<title>Schedule Selector</title>\n')
+psp.write('<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">\n')
+psp.write('<link href="/css/main.css" type="text/css" rel="stylesheet">\n')
+psp.write('<style>\n')
+psp.write('.orangeText {color:#ff9933; font-size:16px; font-family: verdana, arial, san-serif;}\n')
+psp.write('.messageText {font-size:10px; font-family: verdana, arial, san-serif; text-align:left; vertical-align:top;}\n')
+psp.write('.nameText {font-size:14px; font-family: verdana, arial, san-serif;}\n')
+psp.write('.smallText {color:#616161; font-size:10; font-family: verdana, arial, san-serif;}\n')
+psp.write('</style>\n')
+psp.write('</head>\n')
+psp.write('<body topmargin="0" leftmargin="0" marginheight="0" marginwidth="0">\n')
+psp.write('<table width="600">\n')
+psp.write('<tr>\n')
+psp.write('<td><img src="/webapi/images/RZWebExpress.gif" width="328" height="59" alt="" border="0"></td>\n')
+psp.write('</tr>\n')
+psp.write('<tr>\n')
+psp.write('<td>\n')
+psp.write('<!-- this table is for the background image -->\n')
+psp.write('<table width="600" cellpadding="0" cellspacing="0" background="/webapi/images/bg_node.gif" height="379">\n')
+psp.write('<tr>\n')
+psp.write('<td class="orangeText">&nbsp;&nbsp;<img src="/webapi/images/spacer.gif" width="1" height="30" alt="" border="0">Select a name for the saved schedule below:</td>\n')
+psp.write('</tr>\n')
+psp.write('<tr>\n')
+psp.write('<td align="center" valign="top">\n')
+psp.write('<table>\n')
+psp.write('<tr>\n')
+psp.write('<td>\n')
+if schedulelist:
+    psp.write('<select id="theSchedule" onchange="javascript:scheduleSelect()">\n')
+    for f in schedulelist:
+        psp.write('<option value="%s">%s</option>\n' % (f,f))
+    psp.write('</select>\n')
+psp.write('</td>\n')
+psp.write('</tr>\n')
+psp.write('</table>\n')
+psp.write('</td>\n')
+psp.write('</tr>\n')
+psp.write('<tr>\n')
+psp.write('<td class="orangeText" valign="top">&nbsp;&nbsp;<img src="/webapi/images/spacer.gif" width="1" height="30" alt="" border="0">Schedule name:&nbsp;&nbsp;<input id="sched_name" type="text" size="60"></td>\n')
+psp.write('</tr>\n')
+psp.write('<tr>\n')
+psp.write('<td>&nbsp;</td>\n')
+psp.write('</tr>\n')
+psp.write('</table>\n')
+psp.write('</td>\n')
+psp.write('</tr>\n')
+psp.write('<tr>\n')
+psp.write('<td align="center"><img src="/webapi/images/button_cancel.gif" width="95" height="33" alt="" border="0" onclick="javascript:close_window()">&nbsp;&nbsp;&nbsp;&nbsp;<img src="/webapi/images/button_save.gif" onclick="javascript:savefunction()"  width="95" height="33" alt="" border="0"></td>\n')
+psp.write('</tr>\n')
+psp.write('</table>\n')
+psp.write('<script type="text/javascript">\n')
+psp.write('function get_query_string_args(){\n')
+psp.write('var args = new Object();\n')
+psp.write('var query_string = window.location.search.substring(1);\n')
+psp.write('var pairs = query_string.split("&");\n')
+psp.write('var name_value = null;\n')
+psp.write('for(x=0;x<pairs.length;x++){\n')
+psp.write('if (pairs[x].indexOf("=") != -1){\n')
+psp.write('name_value = pairs[x].split("="); \n')
+psp.write('args[name_value[0]] = decodeURIComponent(name_value[1]);\n')
+psp.write('} \n')
+psp.write('}\n')
+psp.write('return args;\n')
+psp.write('}\n\n')
+psp.write('var SCHEDNAME = get_query_string_args()["schedulename"];\n')
+psp.write('var SAVEFUNCTION = get_query_string_args()["savefunction"];\n\n')
+psp.write('if(SCHEDNAME == "NEWSCHEDULE") {\n')
+psp.write('document.getElementById("sched_name").value = "";\n')
+psp.write('}\n')
+psp.write('else {\n')
+psp.write('document.getElementById("sched_name").value = SCHEDNAME;\n')
+psp.write('}\n\n')
+psp.write('function close_window(){\n')
+psp.write('if (window.opener){\n')
+psp.write('window.close();\n')
+psp.write('}\n')
+psp.write('}\n\n')
+psp.write('function scheduleSelect() {\n')
+psp.write('document.getElementById("sched_name").value = document.getElementById("theSchedule").value;\n')
+psp.write('}\n\n')
+psp.write('function savefunction(){\n')
+psp.write('if(window.opener && SAVEFUNCTION != null) {\n')
+psp.write('eval("window.opener." + SAVEFUNCTION + "();");\n')
+psp.write('}\n')
+psp.write('}\n')
+psp.write('</script>\n')
+psp.write('</body>\n')
+psp.write('</html>\n')
+%>

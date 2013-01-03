@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:components="com.cisco.nbm.scheduler.ui.components.*" 
+	
+	label="Add Entry"
+	title="Add New Entry"
+	 
+	creationComplete="init()"
+	>
+<mx:Script>
+	<![CDATA[
+		import com.cisco.nbm.scheduler.EventMetaData;
+	//paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10"
+		import mx.collections.ArrayCollection;
+	/**
+	 * TODO Add check against possible conflict for entry and prevent OK button
+	 */
+		import com.cisco.ui.components.DialogCloseReason;
+		import mx.utils.StringUtil;
+		import com.cisco.nbm.scheduler.HierarchicalSchedule;
+		import com.cisco.nbm.scheduler.DailyEntry;
+		
+		[Bindable]
+		private var DAYS:Array = [];
+		
+		private var _suggestedDay:String = null;
+		
+		private var _initialized:Boolean = false;
+		
+		private var _reason:String;
+		
+		public var time:int;
+		
+		public var day:String;
+		
+		public var rawValue:String;
+		
+		public var entry:DailyEntry = new DailyEntry();
+		
+		[Bindable]
+		public var eventMeta:ArrayCollection;
+		
+		public var selectedMetaData:EventMetaData;
+		
+		private function init():void
+		{
+			_initialized = true;
+			
+			for each (var day:String in HierarchicalSchedule.DAY_INDEXES)
+			{
+				DAYS.push( { label : day.substr(0, 1).toUpperCase() + day.substr(1),
+					data : day } );
+					
+				selectSuggestedDay();
+				handleCBChange();
+			}
+		}
+		
+		public function get reason():String
+		{
+			return _reason;
+		}
+		
+		public function set suggestedDay(value:String):void
+		{
+			_suggestedDay = value;
+			
+			selectSuggestedDay();
+		}
+		
+		/*
+		 * Creates the day labels and data for the combobox
+		 */
+		private function selectSuggestedDay():void
+		{
+			cbDays.selectedIndex = 0;
+			
+			if (_suggestedDay != null)
+			{
+				var i:int = 0;
+				for each (var day:String in HierarchicalSchedule.DAY_INDEXES)
+				{
+					if (day == _suggestedDay)
+					{
+						cbDays.selectedIndex = i;
+						break;
+					} 
+				}
+			}
+		}
+		
+		private function handleAddEntry():void
+		{
+			entry.eventMeta = timeEditor.cbEventMeta.selectedItem as EventMetaData;
+			
+			_reason = DialogCloseReason.OK;
+			cleanupAndDispatch();
+		}
+		
+		private function handleCancel():void
+		{
+			_reason = DialogCloseReason.CANCEL
+			cleanupAndDispatch();
+		}
+		
+		private function cleanupAndDispatch():void
+		{
+			selectedMetaData = timeEditor.cbEventMeta.selectedItem as EventMetaData;
+			
+			dispatchEvent(new Event(Event.COMPLETE));
+			cleanup();
+		}
+		
+		private function cleanup():void
+		{
+			timeEditor.entry = null;
+		}
+		
+		private function handleTimeUpdated(event:DailyEntryEditorEvent):void
+		{
+			time = event.time;
+			entry.time = time;
+			
+			if (event.rawValue != null) {
+				entry.value = event.rawValue;
+				rawValue = event.rawValue;
+				eventMeta = null;
+				entry.eventMeta = null;
+			}
+		}
+		
+		private function handleCBChange():void
+		{
+			day = cbDays.selectedItem.data;
+		}
+		
+		
+	]]>
+</mx:Script>
+<mx:VBox width="100%" height="100%">
+	<mx:Form>
+		<mx:FormItem label="Entry:">
+			<components:DailyEntryTimeEditor
+				id="timeEditor"
+				timeUpdated="handleTimeUpdated(event)"
+				entry="{entry}"
+				eventMeta="{eventMeta}"
+				/>
+		</mx:FormItem>
+		<mx:FormItem label="Day:">
+			<mx:ComboBox id="cbDays" dataProvider="{DAYS}" selectedIndex="0" 
+				change="handleCBChange()" />
+			
+		</mx:FormItem>
+	</mx:Form>
+	<mx:HBox width="100%" horizontalAlign="right" paddingLeft="5" paddingRight="5" paddingBottom="5">
+		<mx:Button label="Add Entry" click="handleAddEntry()" />
+		<mx:Button label="Cancel" click="handleCancel()" />
+	</mx:HBox>
+</mx:VBox>
+</mx:Panel>

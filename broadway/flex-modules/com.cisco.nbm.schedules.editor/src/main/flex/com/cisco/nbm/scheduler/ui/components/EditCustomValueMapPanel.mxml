@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cisco:CiscoPanel 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:cisco="com.cisco.ui.components.*" 
+	layout="vertical" width="400" height="500"
+	minHeight="300"
+	paddingTop="10" paddingBottom="10" paddingLeft="10" paddingRight="10"
+	title="Custom Values"
+	creationComplete="init()">
+	<mx:Metadata>
+		[Event(name="close", type="mx.events.CloseEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.TextInput;
+			import com.cisco.nbm.entities.ui.NumericValueEditor;
+			import mx.core.Application;
+			import mx.managers.ISystemManager;
+			import mx.events.CloseEvent;
+			import mx.controls.Alert;
+			import com.cisco.nbm.scheduler.ui.components.customvaluemap.CustomValueMapModel;
+			import mx.collections.ArrayCollection;
+			import mx.core.IFlexDisplayObject;
+			import mx.managers.PopUpManager;
+			import mx.events.FlexEvent;
+			import mx.core.UIComponent;
+			import com.cisco.nbm.scheduler.ScheduleProperty;
+			
+			private var _property:ScheduleProperty;
+			
+			private var _eventMeta:ArrayCollection;
+			
+			private var closeHandler:Function;
+			
+			private var desiredHeight:int; 
+			
+			private var _valueMap:Object = {};
+			
+			[Bindable]
+			private var valueMapModel:CustomValueMapModel = new CustomValueMapModel();
+			
+			private function init():void
+			{
+				stage.addEventListener(Event.RESIZE, handleResizeEvent);
+				desiredHeight = height;
+				updateValues();
+				ensureFit();
+			}
+			
+			private function ensureFit():void
+			{
+				if (stage == null)
+				{
+					return;
+				}
+				var minimumHeight:int = stage.stageHeight;
+				var newHeight:int = height;
+				
+				if (minimumHeight < height)
+				{
+					newHeight = minimumHeight;
+				}
+				
+				newHeight = desiredHeight < minimumHeight ? desiredHeight : minimumHeight;
+				
+				if (newHeight != desiredHeight)
+				{
+					invalidateSize();
+				}
+				
+				
+				height = newHeight;
+				
+				PopUpManager.centerPopUp(this);
+			}
+			
+			private function handleResizeEvent(event:Event):void
+			{			
+				ensureFit();
+			}
+				
+			public function get valueMap():Object
+			{
+				return _valueMap;
+			}
+			
+			public function set property(value:ScheduleProperty):void
+			{
+				if (value != _property)
+				{
+					_property = value;
+					
+					valueMapModel.property = _property;
+					
+					updateTitle();
+					updateValues();
+				}
+			}
+			
+			private function updateTitle():void
+			{
+				title = "Update Values for " + _property.property;
+			}
+			
+			public function set eventMeta(value:ArrayCollection):void
+			{
+				if (value != _eventMeta)
+				{
+					_eventMeta = value;
+					
+					valueMapModel.eventMeta = _eventMeta;
+					
+					updateValues();
+				}
+			}
+			
+			public function updateValues():void
+			{
+				if (!initialized)
+				{
+					return;
+				}
+				
+				if (_property == null)
+				{
+					return;
+				}
+				
+				if (_eventMeta == null)
+				{
+					return;
+				}
+				
+				valueMapModel.property = _property;
+				valueMapModel.eventMeta = _eventMeta;
+			}
+			
+		    private function handleCancel():void
+		    {
+		    	close(Alert.CANCEL);
+		    }
+		    
+		    private function handleOK():void
+		    {
+		    	_valueMap = valueMapModel.toValueMap();
+		    	close(Alert.OK);
+		    }
+		    
+		    private function close(reason:int):void
+		    {
+		    	stage.removeEventListener(Event.RESIZE, handleResizeEvent);
+		    	var event:CloseEvent = new CloseEvent(CloseEvent.CLOSE);
+		    	event.detail = reason;
+		    	
+		    	dispatchEvent(event);
+		    	
+		    	if (closeHandler != null)
+		    	{
+		    		removeEventListener(CloseEvent.CLOSE, closeHandler);
+		    	}
+		    	destroy();
+		    }
+		    
+		    private function destroy():void
+		    {
+		    	PopUpManager.removePopUp(this);
+				valueMapModel.destroy();
+		    }
+			
+			public static function show(panelParent:DisplayObject, eventMeta:ArrayCollection, property:ScheduleProperty, closeHandler:Function):EditCustomValueMapPanel
+			{
+				var panel:EditCustomValueMapPanel = new EditCustomValueMapPanel();
+				
+				panel.property = property;
+				panel.eventMeta = eventMeta;
+				
+				var sm:ISystemManager = ISystemManager(Application.application.systemManager);
+	            if (sm.useSWFBridge())
+	                panelParent = Sprite(sm.getSandboxRoot());
+	            else
+	                panelParent = Sprite(Application.application);
+				
+				if (closeHandler != null)
+				{
+					panel.closeHandler = closeHandler;
+					panel.addEventListener(CloseEvent.CLOSE, closeHandler);
+				}
+				
+				if (panelParent is UIComponent)
+        			panel.moduleFactory = UIComponent(panelParent).moduleFactory;
+        	
+        		panel.setActualSize(panel.getExplicitOrMeasuredWidth(),
+                            panel.getExplicitOrMeasuredHeight());
+        		panel.addEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+        	
+        		PopUpManager.addPopUp(panel, panelParent, true);
+				
+				return panel;
+			}
+			
+			private static function static_creationCompleteHandler(event:FlexEvent):void
+		    {
+		        if (event.target is IFlexDisplayObject && event.eventPhase == EventPhase.AT_TARGET)
+		        {
+		            event.target.removeEventListener(FlexEvent.CREATION_COMPLETE, static_creationCompleteHandler);
+		            PopUpManager.centerPopUp(IFlexDisplayObject(event.target));
+		        }
+		    }
+		    
+		    private function customFieldRenderer():IFactory {
+		    	var factory:ClassFactory = new ClassFactory(TextInput);
+		    	factory.properties = {restrict:"0-9."};
+		    	return factory;
+		    }
+		    
+
+		]]>
+	</mx:Script>
+	<mx:VBox width="100%" height="100%" defaultButton="{buttonOK}">
+		<mx:AdvancedDataGrid id="gridCustomValues"
+			minHeight="100" 
+			width="100%" height="100%" 
+			dataProvider="{valueMapModel}" editable="true">
+			<mx:columns>
+				<mx:AdvancedDataGridColumn headerText="Name" dataField="name" editable="false"/>
+				<mx:AdvancedDataGridColumn headerText="Value" dataField="realValue" editable="false"/>
+				<mx:AdvancedDataGridColumn headerText="Custom Value" dataField="customValue" editable="true" itemEditor="{customFieldRenderer()}"/>
+			</mx:columns> 		
+		</mx:AdvancedDataGrid>
+		<mx:HRule width="100%" />
+		<mx:HBox width="100%" horizontalAlign="right">
+			<mx:Button label="Cancel" click="handleCancel()" />
+			<mx:Button id="buttonOK" label="OK" click="handleOK()" />
+		</mx:HBox>
+	</mx:VBox>
+</cisco:CiscoPanel>

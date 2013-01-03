@@ -1,0 +1,28 @@
+This is the catch all location for MOAB modules that are completely unrefined.
+In other words, it's a staging area.  The code in here should be stable and
+usable, but it doesn't have to be named "well", organized "correctly", nor
+does it need to be the "perfect abstraction."
+
+It is perfectly OK for releases to rely on STAGEd implementations, as a matter
+of fact that is the whole point.  If something belongs in MOAB but your not
+sure where, or the abstraction isn't obvious, put it in here.  Modules (source
+files) and packages (source directories) and anything else required to build
+MOAB support can be placed here.
+
+As we gain experience with the code, functionality, and requirements that led
+to staged code we will replace the staged implementation with one that is named
+"well", organized "correctly", and represents "perfect abstraction."()
+
+(1) There is no such thing as a "perfect abstraction."  By the nature of
+being an abstraction (aka a model), it is a gross oversimplification of
+reality. Therefore, an abstraction has a great deal less detail then whatever
+is being abstracted.  Just another reason not to get too hung-up on certain
+details...
+
+# Configure this file the way "The Bastard" likes it in Emacs.
+# Local Variables:
+# mode:Text
+# mode:Auto-Fill
+# fill-column:79
+# indent-tabs-mode:nil
+# End:

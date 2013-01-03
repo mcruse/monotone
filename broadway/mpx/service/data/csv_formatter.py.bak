@@ -1,0 +1,81 @@
+import time
+import string
+from mpx.service.data import Formatter
+from mpx.lib.configure import REQUIRED, set_attribute, get_attribute
+from mpx.lib import msglog
+from xml.dom.minidom import Document
+from mpx.service.data import EInconsistantFormat,EIncompatiableFormat
+from mpx.lib.msglog import types
+from mpx.lib.msglog import log
+from mpx.lib.stream import StreamWithCallback
+
+class CSVFormatter(Formatter):
+    def configure(self, config):
+        Formatter.configure(self, config)
+        set_attribute(self, 'timestamp_format', '%Y-%m-%dT%H:%M:%S', config)
+  
+    def configuration(self):
+        config = Formatter.configuration(self)
+        get_attribute(self, 'timestamp_format', config)
+        return config
+    
+    def get_data_fields(self,dic):
+        fields = ''
+        for k in dic.keys():
+            if k != 'timestamp':
+                fields += str(k)+ ','        
+        if fields:
+            fields = fields[:-1]
+        return fields
+    
+    def format(self, data):
+        if self.debug:
+            log('broadway',types.DB,'CSV formatter, format called')
+        stream = StreamWithCallback(self.output_callback)
+        stream.set_meta('data', data)
+        stream.set_meta('index', 0)
+        stream.set_meta('remaining', '')
+        entry = data[0]
+        self.data_fields = self.get_data_fields(entry)
+        stream.write('timestamp,' + self.data_fields + '\n')
+        return stream
+    
+    def output_callback(self, stream):
+        data = stream.get_meta_value('data')
+        index = stream.get_meta_value('index')
+        remaining = stream.get_meta_value('remaining')
+        csv = ''
+        if remaining:
+            remaining = remaining[stream.write(remaining):]
+            stream.set_meta('remaining',remaining)
+            if remaining:
+                return
+        for i in range(index,index+10):
+            try:
+                entry = data[i]
+            except IndexError:
+                stream.close()
+                return
+            if not entry.has_key('timestamp'):
+                raise EIncompatiableFormat()
+            timestamp = time.strftime(self.timestamp_format, time.gmtime(entry['timestamp']))         
+            del(entry['timestamp'])
+            values = [timestamp]
+            data_fields = self.get_data_fields(entry)
+            if data_fields != self.data_fields:
+                log('broadway',types.WARN,
+                    'CSV formatter found and inconsistant log entries')
+                raise EInconsistantFormat(index=i)
+            for key,value in entry.items():
+                values.append(str(value))
+            if values:
+                csv += string.join(values,',') + '\n'
+            count = stream.write(csv)
+            stream.set_meta('index',i+1)
+            if count != len(csv):
+                stream.set_meta('remaining',output[count:])
+                return
+        return None
+
+def factory():
+    return CSVFormatter()

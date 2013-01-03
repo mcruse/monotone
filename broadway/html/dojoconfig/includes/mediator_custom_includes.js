@@ -1,0 +1,22 @@
+dojo.require("utils.debug")
+dojo.require("utils.style")
+dojo.require("utils.display")
+dojo.require("nbmweb.content.FramedPage")
+//Events
+dojo.require("utils.configure.node")
+dojo.require("mpx.node.Proxy")
+dojo.require("utils.configure.trigger")
+dojo.require("utils.configure.exporter")
+dojo.require("nbmweb.edit.Node")
+dojo.require("utils.configure.cloud")
+//Trends
+//Nothing in particular as whatever required in already covered
+//Schedules
+//Security
+dojo.require("utils.select.nodes")
+dojo.require("utils.select.files")
+//Nodes
+dojo.require("nbmweb.node.Configuration")
+dojo.require("nbmweb.node.Value")
+dojo.require("nbmweb.node.Name")
+dojo.require("mpx.node.tree.Model")

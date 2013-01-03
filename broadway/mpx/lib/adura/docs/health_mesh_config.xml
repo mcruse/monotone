@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE XServeConfig SYSTEM "./xserve_config.dtd">
+<XServeConfig>
+	<XFieldExtractor name="Node Health XML" order="3">
+		<XFields>
+			<XField name="amtype" byteoffset="2" length="1" type="uint8"/>
+			<XField name="sourceaddr" byteoffset="5" length="2" type="uint16"/>
+			<XField name="nodeid" byteoffset="7" length="2" type="uint16"/>
+			<XField name="socketid" byteoffset="11" length="1" type="uint8"/>
+			<XBitField name="old_type" byteoffset="12" length="1" type="uint8" mask="0xF0" shift="4"/>
+			<XBitField name="node_count" byteoffset="12" length="1" type="uint8" mask="0x0F" shift="0"/>
+			<XField name="version" byteoffset="13" length="1" type="uint8"/>
+			<XField name="type" byteoffset="14" length="1" type="uint8"/>
+			<XField name="health_pkts" byteoffset="15" length="2" type="uint16"/>
+			<XField name="node_pkts" byteoffset="17" length="2" type="uint16"/>
+			<XField name="forwarded" byteoffset="19" length="2" type="uint16"/>
+			<XField name="dropped" byteoffset="21" length="2" type="uint16"/>
+			<XField name="retries" byteoffset="23" length="2" type="uint16"/>
+			<XField name="battery" byteoffset="25" length="1" type="uint8">
+				<XConversion function="x/10.0" returntype="float">
+					<XConvParam variablename="x" fieldname="battery" type="float"/>
+				</XConversion>
+			</XField>
+			<XField name="power_sum" byteoffset="26" length="2" type="uint16"/>
+			<XField name="board_id" byteoffset="28" length="1" type="uint8"/>
+			<XField name="parent" byteoffset="29" length="2" type="uint16"/>			
+			<XBitField name="quality_tx" byteoffset="31" length="1" type="uint8" mask="0x0F" shift="0"/>
+			<XBitField name="quality_rx" byteoffset="31" length="1" type="uint8" mask="0xFF" shift="4"/>
+			<XField name="path_cost" byteoffset="32" length="1" type="uint8"/>			
+			<XField name="parent_rssi" byteoffset="33" length="1" type="uint8"/>			
+		</XFields>
+		<XFilter>
+			<XCondAnd>				
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="socketid"/>
+					<XFilterParam name="fieldvalue" value="0x03"/>
+				</XCond>				
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="old_type"/>
+					<XFilterParam name="fieldvalue" value="0x0F"/>
+				</XCond>				
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="type"/>
+					<XFilterParam name="fieldvalue" value="1"/>
+				</XCond>				
+			</XCondAnd>
+		</XFilter>
+		<XDataSinks>
+			<XDataSink name="Generic Print Datasink">
+				<XDSParam name="printstring" value="HEALTH Stats:\n	Sender-id=%s[FWD by %s]\n  app_pkt=%s, forw_pkt=%s, drop_pkt=%s, retransmits=%s\n   battery=%s, power_sum=%s\n 	Parent: %s, Link Quality %s,%s, Path Cost %s, RSSI %s"/>
+				<XDSParam name="printfields" value="nodeid,sourceaddr,apppkts,fwdpkts,drpppkts,retranspkts,battery,power_sum,parent,quality_rx,quality_tx,path_cost,parent_rssi"/>
+			</XDataSink>
+			<XDataSink name="Open Log Datasink">
+				<XDSParam name="tablename_1" value="node_health_l"/>
+				<XDSParam name="createsql_1" value="CREATE TABLE node_health_l ( result_time timestamp without time zone,epoch integer, nodeid integer, health_pkts integer, node_pkts integer, forwarded integer, dropped integer, retries integer, battery integer, power_sum integer,board_id integer, parent integer, quality_tx integer, quality_rx integer, path_cost integer, parent_rssi integer)"/>				
+				<XDSParam name="tablename_2" value="node_health"/>
+				<XDSParam name="createsql_2" value="CREATE TABLE node_health ( result_time timestamp without time zone,epoch integer, nodeid integer, health_pkts integer, node_pkts integer, forwarded integer, dropped integer, retries integer, battery integer, power_sum integer, board_id integer, parent integer, quality_tx integer, quality_rx integer, path_cost integer, parent_rssi integer); DELETE FROM task_query_log WHERE query_id=3 and query_type='MOTEVIEW_1_0'; INSERT INTO task_query_log (query_id, table_name, query_type) VALUES (3, 'node_health', 'MOTEVIEW_1_0');"/>				
+				<XDSParam name="rulesql_2" value="CREATE RULE cache_node_health AS ON INSERT TO node_health DO ( DELETE FROM node_health_l WHERE nodeid = NEW.nodeid;INSERT INTO node_health_l VALUES (NEW.*); )"/>				
+				<XDSParam name="insertsql_2" value="INSERT into node_health (result_time,nodeid,health_pkts,node_pkts,forwarded,dropped,retries,battery,power_sum,board_id,parent,quality_tx,quality_rx,path_cost,parent_rssi) values (now(),%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i)"/>
+				<XDSParam name="insertfields_2" value="nodeid,health_pkts,node_pkts,forwarded,dropped,retries,battery,power_sum,board_id,parent,quality_rx,quality_tx,path_cost,parent_rssi"/>
+			</XDataSink>
+		</XDataSinks>
+	</XFieldExtractor>
+
+
+
+
+<XFieldExtractor name="Neighbor Health Mesh XML" order="3">
+		<XFields>
+			<XField name="amtype" byteoffset="2" length="1" type="uint8"/>
+			<XField name="sourceaddr" byteoffset="5" length="2" type="uint16"/>
+			<XField name="nodeid" byteoffset="7" length="2" type="uint16"/>
+			<XField name="socketid" byteoffset="11" length="1" type="uint8"/>
+			<XBitField name="old_type" byteoffset="12" length="1" type="uint8" mask="0xF0" shift="4"/>
+			<XBitField name="node_count" byteoffset="12" length="1" type="uint8" mask="0x0F" shift="0"/>
+			<XField name="version" byteoffset="13" length="1" type="uint8"/>
+			<XField name="type" byteoffset="14" length="1" type="uint8"/>
+			
+			<XField name="neighborid1" byteoffset="15" length="2" type="uint16"/>			
+			<XBitField name="rquality1" byteoffset="17" length="1" type="uint8" mask="0x0F" shift="0"/>
+			<XBitField name="lquality1" byteoffset="17" length="1" type="uint8" mask="0xFF" shift="4"/>
+			<XField name="pathcost1" byteoffset="18" length="1" type="uint8"/>
+			<XField name="rssi1" byteoffset="19" length="1" type="uint8"/>
+
+			<XField name="neighborid2" byteoffset="20" length="2" type="uint16"/>			
+			<XBitField name="rquality2" byteoffset="22" length="1" type="uint8" mask="0x0F" shift="0"/>
+			<XBitField name="lquality2" byteoffset="22" length="1" type="uint8" mask="0xFF" shift="4"/>
+			<XField name="pathcost2" byteoffset="23" length="1" type="uint8"/>
+			<XField name="rssi2" byteoffset="24" length="1" type="uint8"/>
+
+			<XField name="neighborid3" byteoffset="25" length="2" type="uint16"/>			
+			<XBitField name="rquality3" byteoffset="27" length="1" type="uint8" mask="0x0F" shift="0"/>
+			<XBitField name="lquality3" byteoffset="27" length="1" type="uint8" mask="0xFF" shift="4"/>
+			<XField name="pathcost3" byteoffset="28" length="1" type="uint8"/>
+			<XField name="rssi3" byteoffset="29" length="1" type="uint8"/>
+
+			<XField name="neighborid4" byteoffset="30" length="2" type="uint16"/>			
+			<XBitField name="rquality4" byteoffset="32" length="1" type="uint8" mask="0x0F" shift="0"/>
+			<XBitField name="lquality4" byteoffset="32" length="1" type="uint8" mask="0xFF" shift="4"/>
+			<XField name="pathcost4" byteoffset="33" length="1" type="uint8"/>
+			<XField name="rssi4" byteoffset="34" length="1" type="uint8"/>
+
+			<XField name="neighborid5" byteoffset="35" length="2" type="uint16"/>			
+			<XBitField name="rquality5" byteoffset="37" length="1" type="uint8" mask="0x0F" shift="0"/>
+			<XBitField name="lquality5" byteoffset="37" length="1" type="uint8" mask="0xFF" shift="4"/>
+			<XField name="pathcost5" byteoffset="38" length="1" type="uint8"/>
+			<XField name="rssi5" byteoffset="39" length="1" type="uint8"/>
+		</XFields>
+		<XFilter>
+			<XCondAnd>				
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="socketid"/>
+					<XFilterParam name="fieldvalue" value="0x03"/>
+				</XCond>				
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="old_type"/>
+					<XFilterParam name="fieldvalue" value="0x0F"/>
+				</XCond>				
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="type"/>
+					<XFilterParam name="fieldvalue" value="2"/>
+				</XCond>				
+			</XCondAnd>
+		</XFilter>
+		<XDataSinks>
+			<XDataSink name="Generic Print Datasink">
+				<XDSParam name="printstring" value="Neighborhood INFO[Sender-ID %s]: \n Neighbor-ID=%s, Quality=%s,%s, Path Cost=%s, RSSI=%s \n Neighbor-ID=%s, Quality=%s,%s, Path Cost=%s, RSSI=%s \n Neighbor-ID=%s, Quality=%s,%s, Path Cost=%s, RSSI=%s \n Neighbor-ID=%s, Quality=%s,%s, Path Cost=%s, RSSI=%s \n Neighbor-ID=%s, Quality=%s,%s, Path Cost=%s, RSSI=%s"/>
+				<XDSParam name="printfields" value="nodeid,neighborid1,lquality1,rquality1,pathcost1,rssi1,neighborid2,lquality2,rquality2,pathcost2,rssi2,neighborid3,lquality3,rquality3,pathcost3,rssi3,neighborid4,lquality4,rquality4,pathcost4,rssi4,neighborid5,lquality5,rquality5,pathcost5,rssi5"/>
+			</XDataSink>
+			<XDataSink name="Open Log Datasink">
+				<XDSParam name="tablename_1" value="neighbor_health_results_l"/>
+				<XDSParam name="createsql_1" value="CREATE TABLE neighbor_health_results_l ( result_time timestamp without time zone,epoch integer, nodeid integer, n1id integer, n1_in_quality integer, n1_out_quality integer, n1_pathcost integer, n1_rssi integer,n2id integer, n2_in_quality integer, n2_out_quality integer, n2_pathcost integer,n2_rssi integer,n3id integer, n3_in_quality integer, n3_out_quality integer,n3_pathcost integer, n3_rssi integer, n4id integer, n4_in_quality integer, n4_out_quality integer,n4_pathcost integer, n4_rssi integer, n5id integer, n5_in_quality integer, n5_out_quality integer,n5_pathcost integer, n5_rssi integer)"/>				
+				<XDSParam name="tablename_2" value="neighbor_health_results"/>
+				<XDSParam name="createsql_2" value="CREATE TABLE neighbor_health_results ( result_time timestamp without time zone,epoch integer, nodeid integer, n1id integer, n1_in_quality integer, n1_out_quality integer, n1_pathcost integer, n1_rssi integer,n2id integer, n2_in_quality integer, n2_out_quality integer, n2_pathcost integer,n2_rssi integer,n3id integer, n3_in_quality integer, n3_out_quality integer,n3_pathcost integer, n3_rssi integer, n4id integer, n4_in_quality integer, n4_out_quality integer,n4_pathcost integer, n4_rssi integer, n5id integer, n5_in_quality integer, n5_out_quality integer,n5_pathcost integer, n5_rssi integer)"/>				
+				<XDSParam name="rulesql_2" value="CREATE RULE cache_neighbor_health_results AS ON INSERT TO neighbor_health_results DO ( DELETE FROM physical_health_results_l WHERE nodeid = NEW.nodeid;INSERT INTO neighbor_health_results_l VALUES (NEW.*); )"/>				
+				<XDSParam name="insertsql_2" value="INSERT into neighbor_health_results (result_time, nodeid , n1id , n1_in_quality , n1_out_quality , n1_pathcost, n1_rssi ,n2id , n2_in_quality , n2_out_quality , n2_pathcost, n2_rssi ,n3id , n3_in_quality , n3_out_quality , n3_pathcost, n3_rssi , n4id , n4_in_quality , n4_out_quality , n4_pathcost, n4_rssi , n5id , n5_in_quality, n5_out_quality, n5_pathcost, n5_rssi) values (now(),%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i)"/>
+				<XDSParam name="insertfields_2" value="nodeid,neighborid1,lquality1,rquality1,pathcost1,rssi1,neighborid2,lquality2,rquality2,pathcost2,rssi2,neighborid3,lquality3,rquality3,pathcost3,rssi3,neighborid4,lquality4,rquality4,pathcost4,rssi4,neighborid5,lquality5,rquality5,pathcost5,rssi5"/>
+			</XDataSink>
+
+		</XDataSinks>
+	</XFieldExtractor>
+
+
+
+
+</XServeConfig>

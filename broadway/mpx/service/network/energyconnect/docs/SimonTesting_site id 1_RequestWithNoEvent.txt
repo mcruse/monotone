@@ -1,0 +1,23 @@
+POST /EventCacheService/EventCacheService.svc HTTP/1.1
+Content-Type: text/xml; charset=utf-8
+SOAPAction: "http://eservices.energyconnectinc.com/GetEventNotification"
+Host: 166.139.96.132
+Content-Length: 367
+Expect: 100-continue
+
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+<s:Body xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<GetEventNotification xmlns="http://eservices.energyconnectinc.com/">
+<userName>user id 1</userName><password>pwd 1</password><siteID>site id 1</siteID></GetEventNotification></s:Body></s:Envelope>
+HTTP/1.1 200 OK
+Date: Mon, 16 Jun 2008 16:31:15 GMT
+Server: Microsoft-IIS/6.0
+X-Powered-By: ASP.NET
+X-AspNet-Version: 2.0.50727
+Cache-Control: private
+Content-Type: text/xml; charset=utf-8
+Content-Length: 508
+
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+<s:Body xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<GetEventNotificationResponse xmlns="http://eservices.energyconnectinc.com/"><GetEventNotificationResult>1000</GetEventNotificationResult><eventNotificationCount>0</eventNotificationCount><eventCollection><EventNotifications><EventNotification/></EventNotifications></eventCollection></GetEventNotificationResponse></s:Body></s:Envelope>

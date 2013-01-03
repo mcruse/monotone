@@ -1,0 +1,243 @@
+/*
+Purpose: Graph Tool widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: GraphTool.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+function GraphTool(){
+  this.base = Widget;
+  this.base();
+  this._name = 'GraphTool';
+  this._z_index = '1000';
+  this._graph1_node = '';
+  this.node_selector_graph1_node = 'true';
+  this._graph1_legend = '';
+  this._graph2_node = '';
+  this.node_selector_graph2_node = 'true';
+  this._graph2_legend = '';
+  this._graph3_node = '';
+  this.node_selector_graph3_node = 'true';
+  this._graph3_legend = '';
+  this._graph4_node = '';
+  this.node_selector_graph4_node = 'true';
+  this._graph4_legend = '';
+  this._graph_title = '';
+  this._button_scale = '100';
+  this._graph_button_source = '/webapi/images/graphbtnsm.gif';
+  this._graph_button_width = '60px';
+  this._graph_button_height = '20px';
+ }
+
+GraphTool.prototype = new Widget;
+
+GraphTool.prototype.after_config_table = function() {
+  Widget_log('GraphTool.after_config_table(), at top');
+}
+
+GraphTool.prototype.init = function(element) {
+  Widget_log('GraphTool.init(), at top');
+  this._name = 'GraphTool';
+  this._z_index = element.getAttribute('zindex');
+  var infospan = this.get_element(element,'div','info');
+  this._graph1_node = infospan.getAttribute('graph1_node');
+  this._graph1_legend = infospan.getAttribute('graph1_legend');
+  this._graph2_node = infospan.getAttribute('graph2_node');
+  this._graph2_legend = infospan.getAttribute('graph2_legend');
+  this._graph3_node = infospan.getAttribute('graph3_node');
+  this._graph3_legend = infospan.getAttribute('graph3_legend');
+  this._graph4_node = infospan.getAttribute('graph4_node');
+  this._graph4_legend = infospan.getAttribute('graph4_legend');
+  this._graph_title = infospan.getAttribute('graph_title');
+  this._button_scale = infospan.getAttribute('button_scale');
+  this._graph_button_source = infospan.getAttribute('graph_button_source');
+  this._graph_button_width = infospan.getAttribute('graph_button_width');
+  this._graph_button_height = infospan.getAttribute('graph_button_height');
+}
+
+GraphTool.prototype.init_element = function (){
+  Widget_log('GraphTool.init_element(), at top');
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version', '1_0_dev_2');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  this.element.style.position = 'absolute';
+  this.element.style.zIndex = this._z_index;
+
+  var container = document.createElement('div');
+  container.setAttribute('element','container');
+  container.style.position = 'relative';
+  container.style.verticalAlign = 'middle';
+  container.style.height = 'auto';
+  container.style.width = 'auto';
+  container.style.backgroundColor = 'transparent';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.zIndex = '0';
+
+  var imgholder = document.createElement('div');
+  imgholder.setAttribute('element','imgholder');
+  imgholder.style.backgroundColor = 'transparent';
+  imgholder.style.top = '0';
+  imgholder.style.left = '0';
+  imgholder.style.zIndex = '1';
+
+  var graphbtnimg = document.createElement('img');
+  graphbtnimg.setAttribute('src',this._graph_button_source);
+  graphbtnimg.setAttribute('alt','');
+  var myGraphBtnWidth = Math.round(parseInt(this._graph_button_width) * (this._button_scale / 100.0));
+  graphbtnimg.setAttribute('width',myGraphBtnWidth);
+  var myGraphBtnHeight = Math.round(parseInt(this._graph_button_height) * (this._button_scale / 100.0));
+  graphbtnimg.setAttribute('height',myGraphBtnHeight);
+  graphbtnimg.setAttribute('onclick','GraphToolGraphBtnHandler(event)');
+
+  imgholder.appendChild(graphbtnimg);
+  container.appendChild(imgholder);
+
+  var infospan = document.createElement('div');
+  infospan.setAttribute('element','info');
+  infospan.setAttribute('type','hidden');  
+  infospan.setAttribute('graph1_node', this._graph1_node);  
+  infospan.setAttribute('graph1_legend', this._graph1_legend);  
+  infospan.setAttribute('graph2_node', this._graph2_node);  
+  infospan.setAttribute('graph2_legend', this._graph2_legend);  
+  infospan.setAttribute('graph3_node', this._graph3_node);  
+  infospan.setAttribute('graph3_legend', this._graph3_legend);  
+  infospan.setAttribute('graph4_node', this._graph4_node);  
+  infospan.setAttribute('graph4_legend', this._graph4_legend);  
+  infospan.setAttribute('graph_title', this._graph_title);
+  infospan.setAttribute('button_scale', this._button_scale);
+  infospan.setAttribute('graph_button_source', this._graph_button_source);
+  infospan.setAttribute('graph_button_width', this._graph_button_width);
+  infospan.setAttribute('graph_button_height', this._graph_button_height);
+  //infospan.style.position = 'relative';
+  infospan.style.backgroundColor = 'transparent';
+  infospan.style.top = '0';
+  infospan.style.left = '0';
+  infospan.style.height = '1';
+  infospan.style.width = '1';
+  infospan.style.zIndex = '0';
+  infospan.style.visibility = 'hidden';
+  infospan.style.display = 'none';
+   
+  container.appendChild(infospan);
+
+  this.element.appendChild(container);
+}
+
+
+GraphTool.prototype.create = function (){
+  Widget_log('GraphTool.create(), at top');
+  //_msglog('GraphTool.create(), arguments.length=' + arguments.length);
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function GraphTool_factory(){
+  return new GraphTool();
+}
+
+function GraphToolGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e
+}
+
+function GraphToolGraphBtnHandler(evt) {
+  Widget_log("GraphToolGraphBtnHandler() entered");
+  evt = (evt) ? evt : ((event) ? event : null);
+  if(evt.detail) {
+    Widget_log("GraphToolGraphBtnHandler(), evt.detail=" + evt.detail);
+  }
+  var elem = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null);
+  var myWidget = elem.parentNode.parentNode.parentNode; //topmost div of PHVirtualPoint widget
+  Widget_log("GraphToolGraphBtnHandler(), myWidget id = " + myWidget.getAttribute('id'));
+  Widget_log("GraphToolGraphBtnHandler(), window.location.hostname = " + window.location.hostname);
+  if(!(window.parent && window.parent.WebExpressEditor)) {  
+    var myHostName = window.location.hostname + ':';
+    var qstring = '';
+    var pstring = '';
+    var ielement = GraphToolGetElement(myWidget,'div','info');
+    var myGraphTitle = ielement.getAttribute('graph_title');
+    if(myGraphTitle.length > 0) {
+      qstring = "title=" + encodeURIComponent(myGraphTitle);
+    }
+    var myGraph1Node = ielement.getAttribute('graph1_node');
+    var myGraph1Legend = ielement.getAttribute('graph1_legend');
+    if(myGraph1Node.length > 0) {
+      pstring += myHostName + myGraph1Node;
+      if(myGraph1Legend.length > 0) {
+        pstring += ' ' + myGraph1Legend;
+      }
+    }
+    var myGraph2Node = ielement.getAttribute('graph2_node');
+    var myGraph2Legend = ielement.getAttribute('graph2_legend');
+    if(myGraph2Node.length > 0) {
+      if(pstring.length > 0) {
+        pstring += ',';
+      }
+      pstring += myHostName + myGraph2Node;
+      if(myGraph2Legend.length > 0) {
+        pstring += ' ' + myGraph2Legend;
+      }
+    }
+    var myGraph3Node = ielement.getAttribute('graph3_node');
+    var myGraph3Legend = ielement.getAttribute('graph3_legend');
+    if(myGraph3Node.length > 0) {
+      if(pstring.length > 0) {
+        pstring += ',';
+      }
+      pstring += myHostName + myGraph3Node;
+      if(myGraph3Legend.length > 0) {
+        pstring += ' ' + myGraph3Legend;
+      }
+    }
+    var myGraph4Node = ielement.getAttribute('graph4_node');
+    var myGraph4Legend = ielement.getAttribute('graph4_legend');
+    if(myGraph4Node.length > 0) {
+      if(pstring.length > 0) {
+        pstring += ',';
+      }
+      pstring += myHostName + myGraph4Node;
+      if(myGraph4Legend.length > 0) {
+        pstring += ' ' + myGraph4Legend;
+      }
+    }
+    Widget_log("GraphToolGraphBtnHandler(), pstring = " + pstring);
+    if(pstring.length > 0) {
+      ielement.setAttribute('pstring', pstring);
+    }
+    else {
+      ielement.setAttribute('pstring', '');
+    }
+    if(qstring.length > 0) {
+      qstring += "&widgetid=" + myWidget.getAttribute('id');
+    }
+    else {
+      qstring = "widgetid=" + myWidget.getAttribute('id');
+    }
+    Widget_log("GraphToolGraphBtnHandler(), qstring = " + qstring);
+    var ustring = "/webapi/graphtool.html";
+    if(qstring.length > 0) {
+      ustring += '?' + qstring;
+    }
+    var features = "resizable,scrollbars";
+         
+    var objWin = window.open(ustring, "graphtool" + myWidget.getAttribute('id'), features);
+  
+    objWin.focus();
+  }
+}
+
+var GraphTool_loaded = true;

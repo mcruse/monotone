@@ -1,0 +1,261 @@
+<!--
+Copyright (C) 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Alarm Manager Help</title>
+<link href="help_styles.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <h1>Alarm Manager</h1>
+    <div class="help" id="alarmmanager">
+      <dl>
+        <dt>
+          <a name="name" id="name">Name</a>
+        </dt>
+        <dd>
+          This is the name of the alarm as configured when the alarm
+          was created.
+        </dd>
+        <dt>
+          <a name="state" id="state">State</a>
+        </dt>
+        <dd>
+          This is the current state of the the named alarm.
+          The alarm state will be one of the following:
+          <dl>
+            <dt>RAISED</dt>
+            <dd>
+              This is the beginning state of all alarms.  An alarm in the
+              raised state has been triggered by a configured alarm
+              condition, and the trigger condition is still "in-alarm",
+              meaning that the trigger has not left the alarm condition
+              since this alarm was triggered.
+            </dd>
+            <dt>ACCEPTED</dt>
+            <dd>
+              The state a RAISED alarm enters when the alarm has been manually
+              acknowledged.  The term "ACCEPTED" is used to indicate that the
+              person or agent acknowledging the alarm has accepted
+              responsibility for transitioning the alarm out of the RAISED
+              state.
+            </dd>
+            <dt>CLEARED</dt>
+            <dd>
+              The state a RAISED alarm enters if, before being acknowledged
+              manually acknowledged, the trigger condition which caused the
+              alarm has left the "in-alarm" state.  The existence of a
+              particular alarm in the CLEARED state does not necessarilly
+              mean that the alarm condition is not <em>currently</em>
+              "in-alarm", it means only that the trigger condition has left
+              the "in-alarm" state at some point since this alarm was
+              triggered.
+            </dd>
+            <dd>
+              It is the lack of an alarm in the RAISED and ACCEPTED states
+              that can be used to determine whether an alarm condition
+              <em>currently</em> exists for a particular trigger.
+            </dd>
+            <dt>CLOSED</dt>
+            <dd>
+              This is the end of an alarm event's life-cycle.  There are
+              two ways an alarm may enter the CLOSED state: an alarm in
+              the ACCEPTED state has been cleared, or an alarm in the
+              CLEARED state has been acknowledged.
+            </dd>
+            <dd>
+              Typically alarms in the CLOSED state will not be visible
+              on the alarm management interface.  This is not because
+              there are no alarms that have completed their life-cycle;
+              it is only because CLOSED alarms have not remaining actions
+              and are considered irrelevent with the exception of
+              historical analysis and reporting.
+            </dd>
+          </dl>
+        </dd>
+        <dt>
+          <a name="time" id="time">Time</a>
+        </dt>
+        <dd>
+          The is the time at which an alarm event began.  Comparing this
+          time to the current time will indicate how long a particular
+          alarm event has been in existence; it is created the moment
+          the alarm event entered the RAISED state.
+        </dd>
+        <dt>
+          <a name="description" id="description">Description</a>
+        </dt>
+        <dd>
+          This is the description provided for an alarm when the alarm
+          was configured.  Configured properly, this information should
+          provide a thorough explanation of the meaning of a particular
+          alarm.  While the alarm name will typically provide some
+          indication as to the type of an alarm, such as "High Temp,"
+          this information should provide details specific to a particular
+          alarm.  Such details should include the location of the alarm,
+          the full meaning of the alarm, the device or devices associated
+          with the alarm.
+        </dd>
+        <dt>
+          <a name="apply" id="apply">Apply</a>
+        </dt>
+        <dd>
+          Each entry in this column provides a dropdown list of "actions"
+          that may be applied to a particular alarm.  Selections are applied
+          to, and only to, the alarm instance in the same row as the
+          dropdown.  When a particular action is selected, the action is
+          immediately applied to the alarm.  In other words, action and
+          execution are combined in a single-step; choosing a particular
+          action from the list will select that action <em>and</em>
+          apply that action.
+        </dd>
+        <dd>
+          The following actions are available:
+          <dl>
+            <dt>
+              Acknowledge
+            </dt>
+            <dd>
+              Selecting this action "acknowledges" an alarm.  The
+              acknowledgement of an alarm may have two distinct
+              effects, depending upon the current state of the alarm
+              being acknowledged.*
+            </dd>
+            <dd>
+              If the alarm being acknowledged is currently in the RAISED
+              state, then the acknowledgement of the alarm will transition
+              the alarm to the ACCEPTED state.  Because an ACCEPTED alarm
+              was in the RAISED state when the acknowledgement took place,
+              and because the alarm may <em>still</em> be in the RAISED
+              state were it not for the acknowledgement, the acknowledging
+              party has <em>accepted</em> responsibility for the monitoring
+              and management of the alarm and the alarm condition.
+            </dd>
+            <dd>
+              If, on the other hand, the alarm being acknowledged is
+              currently in the CLEARED state, then the acknowledgement of
+              the alarm will transition the alarm to the CLOSED state.
+              Once an alarm has been closed, it is considered complete
+              and no longer subject to real-time monitoring and management.
+            </dd>
+            <dd>
+              * The reason two sequences of alarm acknowledgement
+              have been provided is to insure that alarms do not go
+              unoticed.  In particular, this mechanism insures that
+              all alarms, even transient alarms which are often cleared
+              immediately following being triggered, are not overlooked
+              by the alarm management team.
+            </dd>
+            <dt>Snooze</dt>
+            <dd>
+              The Snooze action will silence a particular alarm instance for
+              a predetermined amount of time.  The snooze option will only
+              be available for alarms of low or medium criticality, and only
+              for those alarms of priority lower than 1.
+            </dd>
+            <dd>
+              The Snooze command is always associated with a particular time
+              interval.  The intervals available are: 5 min, 10 min, 15 min,
+              30 min, 45 min, and 60 min.  Each setting will cause the alarm
+              to snooze for the indicated time interval.  After a snooze time
+              interval has elapsed, the alarm will return to whatever state
+              is appropriate.
+            </dd>
+            <dd>
+              The Snooze operation only affects alarm monitoring and
+              presentation.  Alarms will still be subject to, and
+              aware of, all state transitions and actions associated
+              with general alarms.  It is therefore possible that,
+              during an alarm snooze, the alarm's state changes as a
+              result of incoming events.  Because the alarm life-cycle
+              is one in which each step is of equal or lesser criticality
+              than the previous steps, state transitions need not disrupt
+              the snooze action.
+            </dd>
+            <dt>View Detail</dt>
+            <dd>
+              Selecting this action will transport the user, or present to
+              the user, a more detailed view of a particular alarm.  The
+              availability and contents of this detailed view will be
+              determined partly by the alarm's configuration.
+            </dd>
+            <dt>Configure</dt>
+            <dd>
+              Move to a configuration screen for this alarm.  The
+              configuration screen will not provide access to the
+              alarm management operations, it will instead provide
+              access to reconfiguration methods for the alarm.  From
+              the configuration screen one can adjust thresholds for
+              the alarm, modify the description for the alarm, change
+              the priority and criticality for the alarm, and even to
+              delete or redefine the alarm entirely.
+            </dd>
+            <dd>
+              Only users with system adminstration and configuration
+              privelages will be able to apply this action or access
+              the configuration interface.
+            </dd>
+            <dd>
+              The reason this shortcut has been provided is to allow
+              adjustment and tuning of the running system from the
+              alarm management panel.  In particular, this is designed
+              to simplify the tuning required to eliminate nuissance alarms.
+              Nuissance alarms, or alarms that are unecessary or triggered
+              merely as a symptom of another problem which is itself being
+              monitored and managed, are considered one of the greatest
+              challenges to effective alarm management.
+            </dd>
+          </dl>
+        </dd>
+        <dt>
+          <a name="group" id="group">Group</a>
+        </dt>
+        <dd>
+          Selecting this checkbox marks the row, and associated alarm, for
+          group management actions.  At the bottom of the alarm management
+          page users will find a panel providing operations similar to those
+          provided by the dropdown in each individual alarm.  The meaning of
+          the available actions are, in fact, exactly as they are in each
+          alarm row.  By choosing an action from this set of controls, the
+          user is choosing an action that will be applied to <em>all</em>
+          rows whose Group checkbox has been checked.  This is a convenience
+          mechanism and does not provide any functionality beyond what is
+          provided by each alarm row individually; in fact, certain operations
+          available from the individual rows are not available as group
+          actions.
+        </dd>
+      </dl>
+    </div>
+</body>
+</html>

@@ -1,0 +1,2 @@
+echo "moe25 has been depricated, using moe25-x86"
+. $(psource)/buildsup/moe25-x86.rc

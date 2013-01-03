@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%"
+	>
+	<mx:Script>
+		<![CDATA[
+			import com.cisco.nbm.xmlrpc.v2.MediatorNode;
+			import com.cisco.nbm.xmlrpc.v2.MediatorNodeCall;
+			
+			import mx.events.CloseEvent;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.managers.PopUpManager;
+			import mx.logging.Log;
+			import mx.logging.ILogger;
+			
+			import com.cisco.nbm.globalsetpoints.ui.ProgressPopup;
+			import com.cisco.nbm.globalsetpoints.widget.components.AddGroupDialogue;
+			import com.cisco.nbm.globalsetpoints.event.ListEvent;
+			import com.cisco.nbm.globalsetpoints.KnownPointType;
+			
+			import com.cisco.nbm.entities.EntityManager;
+			public var _entityManager:EntityManager;
+			
+			private var logger:ILogger = Log.getLogger("cisco.globalsetpoints.widget");
+			public var node:MediatorNode;
+			public var subscriptionNode:MediatorNode;
+			
+			private var progressPanel:ProgressPopup;
+			private var _setPointList:ArrayCollection;
+			private var addGroupDialogue:AddGroupDialogue;
+			private var entitypath:String;
+			private var setpointGroupViewer:SetpointGroupViewer;
+			
+			[Embed(source="/assets/icons/alert_minor_2002_48.png")]
+   			private var iconAlert:Class;
+   			
+   			[Bindable]
+   			public var serviceAvailable:Boolean = false;
+			
+			// Start loading list
+			public function getGroups(_entityPath:String):void
+			{
+
+				entitypath = _entityPath;
+				// update path display
+				//entityPathDisplay.text = entitypath.split("/").splice(1,entitypath.split("/").length).join(" > ");
+				
+				var call:MediatorNodeCall = node.execute("get_groups_names", [entitypath]);
+				call.addCallback(handleGetGroupsResult, handleGetGroupNamesError);
+			}
+
+			// On group loaded
+			private function handleGetGroupsResult(method:MediatorNodeCall, result:Object):void
+			{
+				var groupnames:Array = result as Array;
+				setPointList = new ArrayCollection(groupnames);
+				AddButton.enabled = true;
+				
+				if(progressPanel != null){
+					var progress:ProgressPopup = getProgressPopup();
+					destroyProgressPopup(progress); 
+				}
+				
+				// Get list of known group types
+				getKnownPointTypes();
+			}
+			
+			private function handleGetGroupNamesError(method:MediatorNodeCall, result:Object):void
+			{
+				if(!serviceAvailable) return;
+				Alert.show("Failed = "+result.toString());
+				logger.error("handleCreatePolledError: {0}", result);
+			}
+			
+			// Call to ADD new group
+			private function addNewGroup(_newgroupname:String):void
+			{
+				var call:MediatorNodeCall = node.execute("update_group", [entitypath, _newgroupname, []]);
+				call.addCallback(handleAddGroupSuccess, handleCreatePolledError);
+				call.token = { newGroupName : _newgroupname };
+			}
+			
+			// On ADD New Group return
+			private function handleAddGroupSuccess(method:MediatorNodeCall, result:Object):void
+			{
+				getGroups(entitypath);
+				// move to edit
+				
+				
+				var name:String = method.token.newGroupName
+				
+				// Temporarily store it into setpointlist though it's 
+				// going to be clobbered by the getGroups call.				
+				setPointList.addItem(name);
+				SetpointListControl.selectedItem = name;
+				
+				onViewSetpoint(); 
+			}
+			
+			// Call to add REMOVE group
+			private function removeGroup(_grouptoremove:String):void
+			{
+				var call:MediatorNodeCall = node.execute("remove_group", [entitypath, _grouptoremove]);
+				call.addCallback(handleRemoveGroupSuccess, handleCreatePolledError);
+			}
+			
+			// On REMOVE success
+			private function handleRemoveGroupSuccess(method:MediatorNodeCall, result:Object):void
+			{
+				getGroups(entitypath);
+			}
+			
+			//
+			private function handleCreatePolledError(method:MediatorNodeCall, result:Object):void
+			{
+				if(progressPanel != null){
+					var progress:ProgressPopup = getProgressPopup();
+					destroyProgressPopup(progress); 
+				}
+				
+				Alert.show("Failed = "+result.toString());
+				logger.error("handleCreatePolledError: {0}", result);
+			}
+			
+			public function set setPointList(__setPointList:ArrayCollection):void{
+				_setPointList = __setPointList;
+				SetpointListControl.dataProvider = _setPointList;
+			}
+			
+			public function get setPointList():ArrayCollection{
+				return _setPointList;
+			}
+			
+			private function onRemoveSetpoint(event:Event):void{
+				var alertMessage:String = "Are you sure you want to remove '" + SetpointListControl.selectedItem.toString() + "'? This action cannot be undone.";
+				Alert.show(alertMessage,"Remove Global Setpoint Group", Alert.OK | Alert.CANCEL, this, RemoveSetpointConfirm, iconAlert, Alert.OK);
+			}
+			
+			private function RemoveSetpointConfirm(eventObj:CloseEvent):void {
+				if (eventObj.detail==Alert.OK) {
+					// Remove selected set point
+					var progress:ProgressPopup = getProgressPopup();
+					progress.text ="Removing Setpoint Group '" + SetpointListControl.selectedItem.toString() + "'";
+					progress.canCancel = false;
+					removeGroup(SetpointListControl.selectedItem.toString());
+				}
+			}
+			
+			private function onAddSetPoint():void{
+				addGroupDialogue = new AddGroupDialogue();
+				addGroupDialogue.setpointList = setPointList;
+				addGroupDialogue.addEventListener(ListEvent.NEW_SETPOINT, onAddGroupConfirm);
+				PopUpManager.addPopUp(addGroupDialogue, this, true);
+                PopUpManager.centerPopUp(addGroupDialogue);
+			}
+			
+			public function onAddGroupConfirm(listEvent:ListEvent):void{
+				var progress:ProgressPopup = getProgressPopup();
+				progress.text = "Adding new Setpoint Group '" + listEvent.newName + "'";
+				progress.canCancel = false;
+				addNewGroup(listEvent.newName);
+			}
+			
+			private function onViewSetpoint():void{
+				setpointGroupViewer = new SetpointGroupViewer();
+				setpointGroupViewer.selectedGroup = SetpointListControl.selectedItem.toString();
+				setpointGroupViewer.node = node;
+				setpointGroupViewer.subscriptionNode = subscriptionNode;
+				setpointGroupViewer._entityManager = _entityManager;
+				setpointGroupViewer.entitypath = entitypath;
+				//setpointGroupViewer.pathInfo = entityPathDisplay.text;
+				setpointGroupViewer.addEventListener("onClose", resetView);
+				this.addChild(setpointGroupViewer);
+			}
+			
+			// Resets view if the user navigates to different path
+			public function resetView(event:Event = null):void{
+				if(setpointGroupViewer != null){
+					setpointGroupViewer.closeAllPopUps();
+					this.removeChild(setpointGroupViewer);
+					setpointGroupViewer = null;
+				}
+				if(addGroupDialogue != null) PopUpManager.removePopUp(addGroupDialogue);
+				if(progressPanel != null){
+					var progress:ProgressPopup = getProgressPopup();
+					destroyProgressPopup(progress); 
+				}
+			}
+			
+			// Get List of known point types
+			private function getKnownPointTypes():void{
+				var call:MediatorNodeCall = node.execute("get_point_purposes", []);
+				call.addCallback(handleKnownPointTypeResult, handleCreatePolledError);
+			}
+			
+			// On group UPDATE is completed
+			private function handleKnownPointTypeResult(method:MediatorNodeCall, result:Object):void
+			{
+				KnownPointType.list = result as Array;
+
+			}
+			
+			private function getProgressPopup():ProgressPopup
+			{
+				if (progressPanel == null)
+				{
+					progressPanel = ProgressPopup.show();		
+				}
+				
+				return progressPanel;
+			}
+			private function destroyProgressPopup(popup:ProgressPopup):void
+			{
+				PopUpManager.removePopUp(popup);
+				popup.destroy();
+				
+				this.progressPanel = null;
+			}
+		]]>
+	</mx:Script>
+	<mx:VBox left="0" right="0" top="0" bottom="0">
+		<!-- 
+		<mx:HBox width="100%" horizontalGap="1" fontSize="12">
+			<mx:Label text="Available Setpoint Groups:" fontWeight="bold" fontSize="14"/>
+			<mx:Label fontWeight="bold" fontSize="14" id="entityPathDisplay"/>
+		</mx:HBox>
+		-->
+		<mx:List id="SetpointListControl" width="100%" rowCount="10" 
+			enabled="{serviceAvailable}" />
+		<mx:HBox width="100%">
+			<mx:Button label="View" enabled="{SetpointListControl.selectedIndex  > -1}" click="onViewSetpoint()"/>
+			<mx:Spacer width="100%" />
+			<mx:Button label="Remove" click="onRemoveSetpoint(event);" enabled="{SetpointListControl.selectedIndex  > -1}"/>
+			<mx:Button label="Add" id="AddButton" click="onAddSetPoint();" enabled="{serviceAvailable}"/>
+		</mx:HBox>
+	</mx:VBox>
+</mx:Canvas>

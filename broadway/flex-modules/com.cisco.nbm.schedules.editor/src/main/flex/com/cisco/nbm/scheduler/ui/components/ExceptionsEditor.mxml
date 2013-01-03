@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:components="com.cisco.nbm.scheduler.components.*" 
+	xmlns:components1="com.cisco.nbm.scheduler.ui.components.*"
+	width="100%" height="100%"
+	paddingBottom="10" paddingLeft="10" paddingRight="10" paddingTop="10"
+	label="Exceptions"
+	creationComplete="init()" 
+	>
+	<mx:Script>
+		<![CDATA[
+			import com.cisco.app.core.operations.OperationHistory;
+			import com.cisco.nbm.scheduler.DailyEntry;
+			import com.cisco.nbm.scheduler.HierarchicalSchedule;
+			import com.cisco.nbm.scheduler.ScheduleDocument;
+			import com.cisco.nbm.scheduler.ScheduleExceptionEntry;
+			import com.cisco.nbm.scheduler.ui.ScheduleDocumentEvent;
+			import com.cisco.nbm.scheduler.ui.operations.UpdateEntryTimeOperation;
+			import com.cisco.util.UniqueNameFinder;
+			
+			import mx.collections.ArrayCollection;
+			import mx.logging.ILogger;
+			import mx.logging.Log;
+			
+			
+			[Bindable]
+			private var CLOCK_PERIOD:Array = ['AM', 'PM'];
+
+			[Bindable]
+			private var _schedule:HierarchicalSchedule;
+			
+			[Bindable]
+			public var modified:Boolean = false;
+			
+			[Bindable]
+			private var selectedEntry:ScheduleExceptionEntry; 
+			
+			[Bindable]
+			private var canSave:Boolean = false;
+			
+			[Bindable]
+			private var selectedDailyEntry:DailyEntry;
+			
+			
+			public var operationHistoryService:OperationHistory;
+			
+			/**
+			 * Modify this class so that only a schedule document is required
+			 */
+			
+			private var _scheduleDocument:ScheduleDocument;
+			
+			private var logger:ILogger = Log.getLogger("cisco.nbm.scheduler.ui.exceptionsEditor");
+			
+			private function init():void
+			{
+				if (_scheduleDocument != null)
+				{
+					setSchedule(_scheduleDocument.schedule);
+				}
+				updateEntryEditor();
+				updateControls();
+			}
+			
+			private function setSchedule(value:HierarchicalSchedule):void
+			{
+				resetControls();
+				_schedule = value;
+				updateEntryEditor();
+				//timeValueEntries = _schedule.exselectedEntry.timeValueEntries
+				updateControls();
+			}
+			
+			public function resetControls():void
+			{
+				selectedEntry = null;
+				selectedDailyEntry = null;
+			}
+			
+			
+			public function set scheduleDocument(value:ScheduleDocument):void
+			{
+				if (_scheduleDocument == value)
+				{
+					return;
+				}
+				
+				if (_scheduleDocument != null && _scheduleDocument != value)
+				{
+					_scheduleDocument.removeEventListener(ScheduleDocumentEvent.SCHEDULE_CHANGE,
+						handleScheduleDocumentModified);
+					
+				}
+			
+				_scheduleDocument = value;
+			
+				if (_scheduleDocument != null)
+				{
+					_scheduleDocument.addEventListener(ScheduleDocumentEvent.SCHEDULE_CHANGE,
+						handleScheduleDocumentModified);
+					setSchedule(_scheduleDocument.schedule);
+				}	
+				
+				updateControls();
+			}
+			
+			private function handleScheduleDocumentModified(event:ScheduleDocumentEvent):void
+			{
+				if (!initialized)
+				{
+					return;
+				}
+				
+				if (_scheduleDocument != null)
+				{
+					setSchedule(_scheduleDocument.schedule);
+				}
+				else 
+				{
+					setSchedule(null);
+				}
+				
+				weeklyTimeValueEditor.invalidateDisplayList();
+			}
+			
+			private function handleGridChange():void
+			{
+				var newEntry:ScheduleExceptionEntry = exceptionsGrid.selectedItem as ScheduleExceptionEntry;
+				
+				selectedEntry = newEntry;
+				
+				// update entries
+				updateEntryEditor();
+			}
+			
+			private function updateEntryEditor():void
+			{
+				var enableControls:Boolean = false;
+				
+				if (!initialized)
+				{
+					return;
+				}
+				
+				if (selectedEntry != null)
+				{
+					tiName.text = selectedEntry.name;
+					rbSingleDay.selected = selectedEntry.endDate == null;
+					rbMultipleDays.selected = selectedEntry.endDate != null;
+					dfStartDate.selectedDate = selectedEntry.startDate;
+					dfEndDate.selectedDate = selectedEntry.endDate;
+					
+					//labelEndDate.visible = (selectedEntry.endDate != null);
+					dfEndDate.visible = (selectedEntry.endDate != null);
+				}
+				else
+				{
+					tiName.text = "";
+					rbSingleDay.selected = true;
+					dfStartDate.selectedDate = null;
+					dfEndDate.selectedDate = null;
+					//labelEndDate.visible = false;
+					dfEndDate.visible = false;
+				}
+				
+				enableControls = selectedEntry != null;
+				
+				tiName.enabled = enableControls;
+				rbSingleDay.enabled = enableControls;
+				rbMultipleDays.enabled = enableControls;
+				dfStartDate.enabled = enableControls;
+				dfEndDate.enabled = enableControls;
+			}
+			
+			private function updateModified():void
+			{
+				validateStartEndDate();
+				// Update all the controls here
+				var entry:ScheduleExceptionEntry = selectedEntry;
+				
+				
+				_scheduleDocument.modifyExceptionEntry(entry, 
+					tiName.text, dfStartDate.selectedDate, 
+					dfEndDate.selectedDate);
+				
+				modified = true;
+				
+				updateControls();
+			}
+			
+			private function validateStartEndDate():void
+			{
+				var nextDayOfStartDate:Date = new Date(dfStartDate.selectedDate.getFullYear(),
+														dfStartDate.selectedDate.getMonth(),
+														dfStartDate.selectedDate.getDate() + 1);
+				dfEndDate.selectableRange = {rangeStart: nextDayOfStartDate};
+				if(dfEndDate.selectedDate <= dfStartDate.selectedDate){
+					dfEndDate.selectedDate = nextDayOfStartDate;
+				}
+			}
+			
+			private function updateControls():void
+			{
+				canSave = true;
+				
+				if (!initialized)
+				{
+					return;
+				}
+				
+				if (_schedule != null)
+				{
+					dailyEntryEditor.eventMeta = _schedule.metaData;
+					
+					weeklyTimeValueEditor.metaData = _schedule.metaData;
+				}
+			}
+			
+			private function handleSave():void
+			{
+				canSave = false;
+			}
+			
+			private function setModified(value:Boolean):void
+			{
+				modified = value;
+				updateControls();
+			}
+			
+			/**
+			 * Finds a name that is unique to the set of exceptions in this schedule
+			 */
+			private function getUniqueExceptionName():String
+			{
+				var exceptions:ArrayCollection = _schedule.exceptions;
+				var names:Array = [];
+				
+				for each (var exception:ScheduleExceptionEntry in exceptions)
+				{
+					names.push(exception.name);
+				}
+				
+				var uniqueNameFinder:UniqueNameFinder = new UniqueNameFinder();
+				return uniqueNameFinder.find("New Exception", names);
+			}
+			
+			private function handleAddEntry():void
+			{
+				
+				var entry:ScheduleExceptionEntry = new ScheduleExceptionEntry(_schedule);
+				entry.startDate = new Date();
+				
+				entry.name = getUniqueExceptionName();//"New Exception"; // TODO Ask for exception name in dialog
+				var dailyEntry:DailyEntry = entry.createDailyEntry();
+				entry.addDailyEntry(dailyEntry);
+				
+				_scheduleDocument.addException(entry);
+				
+				
+				exceptionsGrid.selectedItem = entry;
+				selectedEntry = entry;
+				updateEntryEditor();
+				
+				setModified(true);
+			} 
+			
+			private function handleDeleteEntry():void
+			{
+				_scheduleDocument.removeException(selectedEntry);
+				
+				selectedEntry = null;
+				updateEntryEditor();
+				setModified(true);
+			}
+			
+			private function updateExceptionType():void
+			{
+				
+				var single:Boolean = rbSingleDay.selected;
+				
+				if (single)
+				{
+					selectedEntry.endDate = null;
+					dfEndDate.selectedDate = null;
+				}
+				else
+				{
+					selectedEntry.endDate = selectedEntry.startDate;
+					dfEndDate.selectedDate = selectedEntry.endDate;
+				}
+				
+				dfEndDate.visible = !single;
+				updateModified();
+			}
+			
+			private function handleDailyEntryUpdated(event:DailyEntryEditorEvent):void
+			{
+				var operation:UpdateEntryTimeOperation = 
+					new UpdateEntryTimeOperation(event.target.entry, -1, -1, 
+					_scheduleDocument, 
+					event.time, event.eventMeta, event.rawValue);
+					
+				operationHistoryService.execute(operation);
+				operationHistoryService.closeUndoGroup();
+			}
+			
+			
+			private function updateSelectedDailyEntry():void
+			{
+				selectedDailyEntry = dailyEntryGrid.selectedItem as DailyEntry;
+			}
+			
+			private function handleAddDailyEntry():void
+			{
+				var entry:DailyEntry = _scheduleDocument.addExceptionDailyEntry(selectedEntry); 
+				dailyEntryGrid.selectedItem = entry;
+				selectedDailyEntry = entry;
+				updateEntryEditor();				
+			}
+			
+			private function handleDeleteDailyEntry():void
+			{
+				_scheduleDocument.removeExceptionDailyEntry(
+					selectedEntry, 
+					selectedDailyEntry)
+				
+			}
+			
+			private function timeLabelFunction(item:Object, column:AdvancedDataGridColumn):String
+			{
+				
+				var entry:DailyEntry = item as DailyEntry;
+				
+				return DailyEntry.timeStringInHoursMinutes(entry);
+			}
+			
+			private function entryLabelFunction(item:Object, column:Object):String {
+				var entry:DailyEntry = item as DailyEntry;
+				
+				if (entry.eventMeta != null) {
+					return entry.eventMeta.name;
+				}
+				
+				return "" + entry.value;
+			}
+			
+			private function handleItemEditEnd(event:Event):void
+			{
+				_scheduleDocument.dirty = true;
+			}
+		]]>
+	</mx:Script>
+	<mx:AdvancedDataGrid id="exceptionsGrid" width="100%" height="200"
+		change="handleGridChange()"
+			dataProvider="{_schedule.exceptions}">
+		<mx:columns>
+			<mx:AdvancedDataGridColumn headerText="Name" 
+					dataField="name" />
+			<mx:AdvancedDataGridColumn headerText="Start Date" 
+				dataField="startDate" />
+			<mx:AdvancedDataGridColumn headerText="End Date" 
+				dataField="endDate" />
+		</mx:columns>
+	</mx:AdvancedDataGrid>
+		<mx:HBox width="100%">
+			<mx:VBox width="100%">
+					
+				<mx:HBox width="100%">
+					<mx:Label width="80" textAlign="right"	 text="Name:" />
+					<mx:TextInput id="tiName" width="200" enabled="false" restrict="a-zA-Z0-9- \\_\\@"
+						change="updateModified()" />
+				</mx:HBox>
+				<mx:HBox width="100%">
+					<mx:Spacer width="80" />
+					<mx:RadioButtonGroup id="type" change="updateExceptionType()" />
+					<mx:RadioButton id="rbSingleDay" groupName="type" label="Single Day" 
+						enabled="false" 
+						change="updateModified()" />
+					<mx:RadioButton id="rbMultipleDays" groupName="type" label="Multiple Days" 
+						enabled="false" 
+						change="updateModified()" />
+				</mx:HBox>
+				<mx:HBox width="100%">
+					<mx:Label width="80" text="Start Date:" textAlign="right" />
+					<mx:DateField id="dfStartDate" yearNavigationEnabled="true" 
+						enabled="false" 
+						change="updateModified()" />
+				</mx:HBox>
+				<mx:HBox width="100%">
+					<mx:Label 
+						id="labelEndDate" visible="{dfEndDate.visible}"
+						width="80" text="End Date:" textAlign="right" />
+					<mx:DateField id="dfEndDate" yearNavigationEnabled="true" 
+						enabled="false" 
+						change="updateModified()" />
+				</mx:HBox>
+			</mx:VBox>
+			<mx:VBox width="100%" height="100%">
+				<components:WeekdayTimeValueEditor width="100%"
+					id="weeklyTimeValueEditor"
+					entries="{selectedEntry.timeValueEntries}"
+					itemEditEnd="handleItemEditEnd(event)" />
+			
+				<components1:DailyEntryTimeEditor 
+					id="dailyEntryEditor"
+					timeUpdated="handleDailyEntryUpdated(event)"
+					entry="{selectedDailyEntry}"
+					width="100%" 
+					/>
+			</mx:VBox>
+			<mx:VBox height="100%">
+				<mx:AdvancedDataGrid 
+					id="dailyEntryGrid"
+					width="100%" height="100%"
+					dataProvider="{selectedEntry.timeValueEntries}"
+					
+					change="updateSelectedDailyEntry()">
+					<mx:columns>
+						<mx:AdvancedDataGridColumn headerText="Time"  
+							dataField="time" 
+							labelFunction="timeLabelFunction" />
+						<mx:AdvancedDataGridColumn headerText="Name" 
+							dataField="eventName" 
+							labelFunction="entryLabelFunction"/>
+					</mx:columns>
+				</mx:AdvancedDataGrid>
+				<mx:HBox width="100%">
+					<mx:Button label="+" enabled="{selectedEntry != null}" 
+						click="handleAddDailyEntry()" 
+						/>
+					<mx:Button label="-" enabled="{selectedDailyEntry != null}" 
+						click="handleDeleteDailyEntry()" />
+				</mx:HBox>
+			</mx:VBox>
+		</mx:HBox>
+	<mx:HBox width="100%">
+		<mx:Button label="Add"  
+			click="handleAddEntry()" />
+		<mx:Button label="Delete" enabled="{selectedEntry != null}" 
+			click="handleDeleteEntry()" />
+		<mx:Spacer width="30" />
+		<!--
+		<mx:Button label="Save" enabled="{canSave}" click="handleSave()" />
+		-->
+	</mx:HBox>
+</mx:VBox>

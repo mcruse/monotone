@@ -1,0 +1,952 @@
+/*
+Purpose: Generic Override widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: GenericOverride.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+function GenericOverride(){
+  this.base = Widget;
+  this.base();
+  this._name = 'GenericOverride';
+  this._z_index = '1000';
+  this._node = '';
+  this.node_selector_node = 'true';
+  this._display_type = 'real';
+  this._precision = '2';
+  this._display_character_length = '10'; 
+  this._text_color = 'black';
+  this.color_selector_text_color = 'true';
+  this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+  this._text_font_size = '12px';
+  this._text_background_color = 'lightgrey';
+  this.color_selector_text_background_color = 'true';
+  this._text_align = 'center';
+  this._text_padding_bottom = '5px';
+  this._text_padding_left = '5px';
+  this._text_padding_right = '5px';
+  this._text_padding_top = '5px';
+  this._border_color_normal = 'black';
+  this.color_selector_border_color_normal = 'true';
+  this._border_color_override = 'red';
+  this.color_selector_border_color_override = 'true';
+  this._button_scale = '100';
+  this._override_button_source = '/webapi/images/ovrbtnsm.gif';
+  this._override_button_width = '40px';
+  this._override_button_height = '20px';
+  this._clear_button_source = '/webapi/images/clrbtnsm.gif';
+  this._clear_button_width = '40px';
+  this._clear_button_height = '20px';
+ }
+
+GenericOverride.prototype = new Widget;
+
+GenericOverride.prototype.after_config_table = function() {
+  Widget_log('GenericOverride.after_config_table(), at top');
+  document.getElementById('GenericOverride_display_type').value = this._display_type;
+  document.getElementById('GenericOverride_text_align').value = this._text_align;
+}
+
+GenericOverride.prototype.get_text_align_defaults = function() {
+  var s = document.createElement('select');
+
+  s.setAttribute('id', 'GenericOverride_text_align');
+
+  var o = document.createElement('option');
+
+  o.value = 'center';
+  o.innerHTML = 'center';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'left';
+  o.innerHTML = 'left';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'right';
+  o.innerHTML = 'right';
+  s.appendChild(o);
+  return s;
+}
+
+GenericOverride.prototype.get_display_type_defaults = function(){
+ 
+  var s = document.createElement('select');
+   
+  s.setAttribute('id','GenericOverride_display_type');
+
+  var o =  document.createElement('option');
+
+  o.value = 'active/inactive';
+  o.innerHTML = 'active/inactive';  
+  s.appendChild(o);  
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'binary';
+  o.innerHTML = 'binary';  
+  s.appendChild(o);  
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'boolean';
+  o.innerHTML = 'boolean';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'integer';
+  o.innerHTML = 'integer';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'on/off';
+  o.innerHTML = 'on/off';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'real';
+  o.innerHTML = 'real';
+  s.appendChild(o);
+  o = null;
+  o =  document.createElement('option');
+  o.value = 'string';
+  o.innerHTML = 'string';
+  s.appendChild(o);
+  return s;
+}
+
+GenericOverride.prototype.init = function(element) {
+  Widget_log('GenericOverride.init(), at top');
+  this._name = 'GenericOverride';
+  this._z_index = element.getAttribute('zindex');
+  var innercontainer = this.get_element(element,'div','innercontainer');
+  if(innercontainer.currentStyle) {
+    this._text_background_color = innercontainer.currentStyle['backgroundColor'];
+  }
+  else if(window.getComputedStyle) {
+    var compStyle = window.getComputedStyle(innercontainer,"");
+    this._text_background_color = compStyle.getPropertyValue('background-color');
+  }
+  var nodedisplayspan = this.get_element(element,'div','nodedisplay');
+  this._node = nodedisplayspan.getAttribute('node');
+  if(nodedisplayspan.currentStyle) {
+    this._text_color = nodedisplayspan.currentStyle['color'];
+    this._text_font_family = nodedisplayspan.currentStyle['fontFamily'];
+    this._text_font_size = nodedisplayspan.currentStyle['fontSize'];
+    this._text_padding_bottom = nodedisplayspan.currentStyle['paddingBottom'];
+    this._text_padding_left = nodedisplayspan.currentStyle['paddingLeft'];
+    this._text_padding_right = nodedisplayspan.currentStyle['paddingRight'];
+    this._text_padding_top = nodedisplayspan.currentStyle['paddingTop'];
+  }
+  else if(window.getComputedStyle) {
+    var compStyle = window.getComputedStyle(nodedisplayspan,"");
+    this._text_color = compStyle.getPropertyValue('color');
+    this._text_font_family = compStyle.getPropertyValue('font-family');
+    this._text_font_size = compStyle.getPropertyValue('font-size');
+    this._text_padding_bottom = compStyle.getPropertyValue('padding-bottom');
+    this._text_padding_left = compStyle.getPropertyValue('padding-left');
+    this._text_padding_right = compStyle.getPropertyValue('padding-right');
+    this._text_padding_top = compStyle.getPropertyValue('padding-top');
+  }
+  else {
+    this._text_color = 'black';
+    this._text_background_color = 'lightgrey';
+    this._text_font_family = 'Verdana, Arial, Helvetica, sans-serif';
+    this._text_font_size = '12px';
+    this._text_padding_bottom = '10px';
+    this._text_padding_left = '10px';
+    this._text_padding_right = '10px';
+    this._text_padding_top = '10px';
+  }
+  var infospan = this.get_element(element,'div','info');
+  this._display_type = this.get_span_attr(infospan, 'display_type');
+  this._precision = this.get_span_attr(infospan, 'precision');
+  this._display_character_length = this.get_span_attr(infospan, 'display_character_length');
+  this._text_align = this.get_span_attr(infospan, 'text_align');
+  this._border_color_normal = this.get_span_attr(infospan, 'border_color_normal');
+  this._border_color_override = this.get_span_attr(infospan, 'border_color_override');
+  this._button_scale = this.get_span_attr(infospan, 'button_scale');
+  this._override_button_source = this.get_span_attr(infospan, 'override_button_source');
+  this._override_button_width = this.get_span_attr(infospan, 'override_button_width');
+  this._override_button_height = this.get_span_attr(infospan, 'override_button_height');
+  this._clear_button_source = this.get_span_attr(infospan, 'clear_button_source');
+  this._clear_button_width = this.get_span_attr(infospan, 'clear_button_width');
+  this._clear_button_height = this.get_span_attr(infospan, 'clear_button_height');
+}
+
+GenericOverride.prototype.init_element = function (){
+  Widget_log('GenericOverride.init_element(), at top');
+  this.element = null;
+  this.element = document.createElement('div');
+  this.element.setAttribute('widget', this._name);
+  this.element.setAttribute('version','1_0_dev_2');
+  //this.element.setAttribute('auto_resize','false');
+  this.element.setAttribute('zindex', this._z_index);
+  this.element.setAttribute('overflow', 'visible');
+  //this.element.style.width = '200px';
+  this.element.style.position = 'absolute';
+  this.element.style.zIndex = this._z_index;
+
+  /*var outercontainer = document.createElement('div');
+  outercontainer.setAttribute('element','outercontainer');
+  outercontainer.style.position = 'relative';
+  outercontainer.style.verticalAlign = 'middle';
+  outercontainer.style.height = 'auto';
+  outercontainer.style.width = 'auto';*/
+
+  var widgettable = document.createElement('table');
+  widgettable.setAttribute('element','widgettable');
+  widgettable.setAttribute('cols', '3');
+  widgettable.setAttribute('align','center');
+  widgettable.setAttribute('cellpadding','0');
+  widgettable.setAttribute('cellspacing','8');
+  widgettable.setAttribute('width','200px');
+  widgettable.insertRow(0);
+
+  //cell[0] contains nodedisplay
+  widgettable.rows[0].insertCell(0);
+  widgettable.rows[0].cells[0].align = 'center';
+  widgettable.rows[0].cells[0].setAttribute('valign','top');
+  //widgettable.rows[0].cells[0].setAttribute('height',myClrBtnHeight);
+  widgettable.rows[0].cells[0].setAttribute('width','1px');
+
+  var innercontainer = document.createElement('div');
+  innercontainer.setAttribute('element','innercontainer');
+  innercontainer.style.position = 'relative';
+  innercontainer.style.verticalAlign = 'middle';
+  innercontainer.style.height = 'auto';
+  innercontainer.style.width = 'auto';
+  if(this._text_background_color != ''){
+    innercontainer.style.backgroundColor = this._text_background_color;
+  }
+  innercontainer.style.textAlign = 'left';
+  innercontainer.style.borderWidth = '2px';
+  innercontainer.style.borderStyle = 'solid';
+  innercontainer.style.borderColor = this._border_color_normal;
+  innercontainer.style.top = '0';
+  innercontainer.style.left = '0';
+  innercontainer.style.zIndex = '0';
+
+  var placeholderspan = document.createElement('div');
+  placeholderspan.setAttribute('element', 'placeholder');
+  //placeholderspan.style.position = 'absolute';
+  placeholderspan.style.backgroundColor = 'transparent';
+  //placeholderspan.style.borderWidth = '2px';
+  //placeholderspan.style.borderStyle = 'solid';
+  //placeholderspan.style.borderColor = this._border_color_normal;
+  if(this._text_background_color != '') {
+    placeholderspan.style.color = this._text_background_color;
+  }
+  if(this._text_font_family != ''){
+    placeholderspan.style.fontFamily = this._text_font_family;
+  }  
+  if(this._text_font_size != ''){
+    placeholderspan.style.fontSize = this._text_font_size;
+  }  
+  if(this._text_padding_bottom != ''){
+    placeholderspan.style.paddingBottom = this._text_padding_bottom;
+  }  
+  if(this._text_padding_left != ''){
+    placeholderspan.style.paddingLeft = this._text_padding_left;
+  }  
+  if(this._text_padding_right != ''){
+    placeholderspan.style.paddingRight = this._text_padding_right;
+  }  
+  if(this._text_padding_top != ''){
+    placeholderspan.style.paddingTop = this._text_padding_top;
+  }  
+  var pstring = '';
+  for(var i = 0; i < parseInt(this._display_character_length); i++)
+	pstring += 'X';
+  placeholderspan.innerHTML = pstring;
+  placeholderspan.style.top = '0';
+  placeholderspan.style.left = '0';
+  placeholderspan.style.zIndex = '1';
+  placeholderspan.style.visibility = 'hidden';
+
+  innercontainer.appendChild(placeholderspan);
+
+  var nodedisplayspan = document.createElement('div');
+  nodedisplayspan.setAttribute('element', 'nodedisplay');
+  nodedisplayspan.setAttribute('node', this._node);
+  switch(this._display_type) {
+    case 'active/inactive':
+      nodedisplayspan.setAttribute('display_function', 'GenericOverrideDisplayActiveInactive');
+      break;
+    case 'binary':
+      nodedisplayspan.setAttribute('display_function', 'GenericOverrideDisplayBinary');
+      break;
+    case 'boolean':
+      nodedisplayspan.setAttribute('display_function', 'GenericOverrideDisplayBoolean');
+      break;
+    case 'integer':
+      nodedisplayspan.setAttribute('display_function', 'GenericOverrideDisplayInteger');
+      break;
+    case 'on/off':
+      nodedisplayspan.setAttribute('display_function', 'GenericOverrideDisplayOnOff');
+      break;
+    case 'real':
+      nodedisplayspan.setAttribute('display_function', 'GenericOverrideDisplayReal');
+      break;
+    case 'string':
+      nodedisplayspan.setAttribute('display_function', 'GenericOverrideDisplayString');
+      break;
+  }
+  nodedisplayspan.style.position = 'absolute';
+  nodedisplayspan.style.backgroundColor = 'transparent';
+  //nodedisplayspan.style.borderWidth = '2px';
+  //nodedisplayspan.style.borderStyle = 'solid';
+  //nodedisplayspan.style.borderColor = this._border_color_normal;
+  if(this._text_color != ''){
+    nodedisplayspan.style.color = this._text_color;
+  }
+  if(this._text_font_family != ''){
+    nodedisplayspan.style.fontFamily = this._text_font_family;
+  }  
+  if(this._text_font_size != ''){
+    nodedisplayspan.style.fontSize = this._text_font_size;
+  }  
+  if(this._text_padding_bottom != ''){
+    nodedisplayspan.style.paddingBottom = this._text_padding_bottom;
+  }  
+  if(this._text_padding_left != ''){
+    nodedisplayspan.style.paddingLeft = this._text_padding_left;
+  }  
+  if(this._text_padding_right != ''){
+    nodedisplayspan.style.paddingRight = this._text_padding_right;
+  }  
+  if(this._text_padding_top != ''){
+    nodedisplayspan.style.paddingTop = this._text_padding_top;
+  }  
+  //FIXTHIS: NN doesn't require offset to style.top
+  nodedisplayspan.style.top = '0'; // offset for placeholder border
+  nodedisplayspan.style.left = '0';
+  nodedisplayspan.style.zIndex = '2';
+
+  innercontainer.appendChild(nodedisplayspan);
+
+  var nodeinputdiv = document.createElement('input');
+  nodeinputdiv.setAttribute('element', 'nodeinput');
+  nodeinputdiv.setAttribute('type', 'text');
+  nodeinputdiv.setAttribute('size', this._display_character_length);
+  nodeinputdiv.setAttribute('onkeypress','GenericOverrideInputDoneCheck(event)');
+  nodeinputdiv.style.position = 'absolute';
+  nodeinputdiv.style.backgroundColor = 'white';
+  if(this._text_color != ''){
+    nodeinputdiv.style.color = this._text_color;
+  }
+  if(this._text_font_family != ''){
+    nodeinputdiv.style.fontFamily = this._text_font_family;
+  }  
+  if(this._text_font_size != ''){
+    nodeinputdiv.style.fontSize = this._text_font_size;
+  }  
+  //FIXTHIS: NN doesn't require offset to style.top
+  nodeinputdiv.style.top = this._text_padding_top; // offset for placeholder border
+  nodeinputdiv.style.left = this._text_padding_left;
+  nodeinputdiv.style.zIndex = '3';
+  nodeinputdiv.style.display = 'none';
+
+  innercontainer.appendChild(nodeinputdiv);
+
+  var infospan = document.createElement('div');
+  infospan.setAttribute('element','info');
+  infospan.setAttribute('type','hidden');  
+  infospan.setAttribute('display_type', this._display_type); 
+  infospan.setAttribute('precision', this._precision); 
+  infospan.setAttribute('display_character_length', this._display_character_length);  
+  infospan.setAttribute('text_align', this._text_align);  
+  infospan.setAttribute('border_color_normal', this._border_color_normal);
+  infospan.setAttribute('border_color_override', this._border_color_override);
+  infospan.setAttribute('button_scale', this._button_scale);
+  infospan.setAttribute('override_button_source', this._override_button_source);
+  infospan.setAttribute('override_button_width', this._override_button_width);
+  infospan.setAttribute('override_button_height', this._override_button_height);
+  infospan.setAttribute('clear_button_source', this._clear_button_source);
+  infospan.setAttribute('clear_button_width', this._clear_button_width);
+  infospan.setAttribute('clear_button_height', this._clear_button_height);
+  //infospan.style.position = 'relative';
+  infospan.style.backgroundColor = 'transparent';
+  infospan.style.top = '0';
+  infospan.style.left = '0';
+  infospan.style.height = '1';
+  infospan.style.width = '1';
+  infospan.style.zIndex = '0';
+  infospan.style.visibility = 'hidden';
+  infospan.style.display = 'none';
+   
+  innercontainer.appendChild(infospan);
+  widgettable.rows[0].cells[0].appendChild(innercontainer);
+
+  // cell[1] contains override button
+  widgettable.rows[0].insertCell(1);
+  widgettable.rows[0].cells[1].align = 'center';
+  widgettable.rows[0].cells[1].setAttribute('valign','middle');
+
+  var ovrbtnimg = document.createElement('img');
+  ovrbtnimg.setAttribute('element','ovrbtn');
+  ovrbtnimg.setAttribute('src',this._override_button_source);
+  ovrbtnimg.setAttribute('alt','');
+  var myOvrBtnWidth = Math.round(parseInt(this._override_button_width) * (this._button_scale / 100.0));
+  ovrbtnimg.setAttribute('width',myOvrBtnWidth);
+  var myOvrBtnHeight = Math.round(parseInt(this._override_button_height) * (this._button_scale / 100.0));
+  ovrbtnimg.setAttribute('height',myOvrBtnHeight);
+  ovrbtnimg.setAttribute('onclick','GenericOverrideOvrBtnHandler(this)');
+
+  //widgettable.rows[0].cells[1].setAttribute('height',myOvrBtnHeight);
+  widgettable.rows[0].cells[1].setAttribute('width',myOvrBtnWidth);
+  widgettable.rows[0].cells[1].appendChild(ovrbtnimg);
+
+  // cell[2] contains clear button
+  widgettable.rows[0].insertCell(2);
+  widgettable.rows[0].cells[2].align = 'center';
+  widgettable.rows[0].cells[2].setAttribute('valign','middle');
+
+  var clrbtnimg = document.createElement('img');
+  clrbtnimg.setAttribute('element','clrbtn');
+  clrbtnimg.setAttribute('src',this._clear_button_source);
+  clrbtnimg.setAttribute('alt','');
+  var myClrBtnWidth = Math.round(parseInt(this._clear_button_width) * (this._button_scale / 100.0));
+  clrbtnimg.setAttribute('width',myClrBtnWidth);
+  var myClrBtnHeight = Math.round(parseInt(this._clear_button_height) * (this._button_scale / 100.0));
+  clrbtnimg.setAttribute('height',myClrBtnHeight);
+  clrbtnimg.setAttribute('onclick','GenericOverrideClrBtnHandler(this)');
+
+  //widgettable.rows[0].cells[2].setAttribute('height',myClrBtnHeight);
+  widgettable.rows[0].cells[2].setAttribute('width',myClrBtnWidth);
+  widgettable.rows[0].cells[2].appendChild(clrbtnimg);
+
+  this.element.appendChild(widgettable);
+  /*outercontainer.appendChild(widgettable);
+  this.element.appendChild(outercontainer);
+
+  if(innercontainer.currentStyle) {
+    Widget_log('GenericOverride.init_element, innercontainer width=' + innercontainer.currentStyle['width']);
+  }
+  else if(window.getComputedStyle) {
+    var compStyle = window.getComputedStyle(innercontainer,"");
+    Widget_log('GenericOverride.init_element, innercontainer width=' + compStyle.getPropertyValue('width'));
+  }
+  else {
+    Widget_log('GenericOverride.init_element, innercontainer width=' + innercontainer.style.width);
+  }
+  Widget_log('GenericOverride.init_element, innercontainer offsetWidth=' + innercontainer.offsetWidth);
+  var phelement = GenericOverrideGetElement(this.element,'div','placeholder');
+  //Widget_log('GenericOverride.init_element, phelement.offsetParent.offsetWidth=' + phelement.offsetParent.offsetWidth);*/
+}
+
+
+GenericOverride.prototype.create = function (){
+  Widget_log('GenericOverride.create(), at top');
+  //_msglog('GenericOverride.create(), arguments.length=' + arguments.length);
+  if(arguments.length == 1) {
+    this.element = element;
+    this.init(element);
+  }
+  this.init_element();
+}
+
+function GenericOverride_factory(){
+  return new GenericOverride();
+}
+
+function GenericOverrideDisplayNoErrors(v) {
+  try {    
+    var pattern1 = /\?/;      
+    var pattern2 = /error\:/;      
+    if (pattern1.exec(v.toString()) == null && pattern2.exec(v.toString()) == null) {
+      return 1;
+    }
+  }
+  catch(err) {
+    return 0;
+  }
+  return 0;
+}
+
+function GenericOverrideDisplayActiveInactive(e,v){
+  try{    
+    if(GenericOverrideDisplayNoErrors(v)){
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(v == 0) {
+          e.innerHTML = 'inactive';
+	}
+        else {
+          e.innerHTML = 'active';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(v == 0) {
+          e.value = 'inactive';
+	}
+        else {
+          e.value = 'active';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+    GenericOverrideTextAlign(e);
+  }
+  GenericOverrideTextAlign(e);
+}
+
+function GenericOverrideDisplayBinary(e,v){
+  try{    
+    if(GenericOverrideDisplayNoErrors(v)){
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(v == 0) {
+          e.innerHTML = '0';
+	}
+        else {
+          e.innerHTML = '1';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(v == 0) {
+          e.value = '0';
+	}
+        else {
+          e.value = '1';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+    GenericOverrideTextAlign(e);
+  }
+  GenericOverrideTextAlign(e);
+}
+
+function GenericOverrideDisplayBoolean(e,v){
+  try{    
+    if(GenericOverrideDisplayNoErrors(v)){
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(v == 0) {
+          e.innerHTML = 'false';
+	}
+        else {
+          e.innerHTML = 'true';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(v == 0) {
+          e.value = 'false';
+	}
+        else {
+          e.value = 'true';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+    GenericOverrideTextAlign(e);
+  }
+  GenericOverrideTextAlign(e);
+}
+
+function GenericOverrideDisplayInteger(e,v){
+  try{    
+    if(GenericOverrideDisplayNoErrors(v)){
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      precision(e,v,0);
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+    GenericOverrideTextAlign(e);
+  }
+  GenericOverrideTextAlign(e);
+}
+
+function GenericOverrideDisplayOnOff(e,v){
+  try{    
+    if(GenericOverrideDisplayNoErrors(v)){
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        if(v == 0) {
+          e.innerHTML = 'off';
+	}
+        else {
+          e.innerHTML = 'on';
+        }
+      }
+      else if(e.nodeName == "INPUT"){ 
+        if(v == 0) {
+          e.value = 'off';
+	}
+        else {
+          e.value = 'on';
+        }
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+    GenericOverrideTextAlign(e);
+  }
+  GenericOverrideTextAlign(e);
+}
+
+function GenericOverrideDisplayReal(e,v){
+  Widget_log("GenericOverrrideDisplayReal(), at top");
+  try{    
+    if(GenericOverrideDisplayNoErrors(v)){
+      var tblelement = e.parentNode.parentNode.parentNode.parentNode.parentNode;
+      var ielement = GenericOverrideGetElement(tblelement,'div','info');
+      var places = parseInt(ielement.getAttribute('precision'));
+      if(isNaN(places)){
+        places = 2;
+      }
+      if(v.as_magnitude){
+        v = v.as_magnitude();
+      }
+      precision(e,v,places);
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+    GenericOverrideTextAlign(e);
+  }
+  GenericOverrideTextAlign(e);
+}
+
+function GenericOverrideDisplayString(e,v){
+  try{    
+    if(GenericOverrideDisplayNoErrors(v)){
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = v.toString();
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = v.toString();
+      }
+    }
+    else{
+      if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+        e.innerHTML = 'N/A';
+      }
+      else if(e.nodeName == "INPUT"){ 
+        e.value = 'N/A';
+      }
+    }
+  }
+  catch(err){   
+    if(e.nodeName == "SPAN" || e.nodeName == "TD" || e.nodeName == "DIV") {
+      e.innerHTML = 'N/A';
+    }
+    else if(e.nodeName == "INPUT"){ 
+      e.value = 'N/A';
+    }
+    GenericOverrideTextAlign(e);
+  }
+  GenericOverrideTextAlign(e);
+}
+
+function GenericOverrideShowOffsets(e) {
+  var atTop = false;
+  var nodename = 'e';
+  var noderef = null;
+  do {
+    noderef = eval(nodename);
+    Widget_log('GenericOverrideTextAlign(), ' + nodename + '.nodeType=' + noderef.nodeType);
+    Widget_log('GenericOverrideTextAlign(), ' + nodename + '.element=' + noderef.getAttribute('element'));
+    Widget_log('GenericOverrideTextAlign(), ' + nodename + '.offsetWidth=' + noderef.offsetWidth);
+    Widget_log('GenericOverrideTextAlign(), ' + nodename + '.offsetLeft=' + noderef.offsetLeft);
+    if(noderef.getAttribute('widget')) {
+       atTop = true;
+    }
+    nodename += '.offsetParent';
+  } while(!atTop);
+}
+
+function GenericOverrideTextAlign(e) {
+  GenericOverrideShowOffsets(e);
+  var phelement = GenericOverrideGetElement(e.parentNode,'div','placeholder');
+  GenericOverrideShowOffsets(phelement);
+  var ielement = GenericOverrideGetElement(e.parentNode,'div','info');
+  //Widget_log('GenericOverrideTextAlign(), phelement.offsetWidth=' + phelement.offsetWidth + ', e.offsetWidth=' + e.offsetWidth);
+  //Widget_log('GenericOverrideTextAlign(), phelement.offsetLeft=' + phelement.offsetLeft + ', e.offsetParent.offsetLeft=' + e.offsetParent.offsetLeft);
+  var myOffsetWidth = parseInt(e.offsetWidth);
+  var myOffsetLeft = parseInt(e.offsetLeft);
+  var myParentOffsetWidth = parseInt(e.offsetParent.offsetWidth);
+  var myParentOffsetLeft = parseInt(e.offsetParent.offsetLeft);
+  var myAlign = ielement.getAttribute('text_align');
+  var myLeftPad = parseInt(e.style.paddingLeft);
+  var myRightPad = parseInt(e.style.paddingRight);
+  var myHorizontalPad = myLeftPad + myRightPad;
+  var placeHolderContentSize = parseInt(phelement.offsetWidth) - myHorizontalPad;
+  Widget_log('GenericOverrideTextAlign(), myAlign=' + myAlign + ', myOffsetWidth=' + myOffsetWidth + ', myParentOffsetWidth=' + myParentOffsetWidth + ', myHorizontalPad=' + myHorizontalPad);
+  if(document.compatMode == 'BackCompat') { //IE6 in backward compatibility mode (IE6 default)
+    switch(myAlign) {
+      case 'right':
+        //e.style.left = Math.round(myParentOffsetWidth - (myOffsetWidth + myHorizontalPad)) + 'px';
+        e.style.left = Math.round((placeHolderContentSize - myOffsetWidth) - myLeftPad) + 'px';
+        break;
+      case 'center':
+        e.style.left = Math.round(((myParentOffsetWidth / 2) - myOffsetLeft) - (((myOffsetWidth + myHorizontalPad) / 2) - myOffsetLeft)) + 'px';
+        break;
+      case 'left':
+        e.style.left = myLeftPad + 'px';
+        break;
+      default:
+        break;
+    }
+    Widget_log('GenericOverrideTextAlign(), BackCompat mode, e.style.left=' + e.style.left);
+  }
+  else { // CSS1Compat
+    switch(myAlign) {
+      case 'right':
+        e.style.left = Math.round(myParentOffsetWidth - myOffsetWidth);
+        break;
+      case 'center':
+        e.style.left = Math.round(myParentOffsetWidth / 2 - myOffsetWidth / 2);
+        break;
+      case 'left':
+        e.style.left = myLeftPad + 'px';
+        break;
+      default:
+        break;
+    }
+    Widget_log('GenericOverrideTextAlign(), CSS1Compat mode, e.style.left=' + e.style.left);
+  }
+}
+
+function GenericOverrideGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e
+}
+
+function GenericOverrideOvrBtnHandler(e){
+  Widget_log("GenericOverrideOvrBtnHandler entered");
+  Widget_log("e.parentNode.parentNode.parentNode.parentNode.getAttribute('element')=" + e.parentNode.parentNode.parentNode.parentNode.getAttribute('element'));
+  var tblelement = e.parentNode.parentNode.parentNode.parentNode;
+  var phelement = GenericOverrideGetElement(tblelement,'div','placeholder');
+  var ndelement = GenericOverrideGetElement(tblelement,'div','nodedisplay');
+  var nielement = GenericOverrideGetElement(tblelement,'input','nodeinput');
+  //nielement.style.top = ndelement.style.top + ndelement.style.paddingTop;
+  nielement.style.left = parseInt(phelement.style.left) + parseInt(phelement.style.paddingLeft);
+  //nielement.style.width = parseInt(phelement.style.offsetWidth) - (parseInt(phelement.style.paddingRight) + parseInt(phelement.style.paddingLeft));
+  Widget_log("nielement.style.left=" + nielement.style.left);
+  //nielement.style.bottom = parseInt(ndelement.style.bottom) - parseInt(ndelement.style.paddingBottom);
+  ndelement.style.visibility = 'hidden';
+  nielement.style.display = 'block';
+  nielement.focus();
+  nielement.select();
+}
+
+function GenericOverrideClrBtnHandler(e) {
+  Widget_log("GenericOverrideClrBtnHandler entered");
+  Widget_log("e.parentNode.parentNode.parentNode.parentNode.getAttribute('element')=" + e.parentNode.parentNode.parentNode.parentNode.getAttribute('element'));
+  var tblelement = e.parentNode.parentNode.parentNode.parentNode;
+  var icelement = GenericOverrideGetElement(tblelement,'div','innercontainer');
+  var phelement = GenericOverrideGetElement(tblelement,'div','placeholder');
+  var ndelement = GenericOverrideGetElement(tblelement,'div','nodedisplay');
+  var nielement = GenericOverrideGetElement(tblelement,'input','nodeinput');
+  var ielement = GenericOverrideGetElement(tblelement,'div','info');
+
+  try {
+    var n = MEDIATOR.get_node(ndelement.getAttribute('node'));
+    n.set('None');
+    /*var myValue = n.get();
+    var myDisplayType = ielement.getAttribute('display_type');
+    switch(myDisplayType) {
+      case 'active/inactive':
+        GenericOverrideDisplayActiveInactive(ndelement,myValue);
+        break;
+      case 'binary':
+        GenericOverrideDisplayBinary(ndelement,myValue);
+        break;
+      case 'boolean':
+        GenericOverrideDisplayBoolean(ndelement,myValue);
+        break;
+      case 'integer':
+        GenericOverrideDisplayInteger(ndelement,myValue);
+        break;
+      case 'on/off':
+        GenericOverrideDisplayOnOff(ndelement,myValue);
+        break;
+      case 'real':
+        GenericOverrideDisplayReal(ndelement,myValue);
+        break;
+      case 'string':
+        GenericOverrideDisplayString(ndelement,myValue);
+        break;
+    }*/
+    icelement.style.borderColor = ielement.getAttribute('border_color_normal');
+    nielement.value = '';
+    nielement.style.display = 'none';
+    ndelement.style.visibility = 'visible';
+  }
+  catch(err) {
+    alert('ERROR: ' + err.message);
+  }
+}
+
+function GenericOverrideInputDoneCheck(evt) {
+  evt = (evt) ? evt : ((window.event) ? event : null);
+  if(evt) {
+    var e = (evt.target) ? evt.target :
+      ((evt.srcElement) ? evt.srcElement : null);
+    if(e) {
+      var charCode = (evt.charCode) ? evt.charCode :
+        ((evt.which) ? evt.which : evt.keyCode);
+      if(charCode == 13)
+	GenericOverrideDoOverride(e);
+    }
+  }
+}
+
+function GenericOverrideDoOverride(e) {
+  Widget_log("GenericOverrideDoOverride() entered");
+  Widget_log("e.value=" + e.value);
+  Widget_log("e.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('element')=" + e.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('element'));
+  var tblelement = e.parentNode.parentNode.parentNode.parentNode.parentNode;
+  var icelement = GenericOverrideGetElement(tblelement,'div','innercontainer');
+  var phelement = GenericOverrideGetElement(tblelement,'div','placeholder');
+  var ndelement = GenericOverrideGetElement(tblelement,'div','nodedisplay');
+  var ielement = GenericOverrideGetElement(tblelement,'div','info');
+
+  if(e.value != '') {
+    try {
+      var n = MEDIATOR.get_node(ndelement.getAttribute('node'));
+      n.set(e.value);
+      var myDisplayType = ielement.getAttribute('display_type');
+      switch(myDisplayType) {
+        case 'active/inactive':
+          GenericOverrideDisplayActiveInactive(ndelement,e.value);
+          break;
+        case 'binary':
+          GenericOverrideDisplayBinary(ndelement,e.value);
+          break;
+        case 'boolean':
+          GenericOverrideDisplayBoolean(ndelement,e.value);
+          break;
+        case 'integer':
+          GenericOverrideDisplayInteger(ndelement,e.value);
+          break;
+        case 'on/off':
+          GenericOverrideDisplayOnOff(ndelement,e.value);
+          break;
+        case 'real':
+          GenericOverrideDisplayReal(ndelement,e.value);
+          break;
+        case 'string':
+          GenericOverrideDisplayString(ndelement,e.value);
+          break;
+      }
+    icelement.style.borderColor = ielement.getAttribute('border_color_override');
+    e.value = '';
+    e.style.display = 'none';
+    ndelement.style.visibility = 'visible';
+    }
+    catch(err) {
+      icelement.style.borderColor = ielement.getAttribute('border_color_normal');
+      e.value = '';
+      e.style.display = 'none';
+      ndelement.style.visibility = 'visible';
+      alert('ERROR: ' + err.message + '\nPlease check node path for this widget.');
+    }
+  }
+}
+
+var GenericOverride_loaded = true;

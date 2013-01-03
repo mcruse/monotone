@@ -1,0 +1,451 @@
+#!/bin/bash
+# @fixme Create test specific msglog and email to me?
+
+TMPDIR=/tmp/$$
+mkdir ${TMPDIR} || exit 1
+
+safe_exit () {
+    cd /tmp
+    rm -rf ${TMPDIR}
+    exit $1
+}
+
+print_help_and_exit () {
+echo "
+test_from_cvs: Checks out the mediator module into a temporary directory,
+               builds it for 'native' execution, runs all available
+               automated tests and then emails the results to
+               eng@envenergy.com.
+
+    OPTIONS
+
+    --help, -h                 Display this help text and exit.
+
+    --branch, -b  'branch'     Select the latest code on the specified
+                               'branch'.  The legal values for 'branch' are
+                               'trunk', '1.2', '1.2.3', '1.3', '1.4.1', 
+                               '1.4.2', '1.4.4', '1.4.5', '1.4.14', '1.5.1'
+                               and '1.5.2'.
+                               If the --branch option is not specified, then 
+                               the 'trunk' source is used.
+
+    --no-mail, -n              Output the results to standard out rather than
+                               emailing them. (default)
+
+    --mail-to, -m 'to-address' Send the results to 'to-address' instead of
+                               standard out.
+
+    --mail-server, -s 'server' Set the hostname of the mail server to use.
+			       Defaults to localhost.
+
+    --mail-port, -p 'port'     Set the port to connect to on the mail-server.
+                               Defaults to 25.
+
+    --mail-debug               Print some debugging information to standard
+			       out regarding mailing the output.
+
+    --debug, -D                Echo bash command processing of this script to
+                               standard error.
+
+    --with-buildrc 'buildrc'   Specify the buildrc to configure, compile and
+			       test.  Defaults to native.
+
+    DESCRIPTION
+
+    This command is essentially a front end to the run_test_modules
+    (aka unittester) command.  The purpose of this command is run
+    the automated tests against the most recent checked in code in a
+    'clean room' environment.
+
+    While the default behavior is to check out the latest code on
+    the trunk, there is an option to build against 'well known'
+    branches.  To simplify matters, the branches are referred to by
+    the version that the branch supports.  See BRANCHES below for
+    more information.
+
+    BRANCHES
+
+    Branches are referred to by the version number that it supports.  In
+    other words, 1.2 refers to the branch for on going 1.2 support.  The
+    current branch version number to branch tag mappings are:
+
+      1.2    mediator_1_2_branch
+      1.2.3  mediator_1_2_3_branch
+      1.3    mediator_1_3_branch
+      1.4.1  mediator_1_4_1_branch
+      1.4.2  mediator_1_4_2_branch
+      1.4.4  mediator_1_4_4_branch
+      1.4.5  mediator_1_4_5_branch
+      1.4.13 mediator_1_4_13_branch
+      1.5.1  mediator_1_5_1_branch
+      1.5.2  mediator_1_5_2_branch
+
+      trunk  A pseudonym for the CVS trunk.
+
+    ENVIRONMENTAL CONSIDERATIONS
+
+    In general, this command should work on any development system that
+    has the required version(s) of the development tools installed.  The
+    current devtool requirements by branch are:
+
+      1.2, 1.2.3 and 1.3:
+
+        /usr/bin/gcc for 'native' C compilation.
+        /usr/java/j2sdk1.4.1 is required for java compilation.
+
+      1.4 and greater and the trunk:
+
+         /usr/bin/gcc is used for 'native' C compilation.
+         /opt/envenergy/devtools/3.0 should cover everything else.
+
+    One other issue is that both the source build and the
+    run_test_modules command rely on the the ~/bin development
+    stubs.  These stubs support all source branches through elfin
+    magic and as long as ./INSTALL_STUBS has been invoked once since
+    about May 5th, 2003, everything should work.
+
+    EXIT CODE
+
+    Upon success completion, test_from_cvs exits with an exit code
+    of 0.  If test_from_cvs fails due to invalid options or
+    arguments, it returns an exit code of 1.  Failure due to an
+    environmental or detectable internal logic error return an
+    exit code of 2.  If the failure is total senseless than
+    exit code 3 is returned.
+
+    Exit codes 1 and output hopefully useful information to standard
+    error.  Exit code 3 means I was lazy...  Rerun using the --debug
+    option and bash command execution should show what command
+    failed.
+
+    NOTE:  Success completion means that the code was checked out,
+           built, and that the automated tests were run.  It does
+           not necessarily mean that all the tests passed, that is
+           what the TEST REPORT is for.
+" | more
+    safe_exit 0
+}
+
+invalid_option_error () {
+echo "
+Error: Invalid option '$1';
+       --help for information on valid options.
+"
+    safe_exit 1
+}
+
+invalid_argument_error () {
+echo "
+Error: Invalid argument '$1';
+       --help for information on valid arguments.
+"
+    safe_exit 1
+}
+
+branch_requires_argument_error () {
+echo "
+Error: The branch option ($1) requires an argument.
+       --help for information on valid arguments.
+"
+    safe_exit 1
+}
+
+buildrc_to_requires_argument_error () {
+echo "
+Error: The with-buildrc option ($1) requires an argument.
+       --help for information on valid arguments.
+"
+    safe_exit 1
+}
+
+mail_to_requires_argument_error () {
+echo "
+Error: The mail-to option ($1) requires an argument.
+       --help for more information.
+"
+    safe_exit 1
+}
+
+unknown_branch_error () {
+echo "
+Error: Unknown branch requested ($1).
+
+       test_from_cvs currently supports six 'branches':  '1.2', '1.2.3', '1.3',
+       '1.4.1', '1.4.2', '1.4.4', '1.4.5', '1.4.13', '1.4.14', '1.5.1', '1.5.2'
+       and the 'trunk'.  By default, test_from_cvs uses the 'trunk'.
+
+       --help for information.
+"
+    safe_exit 1
+}
+
+internal_failure () {
+echo "
+Internal failure: $1
+
+       Start debugging me...  NOW\!
+"
+    safe_exit 2
+}
+
+BRANCH="trunk"
+MAILTO=""
+MAILSERVER="localhost"
+MAILPORT="25"
+MAILDEBUG=""
+MAILSUBJECT="test_from_cvs"
+COMMAND_LINE="$0 $@"
+TEST_COMMAND=~/bin/run_test_modules
+BUILDRC=""
+
+while [ $# -gt 0 ]
+do
+    case "$1" in
+	"--help"|"-h") print_help_and_exit ;;
+	"--branch"|"-b")
+	    [ $# -le 1 ] && branch_requires_argument_error "$1"
+	    shift
+	    BRANCH="$1"
+	    ;;
+	"--no-mail"|"-n") MAILTO="" ;;
+	"--mail-to"|"-m")
+	    [ $# -le 1 ] && mail_to_requires_argument_error "$1"
+	    shift
+	    MAILTO="$1"
+	    ;;
+	"--mail-server"|"-s")
+	    [ $# -le 1 ] && mail_server_requires_argument_error "$1"
+	    shift
+	    MAILSERVER="$1"
+	    ;;
+	"--mail-port"|"-p")
+	    [ $# -le 1 ] && mail_port_requires_argument_error "$1"
+	    shift
+	    MAILPORT="$1"
+	    ;;
+	"--mail-debug")
+	    MAILDEBUG="-d"
+	    ;;
+	"--debug"|"-D") set -xv ;;
+	"--with-buildrc")
+	    [ $# -le 1 ] && buildrc_to_requires_argument_error "$1"
+	    shift
+	    BUILDRC="$1"
+	    ;;
+	-*) invalid_option_error "$1" ;;
+	*) invalid_argument_error "$1" ;;
+    esac
+    shift
+done
+
+case "$BRANCH" in
+    "1.2")
+	CVS_BRANCH_OPTION="-r mediator_1_2_branch"
+	BUILD_STYLE="G1"
+	TEST_COMMAND=~/bin/unittester
+	;;
+    "1.2.3")
+	CVS_BRANCH_OPTION="-r mediator_1_2_3_branch"
+	BUILD_STYLE="G1"
+	TEST_COMMAND=~/bin/unittester
+	;;
+    "1.3")
+	CVS_BRANCH_OPTION="-r mediator_1_3_branch"
+	BUILD_STYLE="G1"
+	;;
+    "1.4.1")
+	CVS_BRANCH_OPTION="-r mediator_1_4_1_branch"
+	BUILD_STYLE="G2"
+	;;
+    "1.4.2")
+	CVS_BRANCH_OPTION="-r mediator_1_4_2_branch"
+	BUILD_STYLE="G2"
+	;;
+    "1.4.4")
+	CVS_BRANCH_OPTION="-r mediator_1_4_4_branch"
+	BUILD_STYLE="G2"
+	;;
+    "1.4.5")
+	CVS_BRANCH_OPTION="-r mediator_1_4_5_branch"
+	BUILD_STYLE="G2"
+	;;
+    "1.4.13")
+	CVS_BRANCH_OPTION="-r mediator_1_4_13_branch"
+	BUILD_STYLE="G3"
+	;;
+    "1.4.14")
+	CVS_BRANCH_OPTION="-r mediator_1_4_14_branch"
+	BUILD_STYLE="G3"
+	;;
+    "1.5.1")
+	CVS_BRANCH_OPTION="-r mediator_1_5_1_branch"
+	BUILD_STYLE="G3"
+	;;
+    "1.5.2")
+	CVS_BRANCH_OPTION="-r mediator_1_5_2_branch"
+	BUILD_STYLE="G3"
+	;;
+    "trunk")
+	CVS_BRANCH_OPTION=""
+	BUILD_STYLE="G3"
+	;;
+    *) unknown_branch_error "$BRANCH"
+esac
+
+# Default to --with-buildrc=native
+[ -z "${BUILDRC}" ] && BUILDRC="native"
+
+which $TEST_COMMAND 1>/dev/null 2>&1 || \
+    internal_failure "TEST_COMMAND ($TEST_COMMAND) not found."
+
+mail_stdin () {
+# NOTE: This is a HACK to ensure a recent version of Python is used.
+/opt/moe25/usr/bin/python-mpx -c '
+import smtplib
+import sys
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option("-f", "--from",
+                  action="store", type="string", dest="fromaddr",
+                  default="dev@richards-zeta.com")
+parser.add_option("-t", "--to",
+                  action="append", type="string", dest="toaddrs")
+parser.add_option("-s", "--subject",
+                  action="store", type="string", dest="subject",
+                  default="")
+parser.add_option("-S", "--server",
+                  action="store", type="string", dest="server",
+                  default="localhost")
+parser.add_option("-p", "--port",
+                  action="store", type="int", dest="port",
+                  default="25")
+parser.add_option("-d", "--debug", action="count", dest="debug_level",
+                  default=0)
+
+(options, args) = parser.parse_args()
+
+if not options.toaddrs:
+    options.toaddrs = ["dev@richards-zeta.com"]
+
+fromaddr = options.fromaddr
+toaddrs  = tuple(options.toaddrs)
+msg = ("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n"
+       % (fromaddr, ", ".join(toaddrs),options.subject))
+msg += sys.stdin.read()
+
+server = smtplib.SMTP(options.server, options.port)
+server.set_debuglevel(options.debug_level)
+server.sendmail(fromaddr, toaddrs, msg)
+server.quit()' "$@"
+}
+
+process_output () {
+    if [ "$MAILTO" == "" ]
+    then cat
+    else mail_stdin -t "$MAILTO" -s "$MAILSUBJECT" \
+	            -S "$MAILSERVER" -p "$MAILPORT" ${MAILDEBUG}
+    fi
+}
+
+cd ${TMPDIR} || safe_exit 3
+case "$BUILD_STYLE" in
+    "G3")
+	# Check out the latest code on the trunk, or the CVS_BRANCH_OPTION
+	# branch.
+	echo "Checking out source, this takes a long time."
+	cvs co $CVS_BRANCH_OPTION broadway >/dev/null || safe_exit 3
+	cd broadway || safe_exit 3
+	#
+	# Set up the build directory
+	#
+	cd ${TMPDIR}
+	mkdir bld                                          || safe_exit 3
+	cd bld                                             || safe_exit 3
+	#
+	# Basic autoconf commands.
+	#
+	cd ${TMPDIR}/broadway        || safe_exit 3
+	./setup_configure_script.sh  || safe_exit 3
+	cd ${TMPDIR}/bld             || safe_exit 3
+	#
+	# Configure for native compilation and build.
+	#
+	${TMPDIR}/broadway/configure --with-buildrc=${BUILDRC} || safe_exit 3
+	#
+	# Create native, build target and set as the penvironment.
+	#
+	source ${TMPDIR}/bld/tools/penvironment.rc BS || safe_exit 3
+	#
+	# Now build.
+	#
+	make                                               || safe_exit 3
+	;;
+    "G2")
+	# Check out the latest code on the trunk, or the CVS_BRANCH_OPTION
+	# branch.
+	echo "Checking out source, this takes a long time."
+	cvs co $CVS_BRANCH_OPTION broadway >/dev/null || safe_exit 3
+	cd broadway || safe_exit 3
+	#
+	# Create native, build target and set as the penvironment.
+	#
+	cd ${TMPDIR}
+	mkdir bld                                          || safe_exit 3
+	cd bld                                             || safe_exit 3
+	source ${TMPDIR}/broadway/tools/penvironment.rc BS || safe_exit 3
+	#
+	# Basic autoconf commands.
+        #
+	cd ${TMPDIR}/broadway        || safe_exit 3
+	./setup_configure_script.sh  || safe_exit 3
+	cd ${TMPDIR}/bld             || safe_exit 3
+	#
+        # Configure for native compilation and build.
+	#
+	${TMPDIR}/broadway/configure --with-buildrc=${BUILDRC} || safe_exit 3
+	make                                                   || safe_exit 3
+	;;
+    "G1")
+	if [ "${BUILDRC}" != "native" ]
+	then
+	    echo "G1 builds only support --with-buildrc=native." >&2
+	    safe_exit 3
+	fi
+	# Check out the latest code on the trunk, or the CVS_BRANCH_OPTION
+	# branch.
+	echo "Checking out source, this takes a loooooong time."
+	cvs co $CVS_BRANCH_OPTION mediator >/dev/null || safe_exit 3
+	cd mediator/broadway || safe_exit 3
+	# START: Force native compilation hack.
+	cat tools/penvironment.rc | \
+	    sed 's:GCC=/opt.*$:GCC=/usr/bin/gcc:g' >tools/penvironment.rc.new \
+		|| safe_exit 3
+	mv tools/penvironment.rc tools/penvironment.rc.old || safe_exit 3
+	mv tools/penvironment.rc.new tools/penvironment.rc || safe_exit 3
+	# END: Force native compilation hack.
+	source tools/penvironment.rc
+	./compileall || safe_exit 3
+	;;
+    *) internal_failure "Unknown BUILD_STYLE ($BUILD_STYLE)." ;;
+esac
+STARTED_AT=$(date)
+$TEST_COMMAND >test_from_cvs.stdout 2>test_from_cvs.stderr
+FINISHED_AT=$(date)
+(echo -e "
+$COMMAND_LINE
+
+                             TEST REPORT
+
+Test suite started $STARTED_AT
+Test suite completed $FINISHED_AT
+
+"
+ cat test_from_cvs.stdout
+ echo -e "
+                             ERROR OUTPUT
+"
+ cat test_from_cvs.stderr) |
+    process_output
+
+safe_exit 0

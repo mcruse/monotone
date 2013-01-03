@@ -1,0 +1,127 @@
+<!--
+Copyright (C) 2008 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Untitled Document</title>
+<script language="JavaScript" type="text/JavaScript">
+var IFRAMENAME = ""
+function startIFrame(){
+    var qsargs = get_query_string_args();
+    //set background color
+    document.body.setAttribute("bgColor",qsargs["bgcolor"]);
+    //set font family and color
+    var elem = document.getElementById("currentselection");
+    elem.style.fontFamily = qsargs["fontfamily"];
+    elem.style.color = qsargs["fontcolor"];
+    //create iframe for editing 
+    var iFrameHolder = document.getElementById("contentholder");
+    var childFrame = document.createElement("iframe");
+    IFRAMENAME = "contentframe";
+    childFrame.setAttribute("id",IFRAMENAME);
+    childFrame.setAttribute("name",IFRAMENAME);
+    updateSelection(qsargs["selectionpath"]);
+    childFrame.src = qsargs["selection"];
+    childFrame.width = "1";
+    childFrame.height = "1";
+    childFrame.marginWidth = "0";
+    childFrame.marginHeight = "0";
+    childFrame.frameBorder = "0";
+    childFrame.scrolling = "auto";
+    iFrameHolder.appendChild(childFrame);
+    window.setTimeout("startIFrameFinish();",1); //fixes IE appendChild() race
+}
+function startIFrameFinish() {
+  adjustIFrame(IFRAMENAME);
+}
+function adjustIFrame(id) {
+  var iframe = document.getElementById(id);
+  var window_height = document.body.parentNode.clientHeight;
+  var window_width = document.body.parentNode.clientWidth;
+  iframe.height = window_height - 22;
+  iframe.width = window_width - 2;
+  return;
+}
+
+function get_query_string_args(){
+  var args = new Object();
+  var query_string = window.location.search.substring(1);
+  var pairs = query_string.split("&");
+  var name_value = null;
+  for(x=0;x<pairs.length;x++){
+    if (pairs[x].indexOf('=') != -1){
+      name_value = pairs[x].split('='); 
+      args[name_value[0]] = decodeURIComponent(name_value[1]);
+    } 
+  }
+  return args;
+}
+function updateSelection(path) {
+  var temp = path.split('|');
+	var innerTableHtml = '<table width="100%" border="0" cellspacing="4" cellpadding="0"><tr><td>Current&nbsp;Selection:</td>';
+	if(temp.length > 0) {
+		innerTableHtml += "<td>" + temp[0] + "</td>";
+		for(var i = 1; i < temp.length; i++) {
+	  	innerTableHtml += "<td>&gt;</td><td>" + temp[i] + "</td>";
+		}
+	}
+  innerTableHtml += '<td width="100%">&nbsp;</td></tr></table>';
+	//alert(innerTableHtml);
+	document.getElementById("selectionholder").innerHTML = innerTableHtml;
+}
+function windowResize() {
+	document.getElementById(IFRAMENAME).height = document.body.parentNode.clientHeight - document.getElementById("currentselection").height;
+  alert('height=' + document.getElementById(IFRAMENAME).height);
+}
+
+</script>
+</head>
+<body marginheight="0" marginwidth="0" leftmargin="0" topmargin="0" onload="startIFrame()">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr>
+          <td id="currentselection" style="height: 12px; font-family:Verdana, Arial, Helvetica, sans-serif; font-size:10px; font-weight:bold"><div id="selectionholder" ><table width="100%" border="0" cellspacing="4" cellpadding="0">
+              <tr>
+                <td>Current&nbsp;Selection:</td>
+                <td width="100%">&nbsp;</td>
+              </tr>
+          </table></div></td>
+</tr>
+    <td style="border: 1px black solid"><div id="content" align="left">
+        <div id="contentholder"></div>
+    </div></td>
+<tr>
+</tr>
+</table>
+</body>
+</html>

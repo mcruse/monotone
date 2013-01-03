@@ -1,0 +1,23 @@
+pcheck_flists: 
+     The primary purpose of pcheck_flists is to ensure that all files which are listed in an
+.flist file are present before packaging a release.
+     On the --exclusions (-E) option.  This option enables processing of *.elist files.  These files
+are conceptually the complement of *.flist files.  Where .flist files are used to describe what is
+included in a given package, .elist files specify which files are not to be included in any package.
+When elist processing is enabled, a number of additional checks are done against the files which
+are present in the source tree and the files which are in the .flists.  These checks are:
+      a) Are there files which aren't in any .flist and aren't in any .elist?
+      b) Are there files which are in both an .flist and an .elist?
+      c) Are there files in an .elist or .flist which aren't local to the directory which the 
+        .elist or .flist is in?  (This currently is not a fatal error)
+Notes: .elists support glob-expansion, so you can specify something like *.txt
+       There are default patterns which don't need to be specified in an .elist file.  These are 
+       Root, Repository, Entries, Entries.Log, .cvsignore, Makefile.in, *.elist, *.flist,
+       _test_case*.py*, and *~
+       There is currently one rule which is used to automatically supplement the default
+       elist.  That is, for any .pyc file in an .flist file, an elist is automatically 
+       generated for the corresponding .py file.
+       There is a special case .elist file called recursive.elist .  The patterns in this file
+       are applied in it's directory and any subdirectory of it's directory.  This should mainly
+       be used in cases where you can't create an appropriate .elist file in the subdirectories,
+       like when the subdirectories are generated.

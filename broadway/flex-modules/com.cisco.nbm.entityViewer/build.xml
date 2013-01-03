@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This build file provdes a close approximation of the build process 
+     and build settings inside Flash Builder, but it is not an exact copy.  
+     Please customize this file as necessary. -->
+<!-- Generated from project settings as of 11/12/12 4:23 PM -->
+<project name="com.cisco.nbm.entityViewer" default="build" basedir=".">
+    	<property environment="env" />
+    	<property file="../common.properties" />
+    	<property file="build.properties" />
+
+    	<!-- Information for tasks -->
+    	<taskdef resource="flexTasks.tasks" classpath="${flex.task}" />
+
+    	<fail>
+            <condition>
+                    <not>
+                            <isset property="FLEX_HOME" />
+                    </not>
+            </condition>
+	        Error!
+	        You need to set FLEX_HOME prperty (path to Flex SDK) in
+		local.properties file located in the same dir as build.xml!
+	        For example: FLEX_HOME = C:\\flex\\sdk\\
+	</fail>
+	<property name="SDK_VERSION" value="3.6.0.16995"/>
+
+	<taskdef name="mxmlc" classname="flex.ant.MxmlcTask" classpath="${FLEX_HOME}/ant/lib/flexTasks.jar"/>
+	<taskdef name="compc" classname="flex.ant.CompcTask" classpath="${FLEX_HOME}/ant/lib/flexTasks.jar"/>
+	<taskdef name="html-wrapper" classname="flex.ant.HtmlWrapperTask" classpath="${FLEX_HOME}/ant/lib/flexTasks.jar"/>
+
+	<property name="LOCALE" value="en_US"/>
+
+	<target name="build">
+		<antcall target="clean"/>
+		<antcall target="init"/>
+		<antcall target="compile"/>
+		<antcall target="wrapper"/>
+	</target>
+
+	<target name="clean">
+		<delete includeemptydirs="true" failonerror="false">
+			<fileset dir="${OUTPUT_DIR}" includes="**/*"/>
+		</delete>
+	</target>
+
+   	<target name="init">
+    		<mkdir dir="${OUTPUT_DIR}"/>
+    	</target>
+
+	<target name="compile">
+		<mxmlc 
+			file="${SOURCE_DIR}/NBMPropertyViewerWidget.mxml"
+			output="${OUTPUT_DIR}/NBMPropertyViewerWidget.swf"
+			locale="${LOCALE}"
+			warnings="false"
+			static-rsls="false"
+			accessible="false"
+		>
+			<load-config filename="config.xml"/>
+
+			<source-path path-element="${SOURCE_DIR}"/>
+
+			<library-path file="${FLEX_HOME}/frameworks/libs/framework.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_agent.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_dmv.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_flashflexkit.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/datavisualization.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/flex.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/qtp.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/rpc.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/utilities.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/locale/${LOCALE}" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.entities/bin-release/com.cisco.nbm.entities.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.skins.kubrick/bin-release/com.cisco.ui.skins.kubrick.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.components/bin-release/com.cisco.ui.components.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.browserBridge/bin-release/com.cisco.nbm.browserBridge.swc" append="true"/>
+
+			<external-library-path file="${FLEX_HOME}/frameworks/libs/player/9/playerglobal.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_agent.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_dmv.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_flashflexkit.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/datavisualization.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/flex.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/qtp.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/rpc.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/utilities.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.entities/bin-release/com.cisco.nbm.entities.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.skins.kubrick/bin-release/com.cisco.ui.skins.kubrick.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.components/bin-release/com.cisco.ui.components.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.browserBridge/bin-release/com.cisco.nbm.browserBridge.swc" append="true"/>
+
+			<library-path dir="${FLEX_HOME}/frameworks/locale/${LOCALE}" includes="*" append="true"/>
+
+		</mxmlc>
+		<mxmlc 
+			file="${SOURCE_DIR}/NBMAlarmViewerWidget.mxml"
+			output="${OUTPUT_DIR}/NBMAlarmViewerWidget.swf"
+			locale="${LOCALE}"
+			warnings="false"
+			static-rsls="false"
+			accessible="false"
+		>
+			<load-config filename="config.xml"/>
+
+			<source-path path-element="${SOURCE_DIR}"/>
+
+			<library-path file="${FLEX_HOME}/frameworks/libs/framework.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_agent.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_dmv.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_flashflexkit.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/datavisualization.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/flex.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/qtp.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/rpc.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/utilities.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/locale/${LOCALE}" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.entities/bin-release/com.cisco.nbm.entities.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.skins.kubrick/bin-release/com.cisco.ui.skins.kubrick.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.components/bin-release/com.cisco.ui.components.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.browserBridge/bin-release/com.cisco.nbm.browserBridge.swc" append="true"/>
+
+			<external-library-path file="${FLEX_HOME}/frameworks/libs/player/9/playerglobal.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_agent.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_dmv.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_flashflexkit.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/datavisualization.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/flex.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/qtp.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/rpc.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/utilities.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.entities/bin-release/com.cisco.nbm.entities.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.skins.kubrick/bin-release/com.cisco.ui.skins.kubrick.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.components/bin-release/com.cisco.ui.components.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.browserBridge/bin-release/com.cisco.nbm.browserBridge.swc" append="true"/>
+
+			<library-path dir="${FLEX_HOME}/frameworks/locale/${LOCALE}" includes="*" append="true"/>
+
+		</mxmlc>
+		<mxmlc 
+			file="${SOURCE_DIR}/NBMLogViewerWidget.mxml"
+			output="${OUTPUT_DIR}/NBMLogViewerWidget.swf"
+			locale="${LOCALE}"
+			warnings="false"
+			static-rsls="false"
+			accessible="false"
+		>
+			<load-config filename="config.xml"/>
+
+			<source-path path-element="${SOURCE_DIR}"/>
+
+			<library-path file="${FLEX_HOME}/frameworks/libs/framework.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_agent.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_dmv.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_flashflexkit.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/datavisualization.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/flex.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/qtp.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/rpc.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/utilities.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/locale/${LOCALE}" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.entities/bin-release/com.cisco.nbm.entities.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.skins.kubrick/bin-release/com.cisco.ui.skins.kubrick.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.components/bin-release/com.cisco.ui.components.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.browserBridge/bin-release/com.cisco.nbm.browserBridge.swc" append="true"/>
+
+			<external-library-path file="${FLEX_HOME}/frameworks/libs/player/9/playerglobal.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_agent.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_dmv.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_flashflexkit.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/datavisualization.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/flex.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/qtp.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/rpc.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/utilities.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.entities/bin-release/com.cisco.nbm.entities.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.skins.kubrick/bin-release/com.cisco.ui.skins.kubrick.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.components/bin-release/com.cisco.ui.components.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.browserBridge/bin-release/com.cisco.nbm.browserBridge.swc" append="true"/>
+
+			<library-path dir="${FLEX_HOME}/frameworks/locale/${LOCALE}" includes="*" append="true"/>
+
+		</mxmlc>
+		<mxmlc 
+			file="${SOURCE_DIR}/NBMScheduleViewerWidget.mxml"
+			output="${OUTPUT_DIR}/NBMScheduleViewerWidget.swf"
+			locale="${LOCALE}"
+			warnings="false"
+			static-rsls="false"
+			accessible="false"
+		>
+			<load-config filename="config.xml"/>
+
+			<source-path path-element="${SOURCE_DIR}"/>
+
+			<library-path file="${FLEX_HOME}/frameworks/libs/framework.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_agent.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_dmv.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_flashflexkit.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/datavisualization.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/flex.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/qtp.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/rpc.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/utilities.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/locale/${LOCALE}" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.entities/bin-release/com.cisco.nbm.entities.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.skins.kubrick/bin-release/com.cisco.ui.skins.kubrick.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.components/bin-release/com.cisco.ui.components.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.browserBridge/bin-release/com.cisco.nbm.browserBridge.swc" append="true"/>
+
+			<external-library-path file="${FLEX_HOME}/frameworks/libs/player/9/playerglobal.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_agent.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_dmv.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/automation_flashflexkit.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/datavisualization.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/flex.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/qtp.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/rpc.swc" append="true"/>
+			<library-path file="${FLEX_HOME}/frameworks/libs/utilities.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.entities/bin-release/com.cisco.nbm.entities.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.skins.kubrick/bin-release/com.cisco.ui.skins.kubrick.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.ui.components/bin-release/com.cisco.ui.components.swc" append="true"/>
+			<library-path file="${WEBTOOLS_CORE_HOME}/com.cisco.nbm.browserBridge/bin-release/com.cisco.nbm.browserBridge.swc" append="true"/>
+
+			<library-path dir="${FLEX_HOME}/frameworks/locale/${LOCALE}" includes="*" append="true"/>
+
+		</mxmlc>
+
+	</target>
+
+	<target name="wrapper">
+		<html-wrapper 
+			output="${OUTPUT_DIR}"
+			file="NBMPropertyViewerWidget.html"
+			swf="NBMPropertyViewerWidget"
+			history="true"
+			version-major="9"
+			version-minor="0"
+			version-revision="124"
+			height="100%"
+			width="100%"
+			title="NBMPropertyViewerWidget"
+			bgcolor="white"
+		/>
+	</target>
+
+</project>

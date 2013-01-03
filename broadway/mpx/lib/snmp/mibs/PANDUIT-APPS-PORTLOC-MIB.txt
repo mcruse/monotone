@@ -1,0 +1,184 @@
+PANDUIT-APPS-PORTLOC-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+     MODULE-IDENTITY,
+	OBJECT-IDENTITY,
+     OBJECT-TYPE,
+	Unsigned32,
+	NOTIFICATION-TYPE
+                              FROM SNMPv2-SMI
+
+     MODULE-COMPLIANCE,
+	NOTIFICATION-GROUP, 
+     OBJECT-GROUP
+                              FROM SNMPv2-CONF
+
+	sysName 
+						FROM SNMPv2-MIB
+
+	pethPsePortType
+						FROM POWER-ETHERNET-MIB
+
+	panduitApps
+						FROM PANDUIT-REG
+
+	PanduitLongDisplayString
+						FROM PANDUIT-TC
+			
+	panduitIdentificationMAC,
+	panduitCommonNotifyPortNumber
+						FROM PANDUIT-COMMON-MIB
+						
+	panduitProdPanelCommonRackId,
+	panduitProdPanelCommonRackPositionId
+						FROM PANDUIT-PRODUCTS-PANEL-COMMON-MIB;
+
+--
+-- Managed Network Solutions contact information.
+--
+panduitAppsPortLocation MODULE-IDENTITY
+        LAST-UPDATED    "200605150000Z"         
+        ORGANIZATION    "Panduit Corp."
+        CONTACT-INFO
+                "       Panduit Corp.
+                        Managed Network Solutions Group
+
+                Postal: Panduit Corp.
+                        17301 Ridgeland Avenue
+                        Tinley Park, IL 60477-3091
+                        USA
+
+                   Tel: +1 708 532-1800/888-506-5400
+
+                E-mail: info@panduit.com"
+
+        DESCRIPTION
+                        "MIB module to support port location
+			objects."
+
+        REVISION        "200504280000Z"         
+
+        DESCRIPTION
+                        "Initial version of this MIB module."
+
+        REVISION        "200605150000Z"         
+
+        DESCRIPTION
+                        "Corrected errors in OIDs."
+
+        ::= { panduitApps 2 }
+
+
+panduitPLPortLocTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF PanduitPLPortLocEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "A list of work area locations per port."
+        ::= { panduitAppsPortLocation 1 }
+
+panduitPLPortLocEntry OBJECT-TYPE
+        SYNTAX PanduitPLPortLocEntry 
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "A row in the Port Location Table."
+	INDEX	{ panduitPLPortLocIndex }
+        ::= { panduitPLPortLocTable 1 }
+
+	PanduitPLPortLocEntry ::= SEQUENCE{
+		panduitPLPortLocIndex	Unsigned32,
+		panduitPLPortLocLocation	PanduitLongDisplayString
+		}
+
+panduitPLPortLocIndex	OBJECT-TYPE
+        SYNTAX Unsigned32(1..2147483647)
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "Port Location Table Index."
+        ::= { panduitPLPortLocEntry 1 }
+
+panduitPLPortLocLocation	OBJECT-TYPE
+        SYNTAX PanduitLongDisplayString
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "The work area location."
+        ::= { panduitPLPortLocEntry 2 }
+
+
+--
+--		Notification Objects 
+--
+panduitPoENotifications OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "PoE Notifications."
+        ::= { panduitAppsPortLocation 0 }
+
+panduitPortLocationChange NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panduitProdPanelCommonRackId,
+		panduitProdPanelCommonRackPositionId,
+		sysName,
+		panduitCommonNotifyPortNumber,
+		pethPsePortType,
+		panduitPLPortLocLocation }
+        STATUS current
+        DESCRIPTION
+		"The Work area location information has been changed
+		for a given port."
+        ::= { panduitPoENotifications 1 }
+
+
+
+
+--
+--		Conformance Section 
+--
+
+panduitAppsPortLocationConformance OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of Compliance and Group information for MIB."
+	::= { panduitAppsPortLocation 2 }
+
+panduitAppsPortLocationGroups OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of groups within MIB."
+	::= { panduitAppsPortLocationConformance 1 }
+
+panduitAppsPortLocationCompliances OBJECT-IDENTITY
+	STATUS current
+	DESCRIPTION "Compliance specifications for MIB."
+	::= { panduitAppsPortLocationConformance 2 }
+
+panduitAppsPortLocationGeneralGroup OBJECT-GROUP
+	OBJECTS {
+		panduitPLPortLocLocation
+		}
+        STATUS current
+        DESCRIPTION "Common objects in the MIB."
+        ::= { panduitAppsPortLocationGroups 1 }
+
+panduitAppsPortLocationNotificationGroup NOTIFICATION-GROUP
+	NOTIFICATIONS {	
+		panduitPortLocationChange 
+		}
+        STATUS current
+        DESCRIPTION	"PoE Notification Objects."
+        ::= { panduitAppsPortLocationGroups 2 }
+
+panduitAppsPortLocationCompliance MODULE-COMPLIANCE
+	STATUS current
+	DESCRIPTION "Compliance requirements for the MIB."
+	MODULE
+		MANDATORY-GROUPS {
+				panduitAppsPortLocationGeneralGroup,
+				panduitAppsPortLocationNotificationGroup
+				}
+	::=	{ panduitAppsPortLocationCompliances 1 }
+
+
+END

@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<%
+# Copyright (c) 2004 Richards-Zeta
+# $Name: mediator_3_1_2_branch $
+# $Id: tree.psp 20770 2011-07-20 09:06:05Z bhagn $
+from mpx.lib.node import as_node,as_node_url
+import re
+
+import string
+def sort_children(n1,n2):    
+    name1 = string.lower(n1.name) 
+    name2 = string.lower(n2.name) 
+    if name1 > name2:        
+        return 1
+    if name1 < name2:
+        return -1
+    if name1==name2:
+        return 0
+        
+response['Content-Type'] = 'text/xml'
+qs = request.get_query_string_as_dictionary(0)
+n = as_node(qs['node'][0])
+cn = n.children_nodes()
+cn.sort(sort_children) 
+
+
+def entity_replace(s):
+    entites = [{'entity':'&','replacement':'&amp;'},
+               {'entity':'>','replacement':'&gt;'},
+               {'entity':'<','replacement':'&lt;'},
+               {'entity':'"','replacement':'&quote;'},
+               {'entity':"'",'replacement':'&apos;'},
+               {'entity':"/",'replacement':'%2F'}]
+    for e in entites:
+        s = re.sub(e['entity'],e['replacement'],s)
+    return s
+%>
+<tree>
+<%
+for c in cn:    
+    if hasattr(c,'children_names') and c.children_names() != []:
+        xml = '<tree text="%s" action="javascript:node_selected()" src="tree.psp?node=%s" />' % (entity_replace(c.name),as_node_url(c))
+        psp.write(xml)
+    else:
+        xml = '<tree text="%s" action="javascript:node_selected()"  />' % (entity_replace(c.name),)
+        psp.write(xml)
+%>
+</tree> 

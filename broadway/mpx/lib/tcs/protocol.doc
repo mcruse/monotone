@@ -1,0 +1,133 @@
+{\rtf1\ansi \deff4\deflang1033{\fonttbl{\f1\froman\fcharset2\fprq2 Symbol;}{\f4\froman\fcharset0\fprq2 Times New Roman;}}{\colortbl;\red0\green0\blue0;\red0\green0\blue255;\red0\green255\blue255;\red0\green255\blue0;
+\red255\green0\blue255;\red255\green0\blue0;\red255\green255\blue0;\red255\green255\blue255;\red0\green0\blue128;\red0\green128\blue128;\red0\green128\blue0;\red128\green0\blue128;\red128\green0\blue0;\red128\green128\blue0;\red128\green128\blue128;
+\red192\green192\blue192;}{\stylesheet{\nowidctlpar \f4 \snext0 Normal;}{\*\cs10 \additive Default Paragraph Font;}}{\info{\title Serial Communication Protocol Specification for SZ/SL Controllers}{\author Gaurav}{\operator Pre-installed Name}
+{\creatim\yr2001\mo2\dy14\hr15\min7}{\revtim\yr2001\mo2\dy14\hr15\min7}{\version1}{\edmins0}{\nofpages0}{\nofwords0}{\nofchars0}{\vern49197}}\widowctrl\ftnbj\aenddoc\makebackup\hyphcaps0\formshade \fet0\sectd \linex0 {\*\pnseclvl1
+\pnucrm\pnstart1\pnindent720\pnhang{\pntxta .}}{\*\pnseclvl2\pnucltr\pnstart1\pnindent720\pnhang{\pntxta .}}{\*\pnseclvl3\pndec\pnstart1\pnindent720\pnhang{\pntxta .}}{\*\pnseclvl4\pnlcltr\pnstart1\pnindent720\pnhang{\pntxta )}}{\*\pnseclvl5
+\pndec\pnstart1\pnindent720\pnhang{\pntxtb (}{\pntxta )}}{\*\pnseclvl6\pnlcltr\pnstart1\pnindent720\pnhang{\pntxtb (}{\pntxta )}}{\*\pnseclvl7\pnlcrm\pnstart1\pnindent720\pnhang{\pntxtb (}{\pntxta )}}{\*\pnseclvl8\pnlcltr\pnstart1\pnindent720\pnhang
+{\pntxtb (}{\pntxta )}}{\*\pnseclvl9\pnlcrm\pnstart1\pnindent720\pnhang{\pntxtb (}{\pntxta )}}\pard\plain \nowidctlpar \f4 {\b\fs28 Serial Communication Protocol Specification for SZ/SL Controllers.
+\par }{\fs28 
+\par Description: -
+\par \tab }
+\par \tab The communication network consists of one Master device, such as a QD2020 or a PC, and multiple slave devices, such as SZ and/or SL controller
+s. There cannot be multiple Master devices existing on any one network. Communication is always initiated    by the Master device to a specific Slave device. All of the Slave devices on a network have a unique address from 0-255 except the address 248. Al
+l messages from a Master require a response. Once a Master sends the message, it will wait for about 100msec. for a valid response. It performs 2 retries with the same waiting time. In the event of no response at all, the Master declares a Communication E
+rr
+or for that particular slave device. The master only sends one message at a time on a network. The slave devices on the network are always in the receive mode. Once Slave devices receive the Start of Message character, they engage themselves in a new mess
+age receive mode. Receipt of the End of Message character signals the slave device to process that message. A response will be sent from a Slave device only if it is addressed correctly and it has received valid Start and End of Message characters.  
+
+\par 
+\par {\fs28 Physical Characteristics: -
+\par 
+\par }\pard \fi-360\li720\nowidctlpar\tx720 {\f1 \'b7\tab }The communication interface is RS-485, 2 wire, half-duplex{\fs28  }operating at any of 2400, \tab 
+4800, 9600 or 19200 baud rate. The transmission format is 8 data bits with 1 start and 1 stop bit. No parity bit is used. (N-8-1)
+\par {\f1 \'b7\tab }All the communication characters are of ASCII-hex type.{\fs28  }
+\par \pard \nowidctlpar {\fs28 
+\par General Transmission Format from Master: -
+\par 
+\par \tab \tab \tab }{\fs28\ul >}{\fs28   }{\fs28\ul Address}{\fs28   }{\fs28\ul Command}{\fs28   }{\fs28\ul Position|Data}{\fs28  }{\fs28\ul Checksum}{\fs28  <}{\fs28\ul CR>}{\fs28 
+\par 
+\par }\pard \fi-360\li720\nowidctlpar\tx720 {\f1 \'b7\tab }A valid message always begins with a Start of Message character (>), followed by two characters representing th
+e address of the intended device on the network, ranging from 0 to 255 (i.e. 00 to FF). Any of the controllers on a network will respond to address 248.{\fs28 
+\par }{\f1 \'b7\tab }Command value is of one character from A/a to Z/z. Extended commands for TCS controllers start with character \ldblquote \{\ldblquote 
+ followed by the actual command character (A/a to Z/z). Extended commands for Energy Management non TCS controllers start with character \ldblquote [\ldblquote  followed by actual command character ( A/a to Z/z).    
+\par {\f1 \'b7\tab }The Position is from 0-15 for each parameter, mapped on a command string  position format as 4 characters 0001-8000, where Position 0=0001, 1=0002, 2=0004, 3=0008, 4=0010, 5=0020, 6=0040, 7=0080, 8=0100, 9=0200, 10=0400, 11=0800, 12=1000, 
+\tab 13=2000, 14=4000, 15=8000.
+\par {\f1 \'b7\tab }Data is 4 ASCII hex characters in length ranging from {\ul +}
+ 32767. Positive data starts with MS bit as 1 and negative data starts with MS bit as 0. The ASCII hex characters are transmitted MS byte to LS byte. For extended commands each command and each position within that command has its ow
+n defined data length. The Minimum data length is 4 characters and the maximum data length is 10 characters.    
+\par {\f1 \'b7\tab }The checksum is computed by adding the values of all the ASCII-hex characters received in the message string, excluding starting character \ldblquote {\b >}\rdblquote  or answer character \ldblquote {\i A}\rdblquote 
+. The sum is then divided by 256 and the integer reminder in hex becomes the checksum.{\fs28  }In the following read command-answer communication sequence,  {\fs28 \tab 
+\par }\pard \fi360\li360\nowidctlpar {\i >00p000494
+\par A8012CB} 
+\par \pard \li720\nowidctlpar the last two characters in each message string represent the checksum value of that message string. (i.e. {\i 94} and {\i CB} ) Checksum can be written as \ldblquote ??\rdblquote 
+ instead of exact calculated value for sending commands to controller, however controller always responds with the calculated checksum. An error message returned from a controller does not use a checksum.{\fs28 
+\par }\pard \fi-360\li720\nowidctlpar\tx720 {\f1 \'b7\tab }All of the messages are followed by a  carriage return character <{\i CR }> (13 decimal or 0D hex).{\fs28  }Receipt of this character always terminates a message. {\fs28 
+\par }\pard \nowidctlpar {\fs28  
+\par 
+\par Read Command Format from Master :-
+\par 
+\par \tab \tab }{\fs28\ul >}{\fs28   }{\fs28\ul Address}{\fs28   }{\fs28\ul Command}{\fs28   }{\fs28\ul Position}{\fs28   }{\fs28\ul Checksum}{\fs28  <}{\fs28\ul CR>}{\fs28 
+\par 
+\par }\pard \fi-360\li720\nowidctlpar\tx720 {\f1 \'b7\tab }This is the command used for  retrieving information from the controller. The addressed controller will respond to a valid command with an answer message string. {\fs28 
+\par }{\f1 \'b7\tab }Command is one character.  A Lower case letter is for reading values from the controller. However command \ldblquote L\rdblquote  , \ldblquote K\rdblquote  and \ldblquote M\rdblquote  are read only commands.
+\par {\f1 \'b7\tab }Multiple positions can be read except \lquote h\rquote  command. If the given positions are more than those of specified in that parameter then the controller ignores the rest of redundant positions. e.g. a command string of    {\i 
+>f8pffff??  }will be answered the same as a command string  of  {\i >f8p00ff?? 
+\par }\pard \nowidctlpar 
+\par {\fs28 Answer String Format from Slave for a read command:-
+\par 
+\par \tab \tab }{\fs28\ul A}{\fs28   }{\fs28\ul Data}{\fs28  }{\fs28\ul Checksum}{\fs28  <}{\fs28\ul CR>}{\fs28  
+\par 
+\par }\pard \fi-360\li720\nowidctlpar\tx720 {\f1 \'b7\tab }Controller responds to a valid read command according to this format. e.g. to read today\rquote 
+s date (which is 10 decimal) from controller (with address 12 decimal, command P, position 4 ), the master sends  {\i >0cp0010??}{\fs28   }and answer from the controller is {\i A800AD9.}{\i\fs28 
+\par }\pard \nowidctlpar {\fs28    }
+\par {\fs28 
+\par Write Command Format from Master:-
+\par 
+\par \tab \tab }{\fs28\ul >}{\fs28   }{\fs28\ul Address}{\fs28   }{\fs28\ul Command}{\fs28   }{\fs28\ul Position}{\fs28   }{\fs28\ul Data}{\fs28   }{\fs28\ul Checksum}{\fs28  <}{\fs28\ul CR>}{\fs28 
+\par }
+\par \pard \fi-360\li720\nowidctlpar\tx720 {\f1 \'b7\tab }Command should be upper case letter, except \ldblquote L\rdblquote , \ldblquote K\rdblquote  and \ldblquote M\rdblquote   which are used for reading and are read only commands .
+\par {\f1 \'b7\tab }Controller acknowledges a correct Write command string by sending a character \ldblquote {\b A}\rdblquote  and a carriage return character <CR>.
+\par {\f1 \'b7\tab }To write today\rquote s date as 21 decimal to controller (with address 248 decimal)
+\par \pard \fi360\li360\nowidctlpar {\i >f8P00108015??}
+\par \pard \nowidctlpar 
+\par {\fs28 
+\par Answer String Format from Slave for a write command:-
+\par 
+\par \tab \tab }{\fs28\ul A}{\fs28   <}{\fs28\ul CR>}{\fs28  
+\par }
+\par \pard \fi-360\li720\nowidctlpar\tx720 {\f1 \'b7\tab }Controller responds to a valid write command with \ldblquote {\i A\rdblquote .}{\b  
+\par }\pard \nowidctlpar   
+\par {\fs28 
+\par Controller Error Messages Format :-
+\par 
+\par }\tab \tab {\fs28\ul N}{\fs28  }{\fs28\ul Error No.}{\fs28  <}{\fs28\ul CR>}{\fs28 
+\par }
+\par \pard \fi-360\li720\nowidctlpar\tx720 {\f1 \'b7\tab }
+The controller responds with the following error numbers when it receives a  command string, which is not understood. However in that command string a valid start of the message character, controller address, and end of message character must exist to get
+ an error message from the controller.
+\par {\f1 \'b7\tab }Error No. 01 represents command string not understood by the addressed controller. Check the parameter opcode list for that controller type.
+\par {\f1 \'b7\tab }Error No. 02 represents checksum error in a command string.
+\par {\f1 \'b7\tab }Error No. 07 represents invalid ASCII hex character in a command string.
+\par \pard \nowidctlpar 
+\par {\fs28 
+\par Command \ldblquote a\rdblquote  with position 0 and 1 is reserved for reading controller type and version number. This should be not be used as any other write messages.}  
+\par 
+\par {\fs28 Read Command Format from Master for an Extended command :-
+\par 
+\par For TCS controllers
+\par \tab \tab }{\fs28\ul >}{\fs28   }{\fs28\ul Address}{\fs28   }{\fs28\ul \{}{\fs28  }{\fs28\ul Command}{\fs28   }{\fs28\ul Position}{\fs28   }{\fs28\ul Checksum}{\fs28  <}{\fs28\ul CR>
+\par }{\fs28 
+\par For Energy Management Non TCS controllers 
+\par  \tab \tab }{\fs28\ul >}{\fs28   }{\fs28\ul Address}{\fs28   }{\fs28\ul [}{\fs28  }{\fs28\ul Command}{\fs28   }{\fs28\ul Position}{\fs28   }{\fs28\ul Checksum}{\fs28  <}{\fs28\ul CR>}
+\par \pard \fi-360\li720\nowidctlpar\tx720 {\f1 \'b7\tab }This is the extended command version of the protocol used for  retrieving information from the controller.{\fs28  }Controller will respond to a valid command with an answering message string.  {\fs28 
+
+\par }{\f1 \'b7\tab }Command is one character.  A lower case letter is used for reading values from the controller. However upper case \ldblquote L\rdblquote  , \ldblquote K\rdblquote  and \ldblquote M\rdblquote  are read only commands.
+\par \pard \nowidctlpar 
+\par  {\fs28 Answer String Format from Slave for an Extended read command:-
+\par 
+\par \tab \tab }{\fs28\ul A}{\fs28   }{\fs28\ul Message Length}{\fs28  }{\fs28\ul Address}{\fs28  }{\fs28\ul Data}{\fs28  }{\fs28\ul Checksum}{\fs28  <}{\fs28\ul CR>}{\fs28  
+\par 
+\par }\pard \fi-720\li720\nowidctlpar * \tab All of the acknowledge responses from the controller start with the character \ldblquote A\rdblquote 
+.  Message Length is 2 characters and it represents the total number of bytes in the rest of the message body including checksum and excluding the <CR>. Address is 2 characters and it represents answering device\rquote 
+s address. Since each position for each extended command has different data length, the length can not be generalized.     
+\par \pard \nowidctlpar  {\i\fs28 
+\par }{\fs28 Write Command Format from Master for an extended command :-
+\par 
+\par For TCS controllers
+\par \tab \tab }{\fs28\ul >}{\fs28   }{\fs28\ul Address}{\fs28   }{\fs28\ul \{}{\fs28  }{\fs28\ul Command}{\fs28   }{\fs28\ul Position}{\fs28   }{\fs28\ul Data}{\fs28   }{\fs28\ul Checksum}{\fs28  }{\fs28\ul CR}{\fs28 
+\par }
+\par {\fs28 For Energy Management Non TCS controllers 
+\par \tab \tab }{\fs28\ul >}{\fs28   }{\fs28\ul Address}{\fs28   }{\fs28\ul [}{\fs28  }{\fs28\ul Command}{\fs28   }{\fs28\ul Position}{\fs28   }{\fs28\ul Data}{\fs28   }{\fs28\ul Checksum}{\fs28  }{\fs28\ul CR}{\fs28 
+\par }
+\par \pard \fi-360\li720\nowidctlpar\tx720 {\f1 \'b7\tab }Command should be upper case letter, except \ldblquote L\rdblquote , \ldblquote K\rdblquote  and \ldblquote M\rdblquote   which are used for reading, and are read only commands..
+\par {\f1 \'b7\tab }Controller acknowledges a correct Write command string by sending a character \ldblquote {\b A}\rdblquote  and a carriage return character <CR>.
+\par \pard \nowidctlpar  {\fs28 
+\par Answer String Format from Slave for an extended write command:-
+\par 
+\par \tab }{\fs28\ul A}{\fs28   <}{\fs28\ul CR>}{\fs28  
+\par }
+\par \pard \fi-360\li720\nowidctlpar\tx720 {\f1 \'b7\tab }Controller responds to a valid write command with \ldblquote {\i A\rdblquote .}{\b  }
+\par \pard \nowidctlpar 
+\par 
+\par 
+\par }

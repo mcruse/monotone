@@ -1,0 +1,142 @@
+<%    
+# Copyright (c) 2005 Richards-Zeta
+# $Name: mediator_3_1_2_branch $
+# $Id: copypage.psp 20101 2011-03-06 16:02:15Z bhagn $
+import os
+import sys
+import errno
+import shutil
+import commands
+from mpx.lib.http import MultipartCollector
+from mpx import properties
+
+from mpx.lib import rzutils
+
+if request.get_protocol() == 'http':
+    root = properties.HTTP_ROOT
+else:
+    root = properties.HTTPS_ROOT
+        
+m = MultipartCollector(request)
+sitedefsdir = 'sitedefs'
+
+def installSiteBuilderFile(fromfile, tofile):
+    fullfromfile = os.path.normpath(os.path.join(root, fromfile))
+    fulltofile = os.path.normpath(os.path.join(root, tofile))
+
+    if not os.path.exists(fullfromfile):
+        response.send_error(404, 'Not Found')
+    else:
+        if not os.path.exists(fulltofile):
+            shutil.copy2(fullfromfile, fulltofile)
+
+installSiteBuilderFile('omega/sitebuilder/home_main.html', 'home_main.html')
+ 
+def copySiteBuilderFile(fromfile, tofile):
+    fullfromfile = os.path.normpath(os.path.join(root, fromfile))
+    fulltofile = os.path.normpath(os.path.join(root, tofile))
+
+    if not os.path.exists(fullfromfile):
+        response.send_error(404, 'Not Found')
+    else:
+        shutil.copy2(fullfromfile, fulltofile)
+        rzutils.wefs_cache(fulltofile)
+
+def mkdirs(newdir, mode=0777):
+    try:
+        oldmask = os.umask(0)
+        try:
+            os.makedirs(newdir, mode)
+        except OSError, err:
+            if err.errno != errno.EEXIST or not os.path.isdir(newdir):
+                raise
+    finally:
+        os.umask(oldmask)
+
+mkdirs(os.path.join(root,sitedefsdir), 0755)
+
+if m.has_key('newpage'):
+    newsitename = m['newpage'].value
+    newsitename = newsitename.replace(' ','_')
+    newsitename = newsitename.replace("'","")
+    newsitename = newsitename.replace('"','')
+else:
+    psp.write('Form did not have correct newpage element<br>')
+    exit()
+
+#copy .wdx file
+if m.has_key('oldpage'):
+    oldsitename = m['oldpage'].value
+    rdfn = os.path.join(root,sitedefsdir,oldsitename + '.wdx')
+    wrfn = os.path.join(root,sitedefsdir,newsitename + '.wdx')
+    try:
+        rdFile = open(rdfn,'r')
+        wrFile = open(wrfn,'w')
+        oldsitestr = '''<var name='sitename'><string>''' + oldsitename + '</string></var>'
+        newsitestr = '''<var name='sitename'><string>''' + newsitename + '</string></var>'
+        wrFile.write(rdFile.read().replace(oldsitestr,newsitestr))
+        wrFile.close()
+        rdFile.close()
+    except Exception,e:
+        psp.write('Error: %s<br>' % e)
+        exit()
+else:
+    psp.write('Form did not have correct wddxinfo element<br>')
+    exit()
+
+#copy .html file
+rdfn = os.path.join(root,oldsitename + '.html')
+wrfn = os.path.join(root,newsitename + '.html')
+try:
+    rdFile = open(rdfn,'r')
+    wrFile = open(wrfn,'w')
+    for s in rdFile.xreadlines():
+        wrFile.write(s)
+    wrFile.close()
+    rdFile.close()
+    rzutils.wefs_cache(wrfn)
+except Exception,e:
+    psp.write('Error: %s<br>' % e)
+    exit()
+
+%>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>O M E G A  ::: [ Richards | Zeta ] - Web SiteBuilder</title>
+<script src="../includes/js/global.js" type="text/javascript"></script>
+<script language="JavaScript" src="/webapi/js/sdk2.js"></script>
+<link rel="stylesheet" href="../includes/css/global.css">
+</head>
+<body marginheight="0" marginwidth="0" topmargin="0" leftmargin="0">
+<div align="left" style="height:400px; width:585px; background-color:#ffffff">
+<span class="PageTitle">Copying a Site Page</span>
+<div class="line-dotted"><img border="0" src="../media/images/pxl.gif" width="1" height="1" alt=""></div>
+Your site page has been successfully copied.  Click the view button below to view your page, click the edit button to modify your page, or click the continue button to return to the Web SiteBuilder menu.<br><br>
+<div align="center">
+<a href="javascript:WebExpress_FileOpsView()"><img src="../media/images/btn_view.gif" width="181" height="23" alt="" border="0"></a><br><br>
+<a href="javascript:WebExpress_FileOpsEdit()"><img src="../media/images/btn_edit.gif" width="181" height="23" alt="" border="0"></a><br><br>
+<a href="javascript:WebExpress_Reload();"><img border="0" src="../media/images/btn_sitebuilder_continue.gif" width="181" height="23" alt="" align="center" vspace="3"></a>
+</div>
+</div>
+<script language="JavaScript">
+function WebExpress_FileOpsEdit(){
+var myDate = new Date();
+<%
+psp.write('top.loadIFrame("/omega/sitebuilder/index.psp?showallfiles=false&file=%s.wdx&cachekiller=" + myDate.valueOf());' % (newsitename))
+%>
+}
+function WebExpress_FileOpsView() {
+var myDate = new Date();
+<%
+psp.write('var myURL = window.location.protocol + "//" + window.location.host + "/" + "%s" + ".html?cachekiller=" + myDate.valueOf();' % newsitename)
+psp.write('var win = window.open(myURL,"WebSiteBuilderView_%s");' % newsitename)
+%>
+}
+function WebExpress_Reload() {
+var myDate = new Date();
+top.location = "/omega/sitebuilder/index.html?cachekiller=" + myDate.valueOf();
+}
+</script>
+</body>
+</html>

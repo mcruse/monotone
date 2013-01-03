@@ -1,0 +1,78 @@
+@CHARSET "UTF-8";
+
+/* Applies to 'select' element within Alarm Managemenet table */
+div.control-group {
+    margin: 5px;
+}
+
+div#update-control {
+    float: left;
+}
+
+div#row-count-control {
+    float: right;
+}
+
+table#events-table {
+    clear: both;
+}
+
+td.select {
+    width: 90px;
+}
+
+td.select select {
+    width: 100%;
+    font-size: 10px;
+}
+
+ul.messages {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+li.message {
+    margin: 0;
+    padding: 0;
+}
+
+td.description ul.messages li a {
+    text-decoration: none;
+}
+
+td.description ul.expandible li {
+    display: none;
+}
+
+td.description ul.expandible li.newest {
+    display: list-item;
+}
+
+td.description ul.expandible li.newest a:hover {
+    text-decoration: underline;
+}
+
+td.description ul.expanded li.message {
+    display: list-item;
+}
+
+/* Applies to div inside table-headers for sort-able columns. */
+img.sort {
+    width: 8px;
+    height: 7px;
+    float: right;
+    margin: 3px 0;
+}
+
+img.up {
+    background: transparent url(/public/images/events/sort_arrow_up.png) no-repeat top right;
+}
+
+img.down {
+    background: transparent url(/public/images/events/sort_arrow_down.png) no-repeat top right;
+}
+
+tr.table-footer td {
+    text-align: center;
+}

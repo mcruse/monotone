@@ -1,0 +1,51 @@
+/******************************
+* Global Generic Styles 
+******************************/
+
+body {
+	font-family: verdana;
+	font-size: 16px;
+	color: #666666;
+    background-color: #FFFFFF;
+}
+	
+div.env_header{ 
+  font-size: 20px;
+  color: #808080;
+  font-weight: bold;
+  font-family:Arial,Helvetica,Times;
+} 
+
+input, select {
+	font-family: verdana;
+	font-size: 16px;
+	color: #666666;
+	}
+
+td.header{ 
+  background:#FFFFFF;
+  height:150px;
+}
+ 
+td.footer{ 
+  background:#aaaaaa;
+  height:20px;
+  text-align:right;
+  padding:2px 
+ }
+
+span.footer{ 
+  color:#FFFFFF;
+  font-size:15px;
+ }
+
+span.header{ 
+  font-size: 30px;
+} 
+
+a.home{ 
+  text-decoration:none;
+  font-size:16px;
+  font-weight:bold;
+  color:#0000FF ;
+ }

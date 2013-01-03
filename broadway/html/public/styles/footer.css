@@ -1,0 +1,16 @@
+@CHARSET "UTF-8";
+
+div#footer {
+    /* Attach footer to bottom of view port */
+    position: fixed;
+    top: auto;
+    right: auto;
+    bottom: 0;
+    left: 0;
+    margin-left: 15px;
+    margin-bottom: 15px;
+    color:#FFFFFF;
+    line-height: 13px;
+    font-weight:normal;
+}
+

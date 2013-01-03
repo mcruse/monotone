@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	implements="mx.core.IToolTip"
+	backgroundAlpha="1"
+	backgroundColor="0xFFFFFF"
+	borderStyle="solid"	
+	borderThickness="2"
+	borderColor="0xFFFFFF"
+	dropShadowEnabled="true"
+	mouseEnabled="false"
+	resize="adjustPosition(event)"
+	cornerRadius="5"
+	minHeight="10" minWidth="40"
+	verticalGap="2">
+	<mx:Script>
+		<![CDATA[
+			import com.cisco.nbm.entities.EntityProperty;
+			import com.cisco.nbm.entities.Entity;
+			import mx.core.Application;
+			
+			[Bindable]
+			private var _text:String;
+			
+			private var _entity:Entity;
+			
+			public function get text():String
+			{
+				return _text;
+			}
+			
+			public function set text(value:String):void
+			{
+				if (value != _text)
+				{
+					_text = value;
+					invalidateSize();
+					adjustPosition(	null);		
+				}
+			}
+			
+			public function set entity(value:Entity):void
+			{
+				if (value != _entity)
+				{
+					_entity = value;
+					
+					if (_entity == null)
+					{
+						text = null;
+						labelDescription.text = "";
+					}
+					else
+					{
+						var prop:EntityProperty = _entity.getPropertyByName("description");
+						var description:String = null;
+						
+						if (prop != null)
+						{
+							description = prop.value as String;
+						}
+						
+						if (description == null)
+						{
+							labelDescription.visible = false;
+							labelDescription.height = 0;
+							invalidateSize();
+						} 
+						else
+						{
+							labelDescription.visible = true;
+							labelDescription.text = description;
+							labelDescription.validateNow();
+							labelDescription.height = labelDescription.measuredHeight;
+						} 
+						
+						text = _entity.label;
+					}
+				}
+			}
+			
+			private function adjustPosition(event:Event):void
+			{
+				var screen:Rectangle = systemManager.screen;
+				
+				var screenTop:Number = screen.y;
+				if (this.y < screenTop)
+				{
+					this.y = screenTop;
+				}
+				
+				var screenBottom:Number = screen.y + screen.height;
+				var thisBottom:Number = this.y + this.height;
+				
+				if (thisBottom > screenBottom)
+				{
+					this.y -= thisBottom - screenBottom;
+				}
+				
+				var screenLeft:Number = screen.x;
+				if (this.x < screenLeft)
+				{
+					this.x = screenLeft;
+				}
+				
+				var screenRight:Number = screen.x + screen.width;
+				var thisRight:Number = this.x + this.width;
+				if (thisRight > screenRight)
+				{
+					this.x -= thisRight - screenRight;
+				}
+			}
+		]]>
+	</mx:Script>
+	<mx:Label id="labelName" fontWeight="bold" text="{_text}" 
+		paddingBottom="0"/>
+	<mx:Text id="labelDescription" height="0" visible="false" 
+		/>
+</mx:VBox>

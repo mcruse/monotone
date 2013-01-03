@@ -1,0 +1,12 @@
+class UsapRequest {
+    uint8 startCode = 0xEE;
+    vbuffer1 vData;
+    uint16 crc = 0x0000;
+}
+
+class UsapResponse {
+    uint8 startCode;
+    vbuffer1 vData;
+    uint16 crc;
+}
+    

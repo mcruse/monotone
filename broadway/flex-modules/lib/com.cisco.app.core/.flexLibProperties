@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties version="1">
+  <includeClasses>
+    <classEntry path="com.cisco.app.core.ArrayUtils"/>
+    <classEntry path="com.cisco.app.core.IDisposable"/>
+    <classEntry path="com.cisco.app.core.async.AsyncMethod"/>
+    <classEntry path="com.cisco.app.core.async.EmptyCall"/>
+    <classEntry path="com.cisco.app.core.clipboard.IInternalClipboardService"/>
+    <classEntry path="com.cisco.app.core.clipboard.InternalClipboardService"/>
+    <classEntry path="com.cisco.app.core.commands.Command"/>
+    <classEntry path="com.cisco.app.core.commands.CommandChangeEvent"/>
+    <classEntry path="com.cisco.app.core.commands.CommandManager"/>
+    <classEntry path="com.cisco.app.core.commands.ICommandService"/>
+    <classEntry path="com.cisco.app.core.jobs.Job"/>
+    <classEntry path="com.cisco.app.core.operations.AbstractOperation"/>
+    <classEntry path="com.cisco.app.core.operations.AbstractUndoableOperation"/>
+    <classEntry path="com.cisco.app.core.operations.IOperation"/>
+    <classEntry path="com.cisco.app.core.operations.IOperationHistoryService"/>
+    <classEntry path="com.cisco.app.core.operations.IProgressMonitor"/>
+    <classEntry path="com.cisco.app.core.operations.IUndoableOperation"/>
+    <classEntry path="com.cisco.app.core.operations.NullProgressMonitor"/>
+    <classEntry path="com.cisco.app.core.operations.OperationHistory"/>
+    <classEntry path="com.cisco.app.core.operations.OperationHistoryEvent"/>
+    <classEntry path="com.cisco.app.core.operations.ProgressMonitor"/>
+    <classEntry path="com.cisco.app.core.operations.ProgressMonitorEvent"/>
+    <classEntry path="com.cisco.app.core.operations.Status"/>
+    <classEntry path="com.cisco.app.core.operations.UndoGroup"/>
+    <classEntry path="com.cisco.app.core.operations.UndoableOperationEvent"/>
+    <classEntry path="com.cisco.app.core.ui.ExecutionEvent"/>
+    <classEntry path="com.cisco.app.core.ui.HandlerBase"/>
+    <classEntry path="com.cisco.app.core.ui.HandlerManager"/>
+    <classEntry path="com.cisco.app.core.ui.IHandler"/>
+    <classEntry path="com.cisco.app.core.ui.IHandlerService"/>
+    <classEntry path="com.cisco.cisco_internal"/>
+    <classEntry path="com.cisco.util.PythonDictionaryParsing"/>
+    <classEntry path="com.cisco.util.UniqueNameFinder"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>

@@ -1,0 +1,74 @@
+<!--
+Copyright (C) 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<table id="targetGrid"
+    autoWidth="true"
+    selectionMode="none"
+    dojoType="dojox.grid.DataGrid"
+    style="height: 250px; margin: 10px 0 10px 0;">
+    <script type="dojo/method" event="onStyleRow" args="row">
+        var tableRows = dojo.query("table.dojoxGridRowTable tr", row.node);
+        if (row.odd) {
+            tableRows.removeClass("light");
+            tableRows.addClass("dark");
+        } else {
+            tableRows.removeClass("dark");
+            tableRows.addClass("light");
+        }
+        if (false && row.over)
+            dojo.removeClass(row.node, "dojoxGridRowOver");
+        row.over = false;
+    </script>
+    <thead>
+        <tr>
+            <th width="200px" field="name">Name</th>
+            <th field="parent" width="200px"
+                formatter="utils.configure.trigger.formatParent">
+                Manager
+            </th>
+            <th width="20px"
+                editable="true"
+                field="selected"
+                alwaysEditing="true"
+                cellType="dojox.grid.cells.Bool">
+                +
+            </th>
+        </tr>
+    </thead>
+</table>  
+<form id="targetEditor" dojoType="dijit.form.Form">
+    <button id="targetCommit" type="button" dojoType="dijit.form.Button">
+        Commit
+    </button>
+    <button id="targetCancel" type="button" dojoType="dijit.form.Button">
+        Cancel
+    </button>
+</form>

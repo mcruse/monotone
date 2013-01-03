@@ -1,0 +1,74 @@
+<!--
+Copyright (C) 2010 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<div dojoType="nbmweb.edit.Node">
+    <div label="Alarm when" dojoType="nbmweb.edit.InputRow">
+        <select name="comparison"
+            style="width: 15em;" class="rowValue"
+            dojoType="dijit.form.Select" />
+            <option value="less_than">
+                input node <em>&lt;</em> constant value
+            </option>
+            <option value="greater_than">
+                input node <em>&gt;</em> constant value
+            </option>
+        </select>
+    </div>
+    <div label="Input node" dojoType="nbmweb.edit.InputRow">
+        <input name="input" class="rowValue" dojoType="dijit.form.TextBox" />
+        <button dojoType="dijit.form.Button" type="button">
+            <script type="dojo/method" event="onClick">
+                var container = this.domNode.parentNode;
+                var parent = dijit.getEnclosingWidget(container);
+                var inputId = parent.input.attr("id");
+                utils.select.nodes.open(inputId);
+            </script>
+            ...
+        </button>
+    </div>
+    <div label="Constant value" dojoType="nbmweb.edit.InputRow">
+        <input name="constant"
+            type="text" class="rowValue" dojoType="dijit.form.ValidationTextBox"
+			regExp="^[\d]*$" />
+    </div>
+    <div label="Poll period" dojoType="nbmweb.edit.InputRow">
+        <input name="poll_period" type="text"
+            class="rowValue" min="0.2" dojoType="dijit.form.TextBox" />
+    </div>
+    <div label="Hysteresis" dojoType="nbmweb.edit.InputRow">
+        <input name="hysteresis" type="text"
+            class="rowValue" min="0.2" dojoType="dijit.form.TextBox" />
+    </div>
+    <div label="Alarm delay" dojoType="nbmweb.edit.InputRow">
+        <input name="alarm_delay" type="text"
+            class="rowValue" min="0.2" dojoType="dijit.form.TextBox" />
+    </div>
+</div>

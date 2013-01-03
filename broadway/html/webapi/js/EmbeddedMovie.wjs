@@ -1,0 +1,315 @@
+/*
+Purpose: Generic Node widget for WebExpress
+$Name: mediator_3_1_2_branch $
+$Id: EmbeddedMovie.wjs 20101 2011-03-06 16:02:15Z bhagn $
+*/
+
+/*************************************************************************
+ * The following section lifted straight from EmbeddedGraph.wjs
+ ***/
+function CFGParameter(widget, attribute, cfg_param, default_value,
+		      /* [ */ override_encode /* ] */) {
+  this.widget = widget;
+  this.attribute = attribute;
+  this.cfg_param = cfg_param;
+  this.default_value = default_value;
+  this.override_encode = override_encode;
+  widget[attribute] = default_value;
+  return;
+}
+
+CFGParameter.prototype.needsSpecifying = function () {
+  var encoded_attr = this.encode(this.widget[this.attribute]);
+  var encoded_default = this.encode(this.default_value);
+  var result = (encoded_attr != encoded_default);
+  return result;
+}
+
+CFGParameter.prototype.encode = function (value) {
+  if (this.override_encode != undefined) {
+    var result = this.override_encode.apply(this, [value]);
+    return result;
+  }
+  return value.toString();
+}
+
+CFGParameter.prototype.asAddVariable = function () {
+  var result = ('so.addVariable("' +
+		this.cfg_param +
+		'", "' +
+		this.encode(this.widget[this.attribute]) +
+		'");\n');
+  return result;
+}
+/***
+ * Finish copy from EmbeddedGraph.wjs
+ ************************************************************************/
+
+function EmbeddedMovie() {
+  this.base = Widget;
+  this.base();
+  this._name = 'EmbeddedMovie';
+  this.config_description = '';
+  
+  this.cfg_dict = {};
+  this._movie_type = '';
+  this._movie_height = '200px';
+  this._movie_width = '200px';
+  this._z_index = '1000';
+
+  this.node_selector_subject_node = 'true';
+  this.color_selector_text_color = 'true';
+  this.color_selector_background_color = 'true';
+  
+  /*********************
+   * The following comes from Constructor in EmbeddedGraph.wjs
+   ***/  
+  var strip_regex = new RegExp("^\\s*(.*)\\s*$", "");
+  var encode_strip = function (value) {
+    var result = strip_regex.exec(value.toString());
+    if (result == null || result.length != 2) {
+      return "";
+    }
+    return result[1];
+  }
+
+  var color_regex = new RegExp("^\\W*([0-9A-Fa-f]+)\\W*$", "");
+  var encode_color = function (color) {
+    var hex = color_regex.exec(color);
+    if (hex == null || hex.length != 2) {
+      return value;
+    }
+    return "0x" + hex[1];
+  }
+
+  var encode_csl = function (csl) {
+    var columns = csl.split(',');
+    for (var i=0; i<columns.length; i++) {
+      columns[i] = encode_strip(columns[i]);
+    }
+    return columns.join();
+  }
+
+  this.add_cfg_param('_subject_node', 'cfg_node_uri', '', encode_strip);
+  this.add_cfg_param('_movie_title', 'cfg_titlebar.title_text', '', encode_strip);
+  this.add_cfg_param('_text_fontname', 'cfg_text_format.font', "Verdana", encode_strip);
+  this.add_cfg_param('_text_fontsize', 'cfg_text_format.size', "", encode_strip);
+  this.add_cfg_param('_text_color', 'cfg_text_format.color', "#D0D5D8", encode_color);
+  this.add_cfg_param('_background_color', 'cfg_background.fill_style.rgb', "#1F282D", encode_color);
+  this.movie_id = null;
+  this.EDIT_DOC_HACK = true;
+  this.edit_doc = null;
+  /***
+   * End copy from Constructor in EmbeddedGraph.wjs
+   ********************/
+}
+EmbeddedMovie.prototype = new Widget();
+
+EmbeddedMovie.prototype.add_cfg_param = function (attribute_name, cfg_param_name, default_value, override_encode) {
+  var cfg_param_obj = new CFGParameter(this, attribute_name, cfg_param_name, default_value, override_encode);
+  this.cfg_dict[attribute_name] = cfg_param_obj;
+}
+
+EmbeddedMovie.prototype.generate_movie_id = function() {
+	var root = 'movie';
+	var count = 1;
+	while (this.edit_doc.getElementById(root + count)) {
+		count ++;
+	}
+	return root + count;
+}
+
+EmbeddedMovie.prototype.after_config_table = function() {
+  document.getElementById('EmbeddedMovie_movie_type').value = this._movie_type;
+}
+
+EmbeddedMovie.prototype.get_movie_type_defaults = function(){
+  var select = document.createElement('select');
+  select.setAttribute('id','EmbeddedMovie_movie_type');
+  var option =  document.createElement('option');
+  var types = ['boiler', 'chiller', 'cooling-tower', 'skid', 'schematic'];
+  for (var i = 0; i < types.length; i++) {
+  	var clone = option.cloneNode(true);
+  	clone.innerHTML = clone.value = types[i];
+  	select.appendChild(clone);
+  }
+  return select;
+}
+
+EmbeddedMovie.prototype.init = function(element) {
+  Widget_log('EmbeddedMovie.init(), at top');
+  this._z_index = element.getAttribute('zindex');
+  var infodiv = this.get_element(element,'div','info');
+  this._movie_type = infodiv.getAttribute('movie_type');
+  this._movie_title = infodiv.getAttribute('movie_title');
+  this._movie_height = infodiv.getAttribute('movie_height');
+  this._movie_width = infodiv.getAttribute('movie_width');
+
+  // Load all "_voodoo" instance attributes (in cfg_dict) from the
+  // info DIV "voodoo" attributes:
+  for (var name in this.cfg_dict) {
+    var value = infodiv.getAttribute(name.slice(1));
+    if (value != undefined) {
+      this[name] = value;
+    }
+  }
+}
+
+EmbeddedMovie.prototype.init_element = function() {
+	if (this.edit_doc == null) {
+		alert("Internal Error: this.edit_doc must be externally set.");
+	}
+	var edit_doc = this.edit_doc;
+	this.movie_id = this.generate_movie_id();
+	var element = edit_doc.createElement('div');
+	element.setAttribute('widget', this._name);
+	element.setAttribute('version','1_0_dev_2');
+	element.setAttribute('zindex', this._z_index);
+	element.setAttribute('overflow', 'visible');
+	element.style.position = 'absolute';
+	element.style.zIndex = this._z_index;
+	this.element = element;
+	
+	var container = edit_doc.createElement('div');
+	container.setAttribute('element','container');
+	container.style.position = 'relative';
+	container.style.verticalAlign = 'middle';
+	container.style.height = 'auto';
+	container.style.width = 'auto';
+	container.style.backgroundColor = 'transparent';
+	container.style.top = '0';
+	container.style.left = '0';
+	container.style.zIndex = '0';
+	
+	var infodiv = edit_doc.createElement('div');
+	infodiv.setAttribute('element','info');
+	infodiv.setAttribute('movie_type', this._movie_type);
+	infodiv.setAttribute('movie_title', this._movie_title);
+	infodiv.setAttribute('movie_height', this._movie_height);
+	infodiv.setAttribute('movie_width', this._movie_width);
+	// Load all "_voodoo" instance attributes (in cfg_dict) to the
+	// info DIV "voodoo" attributes:
+	for (var name in this.cfg_dict) {
+		infodiv.setAttribute(name.slice(1), this[name]);
+	}
+	infodiv.style.position = 'relative';
+	infodiv.style.backgroundColor = 'transparent';
+	infodiv.style.top = '0';
+	infodiv.style.left = '0';
+	infodiv.style.height = 'auto';
+	infodiv.style.width = 'auto';
+	infodiv.style.zIndex = '0';
+	container.appendChild(infodiv);	
+	
+	var movie_element = edit_doc.createElement('div');
+	movie_element.setAttribute('element','embedded_movie');
+	movie_element.setAttribute('id', this.movie_id);
+	movie_element.style.position = 'relative';
+	movie_element.style.backgroundColor = 'transparent';
+	movie_element.style.top = '0';
+	movie_element.style.left = '0';
+	movie_element.style.height = this._movie_height;
+	movie_element.style.width = this._movie_width;
+	movie_element.style.zIndex = '0';
+	movie_element.innerHTML = "Loading Movie for " + this._subject_node;
+	container.appendChild(movie_element);
+
+	var script_element = edit_doc.createElement('script');
+	script_element.setAttribute('type',"text/javascript");
+	script_element.text = this.swfObjectScript(this.movie_id);
+	var insert_script = function (c, e) {
+		// append script element e into container c AFTER the
+		// swfobject script has loaded.
+		c.appendChild(e);
+		return;
+	}
+	
+	var head = edit_doc.getElementsByTagName('head').item(0);
+	if (edit_doc.getElementById('swfobject') == undefined) {
+		var swfobject_element = edit_doc.createElement('script');
+		swfobject_element.id = 'swfobject';
+		swfobject_element.type = 'text/javascript';
+		swfobject_element.src = '/graphtool/swfobject.js';
+		if (swfobject_element.addEventListener) {
+			insert_script(container, script_element);
+		} else {
+			swfobject_element.onreadystatechange = function () {
+				if (this.readyState == "loaded") {
+					insert_script(container, script_element);
+				}
+				return;
+			}
+		}
+		head.appendChild(swfobject_element);
+	} else {
+		insert_script(container, script_element);
+	}
+	this.element.appendChild(container);
+}
+
+/*************************************************************************
+ * The following section lifted from EmbeddedGraph.wjs
+ ***/
+EmbeddedMovie.prototype.encodeVariableValue = function (config_value) {
+  return config_value;
+}
+
+EmbeddedMovie.prototype.addVariableScript = function (config_variable, config_value) {
+  config_variable = this.encodeVariableValue(config_variable);
+  return (
+    'so.addVariable("' + config_variable + '", "' + config_value + '");\n'
+    );
+}
+
+EmbeddedMovie.prototype.swfObjectScript = function (){
+  var script_text = '\n';
+  script_text += 'if (window != undefined && window.parent != undefined';
+  script_text += ' && window.parent.WebExpressEditor) {\n';
+  script_text += 'var e = document.getElementById("'+this.movie_id+'");';
+  script_text += 'e.innerHTML = "This EmbeddedMovie is disabled while ';
+  script_text += 'editting the web-page.";';
+  script_text += '} else {\n';
+  script_text += 'var so = new SWFObject("/omega/media/movies/' + this._movie_type + '.swf", ';
+  script_text += '"' + this.movie_id + '_swf", ';
+  script_text += '"' + parseInt(this._movie_width) + '", ';
+  script_text += '"' + parseInt(this._movie_height) + '", ';
+  script_text += '"8");\n';
+  script_text += 'so.addParam("wmode", "opaque");\n';
+  for (var attr in this.cfg_dict) {
+    var cfg_param_obj = this.cfg_dict[attr];
+    if (cfg_param_obj.needsSpecifying()) {
+      script_text += cfg_param_obj.asAddVariable();
+    }
+  }
+  script_text += 'so.write("' + this.movie_id + '");\n'
+  script_text += '}\n';
+
+  return script_text;
+}
+/***
+ * Finish lifed from EmbeddedGraph.wjs
+ ************************************************************************/
+
+EmbeddedMovie.prototype.create = function (){
+  this.init_element();
+}
+
+function EmbeddedMovie_factory(){
+  return new EmbeddedMovie();
+}
+
+function EmbeddedMovieGetElement(element,t,element_name){
+  var index;
+  var e = null;
+  var elements = element.getElementsByTagName(t);
+  for (index=0;index<elements.length;index++){
+    if (elements[index].getAttribute('element') &&
+        elements[index].getAttribute('element') == element_name){ 
+      e = elements[index];
+      break;
+    }
+  }
+  return e
+}
+
+var EmbeddedMovie_loaded = true;

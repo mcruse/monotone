@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:components="com.cisco.nbm.scheduler.components.*"
+	creationComplete="init()"
+	layout="vertical"
+	>
+	<mx:Script>
+		<![CDATA[
+			import com.cisco.nbm.scheduler.components.WeekdayTimeValueEditorEvent;
+			import com.cisco.nbm.scheduler.DailyEntry;
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]
+			public var mondayEntries:ArrayCollection = new ArrayCollection();
+			
+			private function init():void
+			{
+				// create a bunch of fake entries
+				
+				var entry:DailyEntry = new DailyEntry();
+				entry = DailyEntry.fromValues("occupied", "05:30:00", "10");
+				//entry.color = 0x0f0f0f;
+				mondayEntries.addItem(entry);
+				
+				entry = DailyEntry.fromValues("unocuppied", "13:00:00", "0");
+				//entry.color = 0xf0f0f0;
+				mondayEntries.addItem(entry);
+				
+				
+				entry = DailyEntry.fromValues("unocuppied", "22:10:00", "0");
+				//entry.color = 0xffccdd;
+				mondayEntries.addItem(entry);
+				
+				mondayTVEditor.entries = mondayEntries;
+			}
+			
+			private function handleTVChange():void
+			{
+				timeValueTable.selectedItem = mondayTVEditor.selectedEntry;
+			}
+			
+			private function handleDGChange():void
+			{
+				mondayTVEditor.selectedEntry = timeValueTable.selectedItem as DailyEntry;
+			}
+	
+			private var lastTime:Number;
+					
+			private function handleItemEditBeginning(event:WeekdayTimeValueEditorEvent):void
+			{
+				var idx:int = mondayTVEditor.selectedIndex;
+				
+				if (idx == 1)
+				{
+					trace("cancelling");
+					event.preventDefault();
+					return;
+				}
+				
+				lastTime = mondayTVEditor.selectedEntry.time;
+			}
+			
+			private function undo():void
+			{
+				trace("undo");
+				mondayTVEditor.selectedEntry.time = lastTime;
+			}
+		]]>
+	</mx:Script>
+	<mx:HDividedBox width="100%" height="100%">
+		<mx:Canvas width="300" height="100%" backgroundColor="#ff0000" />
+		
+		<mx:VBox width="100%" horizontalAlign="center">
+			<mx:Button label="Undo" click="undo()" />
+			<components:WeekdayTimeValueEditor id="mondayTVEditor" width="100%"
+				change="handleTVChange()"
+				itemEditBeginning="handleItemEditBeginning(event)" 
+				debug="false" />
+			
+			<components:WeekdayTimeValueEditor id="tuesdayTVEditor" width="100%"
+				change="handleTVChange()"
+				itemEditBeginning="handleItemEditBeginning(event)" 
+				debug="false" />
+				
+			<components:WeekdayTimeValueEditor id="wednesdayTVEditor" width="100%"
+				change="handleTVChange()"
+				itemEditBeginning="handleItemEditBeginning(event)" 
+				debug="false" />
+				
+			<components:WeekdayTimeValueEditor id="thursdayTVEditor" width="100%"
+				change="handleTVChange()"
+				itemEditBeginning="handleItemEditBeginning(event)" 
+				debug="false" />
+				
+			<components:WeekdayTimeValueEditor id="fridayTVEditor" width="100%"
+				change="handleTVChange()"
+				itemEditBeginning="handleItemEditBeginning(event)" 
+				debug="false" />
+				
+				
+			<components:WeekdayTimeValueEditor id="saturdayTVEditor" width="100%"
+				change="handleTVChange()"
+				itemEditBeginning="handleItemEditBeginning(event)" 
+				debug="false" />
+				
+			<components:WeekdayTimeValueEditor id="sundayTVEditor" width="100%"
+				change="handleTVChange()"
+				itemEditBeginning="handleItemEditBeginning(event)" 
+				debug="false" />
+				
+			
+			
+			<mx:AdvancedDataGrid id="timeValueTable" width="100%" height="100%"
+				dataProvider="{mondayEntries}" editable="true"
+				change="handleDGChange()">
+			
+				<mx:columns>
+					<mx:AdvancedDataGridColumn headerText="Time" width="100" dataField="time" />
+					<mx:AdvancedDataGridColumn headerText="Event Name" dataField="name" />
+					<mx:AdvancedDataGridColumn headerText="Color" dataField="color"
+						editorDataField="color"
+						rendererIsEditor="true"
+						itemEditor="com.cisco.nbm.scheduler.components.ColorEditor"
+						itemRenderer="com.cisco.nbm.scheduler.components.ColorEditor"
+						>
+						
+					</mx:AdvancedDataGridColumn>
+				</mx:columns>
+			</mx:AdvancedDataGrid>
+		</mx:VBox>
+	</mx:HDividedBox>
+</mx:Application>

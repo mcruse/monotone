@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE XServeConfig SYSTEM "./xserve_config.dtd">
+<XServeConfig>
+	<XFieldExtractor name="LightPoint Config - Groups: Relay1" order="3">
+		<XFields>
+			<XField name="amtype" byteoffset="2" length="1" type="uint8"/>
+			<XField name="firmware_id" byteoffset="7" length="2" type="uint16" specialtype="nodeid"/>
+			<XField name="parent" byteoffset="14" length="2" type="uint16" specialtype="parentid"/>
+			<XField name="group" byteoffset="3" length="1" type="uint8"/>
+			<XField name="socketid" byteoffset="11" length="1" type="uint8"/>
+			<XField name="board_id" byteoffset="12" length="1" type="uint8" specialtype="boardid"/>
+			<XField name="packet_id" byteoffset="13" length="1" type="uint8"/>
+			<XField name="group1" byteoffset="18" length="2" type="uint16"/>
+			<XField name="group2" byteoffset="20" length="2" type="uint16"/>
+			<XField name="group3" byteoffset="22" length="2" type="uint16"/>
+			<XField name="group4" byteoffset="24" length="2" type="uint16"/>
+			<XField name="group5" byteoffset="26" length="2" type="uint16"/>
+			<XField name="group6" byteoffset="28" length="2" type="uint16"/>
+			<XField name="group7" byteoffset="30" length="2" type="uint16"/>
+			<XField name="group8" byteoffset="32" length="2" type="uint16"/>
+		</XFields>
+		<XFilter>
+			<XCondAnd>
+			
+				<!--
+					Check if this is a sensor type packet...AMTYPE_MULTIHOP or AMTYPE_XDEBUG
+					The Byte offsets defined above assume that there is a multihop header
+				-->
+				<XCondOr>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="amtype"/>
+						<XFilterParam name="fieldvalue" value="0x31"/>
+					</XCond>
+					<XCond name="IsEqual">
+						<XFilterParam name="fieldname" value="amtype"/>
+						<XFilterParam name="fieldvalue" value="0x33"/>
+					</XCond>
+					<XCondAnd>
+						<XCondOr>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="socketid"/>
+								<XFilterParam name="fieldvalue" value="0x31"/>
+							</XCond>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="socketid"/>
+								<XFilterParam name="fieldvalue" value="0x33"/>
+							</XCond>
+						</XCondOr>
+						<XCondOr>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="amtype"/>
+								<XFilterParam name="fieldvalue" value="0x0B"/>
+							</XCond>
+							<XCond name="IsEqual">
+								<XFilterParam name="fieldname" value="amtype"/>
+								<XFilterParam name="fieldvalue" value="0x0D"/>
+							</XCond>
+						</XCondOr>										
+					</XCondAnd>
+				</XCondOr>
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="board_id"/>
+					<XFilterParam name="fieldvalue" value="0x84"/>
+				</XCond>				
+				<XCond name="IsEqual">
+					<XFilterParam name="fieldname" value="packet_id"/>
+					<XFilterParam name="fieldvalue" value="0x1"/>
+				</XCond>				
+			</XCondAnd>
+		</XFilter>
+		<XDataSinks>
+			<XDataSink name="Generic Print Datasink">
+				<XDSParam name="printstring" value="LightPoint groups for node %s, relay 1:\n   1: %s \n   2: %s \n   3: %s \n   4: %s \n   5: %s \n   6: %s \n   7: %s \n   8: %s"/>
+				<XDSParam name="printfields" value="firmware_id,group1,group2,group3,group4,group5,group6,group7,group8"/>
+			</XDataSink>
+			<XDataSink name="Open Log Datasink">
+				<XDSParam name="tablename_1" value="fieldstate_groups"/>
+				<XDSParam name="createsql_1" value="CREATE TABLE fieldstate_groups ( id serial primary key, result_time timestamp without time zone, firmware_id integer, relay_group_id integer, type integer, relays integer, index integer )"/>
+				
+				<XDSParam name="deletesql_1" value="DELETE FROM fieldstate_groups WHERE firmware_id = %i AND type = 1 AND relays = 1"/>
+				<XDSParam name="deletefields_1" value="firmware_id"/>
+				
+				<XDSParam name="insertsql_1" value="INSERT INTO fieldstate_groups ( firmware_id, relay_group_id, type, relays ) VALUES ( %i, %i, 1, 1 )"/>
+				<XDSParam name="insertfields_1" value="firmware_id,group1"/>
+				
+				<XDSParam name="insertsql_2" value="INSERT INTO fieldstate_groups ( firmware_id, relay_group_id, type, relays ) VALUES ( %i, %i, 1, 1 )"/>
+				<XDSParam name="insertfields_2" value="firmware_id,group2"/>
+				
+				<XDSParam name="insertsql_3" value="INSERT INTO fieldstate_groups ( firmware_id, relay_group_id, type, relays ) VALUES ( %i, %i, 1, 1 )"/>
+				<XDSParam name="insertfields_3" value="firmware_id,group3"/>
+				
+				<XDSParam name="insertsql_4" value="INSERT INTO fieldstate_groups ( firmware_id, relay_group_id, type, relays ) VALUES ( %i, %i, 1, 1 )"/>
+				<XDSParam name="insertfields_4" value="firmware_id,group4"/>
+				
+				<XDSParam name="insertsql_5" value="INSERT INTO fieldstate_groups ( firmware_id, relay_group_id, type, relays ) VALUES ( %i, %i, 1, 1 )"/>
+				<XDSParam name="insertfields_5" value="firmware_id,group5"/>
+				
+				<XDSParam name="insertsql_6" value="INSERT INTO fieldstate_groups ( firmware_id, relay_group_id, type, relays ) VALUES ( %i, %i, 1, 1 )"/>
+				<XDSParam name="insertfields_6" value="firmware_id,group6"/>
+				
+				<XDSParam name="insertsql_7" value="INSERT INTO fieldstate_groups ( firmware_id, relay_group_id, type, relays ) VALUES ( %i, %i, 1, 1 )"/>
+				<XDSParam name="insertfields_7" value="firmware_id,group7"/>
+				
+				<XDSParam name="insertsql_8" value="INSERT INTO fieldstate_groups ( firmware_id, relay_group_id, type, relays ) VALUES ( %i, %i, 1, 1 )"/>
+				<XDSParam name="insertfields_8" value="firmware_id,group8"/>
+				
+			</XDataSink>
+		</XDataSinks>
+	</XFieldExtractor>
+	
+</XServeConfig>

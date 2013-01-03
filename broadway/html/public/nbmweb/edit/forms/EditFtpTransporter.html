@@ -1,0 +1,77 @@
+<!--
+Copyright (C) 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<div dojoType="nbmweb.edit.Node">
+    <div label="Host" dojoType="nbmweb.edit.InputRow">
+        <input name="host" type="text" 
+            class="rowValue" dojoType="dijit.form.TextBox" />
+    </div>
+    <div label="Port" dojoType="nbmweb.edit.InputRow">
+        <input name="port" type="text" 
+            class="rowValue" dojoType="dijit.form.TextBox" />
+    </div>
+    <div label="Directory" dojoType="nbmweb.edit.InputRow">
+        <input name="directory" type="text" 
+            class="rowValue" dojoType="dijit.form.TextBox" />
+    </div>
+    <div label="User name" dojoType="nbmweb.edit.InputRow">
+        <input name="username" type="text" 
+            class="rowValue" dojoType="dijit.form.TextBox" />
+    </div>
+    <div label="Password" dojoType="nbmweb.edit.InputRow">
+        <input name="password" type="password" 
+            class="rowValue" dojoType="dijit.form.TextBox" />
+    </div>    
+    <div label="Timeout (secs)" dojoType="nbmweb.edit.InputRow">
+        <input name="timeout" type="text" 
+            class="rowValue" dojoType="dijit.form.TextBox" />
+    </div>
+    <div label="File prefix" dojoType="nbmweb.edit.InputRow">
+        <input name="file_prefix" type="text" 
+            class="rowValue" dojoType="dijit.form.TextBox" />
+    </div>
+    <div label="File suffix" dojoType="nbmweb.edit.InputRow">
+        <input name="file_suffix" type="text" 
+            class="rowValue" dojoType="dijit.form.TextBox" />
+    </div>
+    <div label="Name scheme" dojoType="nbmweb.edit.InputRow">
+        <input name="name_scheme" type="text" 
+            class="rowValue" dojoType="dijit.form.TextBox" />
+    </div>
+    <div label="Passive Mode" dojoType="nbmweb.edit.InputRow">
+        <input name="passive_mode" type="checkbox" value="true"
+            class="rowValue" dojoType="nbmweb.edit.BooleanInput" />
+    </div>
+    <div label="File append" dojoType="nbmweb.edit.InputRow">
+        <input name="file_append" type="checkbox" value="false"
+            class="rowValue" dojoType="nbmweb.edit.BooleanInput" />
+    </div>
+</div>

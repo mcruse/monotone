@@ -1,0 +1,89 @@
+<!--
+Copyright (C) 2008 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+
+  <head>
+
+    <!-- $Name: mediator_3_1_2_branch $ -->
+    <!-- $Id: activex_redirect.html 20101 2011-03-06 16:02:15Z bhagn $ -->
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+
+    <title>Active X Redirect</title>
+
+  </head>
+
+<script language="javascript">
+
+
+
+function open_link(){
+
+   var url = "http://www.microsoft.com/downloads/details.aspx?displaylang=en&FamilyID=0CDD34BF-50EA-4238-846B-243C58FF224A";
+
+   window.opener.location = url;
+
+   window.close();
+
+}
+
+</script>
+
+  <body>
+
+<center> <table width="475" border="0" cellspacing="0" cellpadding="10" height="275"> 
+
+<tr><td align="center" bgcolor="#FF0000" valign="BOTTOM" height="20"><b><font color="#FFFFFF" size="+2">Error 
+
+! </font></b></td></tr> <tr><td align="LEFT" valign="MIDDLE"><p>You have the wrong 
+
+version or don't have <span style="color:#000099">"MSXML.xmlhttp"</span> activeX 
+
+control from Microsoft. To use Microsoft Internet Explorer, the Mediator 
+
+Web API requires that <span style="color:#000099">"MSXML.xmlhttp"</span> be installed. 
+
+<br><br>You can download the lastest version of MSXML.xmlhttp <a href ="javascript:open_link()">here</a> 
+
+<br>or <br>if you can't run activex controls you can use the latest version of <a href="http://www.netscape.com">Netscape</a>.</td></tr>
+
+<tr><td align="right"><a href="javascript:window.close()" style="text-decoration:none">Close Window</a>  
+
+<tr><td align="left" class="footer"><span class="footer">&copy;Envenergy</span> 
+
+</td></tr> </table></center>
+
+</body>
+
+</html>
+

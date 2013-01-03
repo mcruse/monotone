@@ -1,0 +1,172 @@
+OVERVIEW
+
+This program starts the Mediator application and then monitors a
+couple aspects of the application's and system's health.  If the
+monitored items fall outside of the acceptable limits, then the
+application is terminated, a "best attempt" is made to resolve the
+issue and the Mediator application is restarted.
+
+This program is far from perfect, the goal of this implementation
+is to address the most pressing issues in a way that can be refined
+over time.  See FUTURE IMPROVEMENTS below.
+
+
+MONITORED ITEMS
+
+1.  PROCESS GROUP
+
+    When the application's main thread exits, it is important that
+    all the application's threads and children processes also exit.
+    There have been several bugs that left a thread running that
+    had a port open, or a child process with some sort of resource
+    lock.  These scenarios led to a situation whereby the Mediator
+    application either could not restart, or open restarting could
+    not preform all of its functions.  There were also situations
+    were a child thread segfaulting could leave the application in
+    a "weird" state were the remaining threads did not exit
+    correctly and therefore the application was not restarted by
+    the init process.
+
+    To avoid these scenarios, this program waits for the main
+    process/thread to exit and then ensures that all the
+    application's threads and sub-processes have exited.  If the
+    threads and processes have not terminated, this program sends a
+    SIGTERM to the process group and gives the threads 10 seconds
+    to terminate.  If any threads and processes remain after 10
+    seconds, the this program sends a SIGKILL to the process group.
+
+2.  FREE DISK SPACE
+
+    This program uses SIGALRM to wake up every second and check for
+    remaining disk space.  If disk space falls below a threshold
+    (currently 1 block which is 4096 bytes), then it attempts to
+    determine whether it can recover more than 1 MB of disk space.
+    The reason for the minimum recoverable space threshold is to
+    avoid "thrashing" the system.  There are other means to achieve
+    this, but they require much more complicated logic and it does
+    not seem to result in a better solution.
+
+    If the system has fallen below the minimum free space threshold
+    and can recover at least the minimum recoverable space, then
+    the Mediator application is shutdown (via SIGTERM, falling back
+    to SIGKILL if the process group does not exit in 10 seconds).
+    After the Mediator application is shutdown, then this program
+    deletes all of the files that are considered "safe" to delete
+    to recover disk space.  Any file in /var/log is considered
+    "fair game" to delete.  This is because these files can grow
+    huge quickly and the means of managing them is time based.  See
+    FUTURE IMPROVEMENTS for refinements to this approach that could
+    improve the supportability of the system.  Besides files in
+    /var/log, the file /var/mpx/log/msglog.log.1 is also deleted.
+    Again, this is less than perfect, see FUTURE IMPROVEMENTS.
+
+
+SIGNAL HANDLING
+
+  This program both generates and handles signals.
+
+Generated Signals
+
+  SIGTERM:  This program generates SIGTERM as part of the "clean
+  shutdown" sequence.  The signal is sent to the entire process group
+  of this program which includes itself, the Mediator application and
+  any of its threads and child processes.
+
+  SIGKILL:  The watchdog generates SIGKILL if any of the Mediator
+  application or any of its threads and child processes fail to
+  terminate after the "application termination timeout" (10 seconds)
+  has expired.
+
+Handled Signals
+
+  SIGTERM:  If the watchdog receives a SIGTERM, it will generate a
+  SIGTERM for its entire process group.  If any the Mediator
+  application or any of its threads and child processes fail to
+  terminate after the "application termination timeout" (10 seconds)
+  then it will send SIGKILL for its entire process group.
+
+  SIGINT:  The watchdog ignores SIGINT so that SIGINTs sent to the
+  Mediator Application are not propagated to the watchdog, causing
+  unexpected and usually painful program terminations.
+
+  SIGUSR1:  The watchdog forces a disk space recovery upon receiving a
+  SIGUSR1.  When handling SIGUSR1, the disk recovery will occur even
+  if the total recoverable disk space is less then the "minimum
+  recoverable space" threshold (1 MB).
+
+
+EXAMPLE USE
+
+The first argument [*] is the program that the watchdog
+launches:
+
+  $ /usr/bin/watchdog /usr/bin/python2 /etc/rc.mfw.pyc
+
+[*] Someday, the watchdog may accept arguments, so it should
+read "the first argument that does not start with a dash (-),
+or the first argument after the double-dash (--) argument.
+
+- or -
+
+Notice that all arguments after the "program argument" are passed
+to the program "as is":
+
+  $ /usr/bin/watchdog /usr/bin/python2 -i /etc/rc.mfw.pyc -i
+
+
+FUTURE IMPROVEMENTS (in no particular order)
+
+Configurable Wait Time for Process Group Termination
+
+  Support a command line option that allows "tuning" the amount of
+  time to wait after sending the initial SIGTERM before expecting
+  all of the threads/processes in the process group to terminate.
+
+Configurable Minimum Free Disk Space
+
+  A command line option to support setting the threshold at which
+  the watchdog attempts to recover disk space.
+
+Configurable Minimum Recoverable Disk Space
+
+  Support a command line option that specifies the minimum
+  recoverable disk space required before attempting a recovery.
+
+Configurable Recovery Directories and Files with Regex
+
+  Command line options to support specifying the directories and/or
+  files that are eligible for disk space recovery.  These options
+  should support "re" style regular expressions and be compatible
+  with future features related to deleting or trimming files and
+  application logs (at least the msglog).
+
+Support "Trimming" /var/log Files
+
+  A better rule than deleting the /var/log files would be to delete
+  the backup logs (named .*\.[0-9]+(|\..*) and to "trim" the
+  current logs to a configurable length.
+
+Support "Trimming" /var/mpx/log/msglog.log.1
+
+  Rather than delete /var/mpx/log/msglog.log.1, trimming it to a
+  configurable size would help preserve diagnostic information.
+  This may be achieved as part of "'Signal' Application that Disk
+  Space is Low", below.
+
+Support Logging the Recovery of Disk Space
+
+  The watchdog should add a short log entry to /var/log/messages or
+  /var/mpx/log/msglog.log.1 indicating that it (attempted to)
+  recover disk space.
+
+"Signal" Application that Disk Space is Low
+
+  Ideally, before taking any external action, the watchdog should
+  "signal" the application that disk space is low.  This would
+  allow the application to take actions that may be outside the
+  scope of the watchdog (trimming logs, deleting temporary files,
+  whatever).  The word signal is quoted because the actual
+  mechanism need not be a UNIX signal, since both Linux (POSIX, for
+  that matter) and Python have "issues" surrounding signals and
+  threads (at least the versions of Linux and Python that we use on
+  MOE2 at this time).

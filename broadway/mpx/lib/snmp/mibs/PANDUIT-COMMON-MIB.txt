@@ -1,0 +1,921 @@
+PANDUIT-COMMON-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+		MODULE-IDENTITY,
+		OBJECT-IDENTITY,
+		OBJECT-TYPE,
+		Unsigned32,
+		IpAddress,
+		NOTIFICATION-TYPE,
+		Integer32
+					FROM SNMPv2-SMI
+
+		MODULE-COMPLIANCE, 
+		OBJECT-GROUP,
+		NOTIFICATION-GROUP
+					FROM SNMPv2-CONF
+
+		sysName 
+					FROM SNMPv2-MIB
+
+		TEXTUAL-CONVENTION,
+		DisplayString,
+		MacAddress,
+		TruthValue
+					FROM SNMPv2-TC
+
+		SnmpSecurityLevel,
+		SnmpAdminString                     
+					FROM SNMP-FRAMEWORK-MIB
+					
+		usmUserEntry
+					FROM SNMP-USER-BASED-SM-MIB
+
+		panduit			
+					FROM PANDUIT-REG
+
+		PanduitLongDisplayString,
+		PanduitAccessLevel 
+					FROM PANDUIT-TC;
+	 			
+         
+--
+-- Managed Network Solutions contact information.
+--
+panduitCommon MODULE-IDENTITY
+        LAST-UPDATED    "200605040000Z"
+        ORGANIZATION    "Panduit Corp."
+        CONTACT-INFO
+                "       Panduit Corp.
+                        Managed Network Solutions Group
+
+                		Postal: Panduit Corp.
+                        17301 Ridgeland Avenue
+                        Tinley Park, IL 60477-3091
+                        USA
+
+						Tel: +1 708 532-1800/888-506-5400
+
+                		E-mail: info@panduit.com"
+
+        DESCRIPTION
+                        "MIB module to support common features for all
+				Panduit managed objects."
+
+        REVISION        "200501070000Z"
+
+        DESCRIPTION
+                        "Initial version of this MIB module."
+
+        REVISION        "200504270000Z"
+
+        DESCRIPTION
+                        "Updates:
+					- A-Jack Support
+					- Added panduitIdentificationLocation"
+
+        REVISION        "200511210000Z"
+
+        DESCRIPTION
+                        "Added Missing Notification Definitions for:
+				- panduitSelfTestPass
+				- panduitSelfTestFail
+				- panduitTrapRecipientAdded
+				- panduitLocationChange
+
+			Added New Compliance Objects:
+				- panduitCommonCompliance3
+				- panduitCommonNotification2Group
+
+			Deprecated:
+				- panduitCommonCompliance (20050427) 
+
+			Obsolete:
+				- panduitCommonCompliance2
+			"
+	
+        REVISION        "200512230000Z"
+
+        DESCRIPTION
+                        "Corrected PanduitNetworkIPType  Textual Convention.
+			Static and Dynamic were reversed.
+			"
+
+	
+        REVISION        "200605040000Z"
+
+        DESCRIPTION
+                        "Following Revisions were made:
+				- Added support for SNMPv3 Trap Handling 
+					- Added value snmpv3(3) to panduitNetsNMPTrapRecvVersion
+					- Added panduitNetSNMPTrapRecvUser
+					- Added panduitNetSNMPTrapRecvAuthLevel
+					- Added panduitNetSNMPVersionSupport
+				- Added support for a Panduit Access Control Module
+					- Added panduitNetSNMPACMAccessLevel
+					- Added panduitNetSNMPACMAuthLevel
+				- Added Textual Convention PanduitSNMPVersionSupportType 
+				
+				Compliance Updates:
+				-Added panduitCommonNetworkACMGroup
+				-Deprecated panduitCommonNetworkGroup for newer panduitCommonNetwork2Group
+				-Deprecated panduitCommonCompliance3 for newer panduitCommonCompliance4
+			"
+
+
+        ::= { panduit	2 }
+
+
+-- 
+-- Textual Conventions
+--
+
+PanduitProductFamilyType ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+            "The Product Family of the managed object.
+
+            'poweredPatchPanel' -- The managed object is a Patch Panel 
+					categorized as a mid-span Power 
+					suppliying Equipment (PSE)
+					for PoE applications.
+            'aJack'		-- The managed object is an A-Jack
+					categorized as a mid-span Power 
+					suppliying Equipment (PSE) and
+					Powered Device (PD) for PoE 
+					applications.
+		'iPanel'		-- The managed object is an I-Panel.  This is a
+					network device used to monitor the patchfield
+					and guide users when making guided moves, 
+					adds, and changes."
+ 
+     SYNTAX     INTEGER {
+			poweredPatchPanel(1),
+			aJack(2),
+			iPanel(3)
+			}
+
+PanduitNetworkIPType ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+            "Defines how the IP settings (Address, subnet, gateway) are set:
+
+		'dynamic' - IP Settings are dynamically set via a DHCP server.
+
+		'static'  - IP Settings are manually set by an administrator."
+ 
+     SYNTAX     INTEGER {
+			dynamic(1),
+                  static(2)
+			}
+
+PanduitSetType ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+            "Determines the state of a requested change.  Required for 
+		values that are not immediately saved. 
+
+		'configured'	- Any Requested changes have been completed.
+
+		'request'	- Make a change.
+		
+		'processing'	- A change is in process."
+ 
+     SYNTAX     INTEGER {
+                 	configured(1),
+			request(2),
+			processing(3)
+			}
+
+PanduitSNMPVersionSupportType ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+            "Determines what version of SNMP Packets will be supported by the agent.
+		SNMP Packets that are not supported will be dropped:
+
+		'any'			- Any SNMP Packets are accepted.
+
+		'SNMPv1/SNPMV2c'	- Only SNMPv1/SNMPv2c packets will be processed.
+		
+		'SNMPv3'		- Only SNMPv3 packets will be processed."
+ 
+     SYNTAX     INTEGER {
+                  all(1),
+			sNMPv1_SNMPv2c(2),
+			sNMPv3(3)
+			}
+
+--
+--                      panduitIdentification Objects
+--
+panduitIdentification OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Subtree to aid in Identifying the Managed Object"
+        ::= { panduitCommon 1 }
+
+
+panduitIdentificationFamily OBJECT-TYPE
+        SYNTAX PanduitProductFamilyType 
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+		"A category of products for which the managed object is a member.
+		For example, a DPoE24U1x belongs to PoweredPatchPanel(1) Family."
+        ::= { panduitIdentification 1 }
+
+panduitIdentificationVersion OBJECT-TYPE
+        SYNTAX DisplayString
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+                "Hardware Version of the managed object."
+        ::= { panduitIdentification 2 }
+
+panduitIdentificationMAC OBJECT-TYPE
+        SYNTAX MacAddress
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+                "MAC Address of the Managed Object."
+        ::= { panduitIdentification 3 }
+
+panduitIdentificationHwId OBJECT-TYPE
+        SYNTAX DisplayString
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+                "A combination of the Family, Version, and MAC Address.
+		The format is Family:Version:MAC Address."
+        ::= { panduitIdentification 4 }
+
+panduitIdentificationFwId OBJECT-TYPE
+        SYNTAX DisplayString
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+                "Firmware Version Number, including build info."
+        ::= { panduitIdentification 5 }
+
+panduitIdentificationLocation OBJECT-TYPE
+        SYNTAX PanduitLongDisplayString
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "Location of the managed object."
+        ::= { panduitIdentification 6 }
+
+
+
+--
+--                      Network Objects
+--
+panduitNetwork OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Subtree containing Network information for the managed object."
+        ::= { panduitCommon 2 }
+
+
+--
+--			Network IP Objects
+--
+panduitNetIP OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+		"Subtree containing IP-specific information about the managed 
+		object."
+        ::= { panduitNetwork 1 }
+
+
+-- NOTE WELL:  	Description of Internet Protocol (IP) Address Values for Panduit 
+--		Managed objects
+--
+--	 	There are two sets of OIDs for the setting/reading of the Internet
+--		Protocol(IP) address values (Type,Address, subnet, gateway).  
+--		These are:
+--
+--		panduitNetIPTypeCurrent			panduitNetIPTypeConfig  
+--		panduitNetIPAddressCurrent		panduitNetIPAddressConfig  
+--		panduitNetIPMaskCurrent			panduitNetIPMaskConfig  
+--		panduitNetIPGatewayCurrent		panduitNetIPGatewayConfig  
+--
+--		The first set, ending in Current and henceforth referred to as the
+--		Current IP Values, are the actual in-use values of the managed 
+--		object.  These values are set to read-only.  The second set, ending 
+--		in Config and henceforth referred to as the Config IP Values, can be
+--		modified by the user in order to alter the managed object's IP 
+--		Address values (e.g. Change the IP Address from 192.168.101.1 to
+--		192.168.101.2).  
+--		Once Changes have been made to the second set of values, the user 
+--		then sets the value in panduitNetIPSetConfig to request(2).  This
+--		operation changes the current IP address to the config IP values. 
+--		The managed object has now switched to the Config IP Values.
+--
+--		
+--		Although the current IP Values have been changed, a commit is needed
+--		in order to make the change permanent.  To make the change
+--		permanent, set panduitNetIPSetCommit to request(2).  This ensures
+--		that the user is able to communicate with the panel following
+--		an IP Value change.  
+--
+--		To undo an IP value change, reboot the panel.  This will revert
+--		the IP values to their values prior to the change.
+--
+--		Making an IP Address change(Summary):
+--
+--		1)	Set panduitNetIPTypeConfig, panduitNetIPAddressConfig,  
+--			panduitNetIPMaskConfig, panduitNetIPGatewayConfig to 
+--			desired values.
+--
+--		2)	Set panduitNetIPSetConfig to request(2).
+--
+--		3)	To make the change permanent, set panduitNetIPSetCommit to 
+--			request(2).
+-- NOTE WELL
+
+panduitNetIPTypeCurrent OBJECT-TYPE
+        SYNTAX PanduitNetworkIPType 
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+		"Current System IP Type (See definition of PanduitNetworkIPType 
+		above).  Determines if IP Address is static or dynamic."
+        ::= { panduitNetIP 1 }
+
+panduitNetIPAddressCurrent OBJECT-TYPE
+        SYNTAX IpAddress
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+                "The managed object's IP Address."
+        ::= { panduitNetIP 2 }
+
+panduitNetIPMaskCurrent OBJECT-TYPE
+        SYNTAX IpAddress
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+                "The managed object's Subnet Mask."
+        ::= { panduitNetIP 3 }
+
+panduitNetIPGatewayCurrent OBJECT-TYPE
+        SYNTAX IpAddress
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+                "The managed object's Default Gateway IP Address."
+        ::= { panduitNetIP 4 }
+
+panduitNetIPTypeConfig OBJECT-TYPE
+        SYNTAX PanduitNetworkIPType 
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+		"Used to modify the managed object's IP Type(See definition of 
+		PanduitNetworkIPType above).  This is used to determine if the IP 
+		Address values are manually set by the administrator or using a DHCP
+ 		server."
+         ::= { panduitNetIP 5 }
+
+panduitNetIPAddressConfig OBJECT-TYPE
+        SYNTAX IpAddress
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+		"Used to modify the managed object's IP Address."
+        ::= { panduitNetIP 6 }
+
+panduitNetIPMaskConfig OBJECT-TYPE
+        SYNTAX IpAddress
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "Used to modify the managed object's Subnet Mask."
+        ::= { panduitNetIP 7 }
+
+panduitNetIPGatewayConfig OBJECT-TYPE
+        SYNTAX IpAddress
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+		"Used to modify the managed object's Default Gateway IP 
+		Address."
+        ::= { panduitNetIP 8 }
+
+panduitNetIPSetConfig OBJECT-TYPE
+        SYNTAX PanduitSetType 
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+		"Setting to request(2) will change Current IP Address values 
+		using the Config IP Address Values.  Additionaly, reports on the 
+		status of the change."
+        ::= { panduitNetIP 9 }
+
+panduitNetIPSetCommit OBJECT-TYPE
+        SYNTAX PanduitSetType 
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+		"Setting to request(2) will make the Current IP Address values
+		permanent.  This is required after changin the IP Address values
+		using panduitSetIpConfig.  If this is not done, a reboot of the
+		managed object will cause the IP Address Values to revert to
+		their last committed values."
+        ::= { panduitNetIP 10 }
+
+--
+--		SNMP Objects
+--
+
+panduitNetSNMP OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+		"Subtree containing SNMP-specific information about the managed 
+		object."
+        ::= { panduitNetwork 2 }
+
+panduitNetSNMPReadCommunity OBJECT-TYPE
+        SYNTAX DisplayString(SIZE(0..255))
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "The managed object's Read Community String."
+        ::= { panduitNetSNMP 1 }
+
+panduitNetSNMPWriteCommunity OBJECT-TYPE
+        SYNTAX DisplayString(SIZE(0..255))
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+		"The managed object's Write Community String.  Access to this 
+		value is granted only when the write community string is specified 
+		in the SNMP operation."
+        ::= { panduitNetSNMP 2 }
+
+
+--
+--		SNMP Trap Receiver Objects
+--
+
+panduitNetSNMPTrap OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Subtree containing SNMP trap specific information about the managed
+		object."
+        ::= { panduitNetSNMP 3 }
+
+panduitNetSNMPTrapConfigRecvNum OBJECT-TYPE
+        SYNTAX Integer32
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+		"The number of Trap receiver's allowed by the managed object.
+		This table does not support row creation."
+        ::= { panduitNetSNMPTrap 1 }
+
+panduitNetSNMPTrapRecvTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF PanduitNetSNMPTrapRecvEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+		"A list of destinations for SNMP Traps in the form of IP 
+		Addresses.  In addition to destinations, the table also contains 
+		certain configuration information for each destination."
+        ::= { panduitNetSNMPTrap 2 }
+
+panduitNetSNMPTrapRecvEntry OBJECT-TYPE
+        SYNTAX PanduitNetSNMPTrapRecvEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "A row in the Trap Receiver Table."
+	INDEX	{ panduitNetSNMPTrapRecvIndex }
+        ::= { panduitNetSNMPTrapRecvTable 1 }
+
+	PanduitNetSNMPTrapRecvEntry ::= SEQUENCE{
+		panduitNetSNMPTrapRecvIndex		Unsigned32,
+		panduitNetSNMPTrapRecvIP		IpAddress,
+		panduitNetSNMPTrapRecvEnable		TruthValue,
+		panduitNetSNMPTrapRecvCommunityString	DisplayString,
+		panduitNetSNMPTrapRecvSeverity		INTEGER,
+		panduitNetsNMPTrapRecvVersion		INTEGER,
+		panduitNetSNMPTrapRecvUser 		SnmpAdminString ,
+		panduitNetSNMPTrapRecvAuthLevel SnmpSecurityLevel
+		}
+
+panduitNetSNMPTrapRecvIndex OBJECT-TYPE
+        SYNTAX Unsigned32(1..2147483647)
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "Trap Receiver Table Index."
+        ::= { panduitNetSNMPTrapRecvEntry 1 }
+
+panduitNetSNMPTrapRecvIP OBJECT-TYPE
+        SYNTAX IpAddress
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+		"Destination IP Address for traps from the managed object."
+        ::= { panduitNetSNMPTrapRecvEntry 2 }
+
+panduitNetSNMPTrapRecvEnable OBJECT-TYPE
+        SYNTAX TruthValue
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+		"Determines whether or not the managed object will send a trap 
+		to the destination IP Address for a given row.  true(1) indicates 
+		that the managed object will send a trap to the destination IP 
+		Address."
+        ::= { panduitNetSNMPTrapRecvEntry 3 }
+
+panduitNetSNMPTrapRecvCommunityString OBJECT-TYPE
+        SYNTAX DisplayString(SIZE(1..255))
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+		"The Community string to be included in the trap sent to the 
+		destination IP Address."
+        ::= { panduitNetSNMPTrapRecvEntry 4 }
+
+panduitNetSNMPTrapRecvSeverity OBJECT-TYPE
+        SYNTAX INTEGER(1..15)
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+		"Bit-mask used to filter which events should be sent to the 
+		destination IP address.  Each Panduit Trap event has an associated
+				severity Level.  The levels are:
+
+				Critical(1),
+				Major(2),
+				Minor(4),
+				Advisory(8),
+				All(15)
+
+		The severity value can be a combination of the levels in order to 
+		allow the destination IP address to receive more than one severity 
+		level.  For example, Critical(1) and Minor(4) can be combined by 
+		setting the severity level to 5 (4+1)."
+        ::= { panduitNetSNMPTrapRecvEntry 5 }
+
+panduitNetsNMPTrapRecvVersion OBJECT-TYPE
+        SYNTAX INTEGER{	snmpv1(1),
+			snmpv2c(2),
+			snmpv3(3)
+			}
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "SNMP Version of the TRAP PDU."
+        ::= { panduitNetSNMPTrapRecvEntry 6 }
+
+panduitNetSNMPTrapRecvUser OBJECT-TYPE
+        SYNTAX SnmpAdminString (SIZE(1..32)) 
+
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "A USM User Name that will be used to send 
+			SNMPv3 Traps.  The user must exist in the 
+			usmUserTable."
+        ::= { panduitNetSNMPTrapRecvEntry 7 }
+
+panduitNetSNMPTrapRecvAuthLevel OBJECT-TYPE
+        SYNTAX SnmpSecurityLevel
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "The security level applied to the trap."
+        ::= { panduitNetSNMPTrapRecvEntry 8 }
+
+panduitNetSNMPVersionSupport OBJECT-TYPE
+        SYNTAX PanduitSNMPVersionSupportType 
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "The SNMP Packet versions that are supported by the agent."
+        ::= { panduitNetSNMP 4 }
+
+--
+--		Panduit Access Control Module Objects
+--
+
+panduitNetSNMPACM OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Subtree containing SNMP trap specific information about the managed
+		object.  These OIDs provide a limited version of the View-based Access Control Module.  Data is
+		organized by user and exposes the Access and security level."
+        ::= { panduitNetSNMP 5 }
+
+
+panduitNetSNMPACMTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF PanduitNetSNMPACMEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+		"A list of destinations for SNMP Traps in the form of IP 
+		Addresses.  In addition to destinations, the table also contains 
+		certain configuration information for each destination."
+        ::= { panduitNetSNMPACM 1 }
+
+panduitNetSNMPACMEntry OBJECT-TYPE
+        SYNTAX PanduitNetSNMPACMEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+                "A row in the Trap Receiver Table."
+AUGMENTS { usmUserEntry } 
+        ::= { panduitNetSNMPACMTable 1 }
+
+		PanduitNetSNMPACMEntry ::= SEQUENCE{
+		panduitNetSNMPACMAccessLevel		PanduitAccessLevel ,
+		panduitNetSNMPACMAuthLevel		SnmpSecurityLevel
+		}
+
+panduitNetSNMPACMAccessLevel OBJECT-TYPE
+        SYNTAX PanduitAccessLevel 
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+                "Read-only and read-write access to the agent."
+
+        ::= { panduitNetSNMPACMEntry 1 }
+
+panduitNetSNMPACMAuthLevel OBJECT-TYPE
+        SYNTAX SnmpSecurityLevel
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "The minimum security level required for communicating with the agent."
+        ::= { panduitNetSNMPACMEntry 2 }
+
+--
+--		Panduit Common Notification Objects
+--
+
+panduitCommonNotifications OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+                "Sub-tree of traps implemented for all Panduit managed objects."
+        ::= { panduitCommon 0 }
+	
+
+panduitAgentCommunicationLost NOTIFICATION-TYPE
+	OBJECTS {panduitIdentificationMAC}
+        STATUS current
+        DESCRIPTION
+		"SNMP Agent in the managed object can not communicate with the 
+		rest of the managed object."
+        ::= { panduitCommonNotifications 1 }
+
+panduitCommonNotifyPortNumber OBJECT-TYPE
+        SYNTAX INTEGER(1..2147483647)
+        MAX-ACCESS accessible-for-notify
+        STATUS current
+        DESCRIPTION
+		"The Port number of the port involved in the notification 
+		event."
+        ::= { panduitCommonNotifications 2 }
+
+panduitSelfTestPass NOTIFICATION-TYPE
+	OBJECTS {	
+		panduitIdentificationMAC,
+		sysName }
+        STATUS current
+        DESCRIPTION
+		"SNMP agent in the managed object has completed diagnostics successfully and is
+		up and running."
+        ::= { panduitCommonNotifications 3 }
+
+panduitSelfTestFail NOTIFICATION-TYPE
+	OBJECTS {panduitIdentificationMAC}
+        STATUS current
+        DESCRIPTION
+		"SNMP agent in the managed object has failed diagnostics."
+        ::= { panduitCommonNotifications 4 }
+
+panduitTrapRecipientAdded NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		sysName,
+		panduitNetSNMPTrapRecvIP
+		}
+        STATUS current
+        DESCRIPTION
+                "A trap recipient has been added or enabled."
+        ::= { panduitCommonNotifications 5 }
+
+panduitLocationChange NOTIFICATION-TYPE
+	OBJECTS {
+		panduitIdentificationMAC,
+		panduitIdentificationLocation
+		}
+        STATUS current
+        DESCRIPTION
+                "The location of the managed object has changed."
+        ::= { panduitCommonNotifications 6 }
+
+--
+--		Conformance Section 
+--
+
+panduitCommonConformance OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of Compliance and Group information for MIB."
+	::= { panduitCommon 3 }
+
+panduitCommonGroups OBJECT-IDENTITY 
+	STATUS current
+	DESCRIPTION	"Sub-tree of groups within MIB."
+	::= { panduitCommonConformance 1 }
+
+panduitCommonCompliances OBJECT-IDENTITY
+	STATUS current
+	DESCRIPTION "Compliance specifications for MIB."
+	::= { panduitCommonConformance 2 }
+
+panduitCommonIdentificationGroup OBJECT-GROUP
+	OBJECTS {
+		panduitIdentificationFamily,
+		panduitIdentificationVersion,
+		panduitIdentificationMAC,
+		panduitIdentificationHwId,
+		panduitIdentificationFwId}
+        STATUS deprecated
+        DESCRIPTION
+                "Identification Objects."
+        ::= { panduitCommonGroups 1 }
+
+panduitCommonNetworkGroup OBJECT-GROUP
+	OBJECTS {
+		panduitNetIPTypeCurrent,
+		panduitNetIPAddressCurrent,
+		panduitNetIPMaskCurrent,
+		panduitNetIPGatewayCurrent,
+		panduitNetIPTypeConfig,
+		panduitNetIPAddressConfig,
+		panduitNetIPMaskConfig,
+		panduitNetIPGatewayConfig,
+		panduitNetIPSetConfig,
+		panduitNetIPSetCommit,
+		panduitNetSNMPReadCommunity,
+		panduitNetSNMPWriteCommunity,
+		panduitNetSNMPTrapConfigRecvNum,
+		panduitNetSNMPTrapRecvIP,
+		panduitNetSNMPTrapRecvEnable,
+		panduitNetSNMPTrapRecvCommunityString,
+		panduitNetSNMPTrapRecvSeverity,
+		panduitNetsNMPTrapRecvVersion
+		}
+        STATUS deprecated
+        DESCRIPTION "Network Objects."
+        ::= { panduitCommonGroups 2 }
+
+panduitCommonNetwork2Group OBJECT-GROUP
+	OBJECTS {
+		panduitNetIPTypeCurrent,
+		panduitNetIPAddressCurrent,
+		panduitNetIPMaskCurrent,
+		panduitNetIPGatewayCurrent,
+		panduitNetIPTypeConfig,
+		panduitNetIPAddressConfig,
+		panduitNetIPMaskConfig,
+		panduitNetIPGatewayConfig,
+		panduitNetIPSetConfig,
+		panduitNetIPSetCommit,
+		panduitNetSNMPReadCommunity,
+		panduitNetSNMPWriteCommunity,
+		panduitNetSNMPTrapConfigRecvNum,
+		panduitNetSNMPTrapRecvIP,
+		panduitNetSNMPTrapRecvEnable,
+		panduitNetSNMPTrapRecvCommunityString,
+		panduitNetSNMPTrapRecvSeverity,
+		panduitNetsNMPTrapRecvVersion,
+		panduitNetSNMPTrapRecvUser,
+		panduitNetSNMPTrapRecvAuthLevel,
+		panduitNetSNMPVersionSupport
+		}
+        STATUS current
+        DESCRIPTION "Network Objects."
+        ::= { panduitCommonGroups 8 }
+
+panduitCommonNetworkACMGroup OBJECT-GROUP
+	OBJECTS {
+		panduitNetSNMPACMAccessLevel,
+		panduitNetSNMPACMAuthLevel
+		}
+        STATUS current
+        DESCRIPTION "Panduit's Access Control Module Objects."
+        ::= { panduitCommonGroups 9 }
+
+
+   
+panduitCommonNotificationGroup NOTIFICATION-GROUP
+	NOTIFICATIONS { panduitAgentCommunicationLost }
+        STATUS current
+        DESCRIPTION	"Notification Objects."
+        ::= { panduitCommonGroups 3 }
+
+panduitCommonNotificationObjectGroup OBJECT-GROUP
+	OBJECTS { panduitCommonNotifyPortNumber }
+        STATUS current
+        DESCRIPTION	"Object Types for Notifications."
+        ::= { panduitCommonGroups 4 }
+
+panduitCommonIdentification2Group OBJECT-GROUP
+	OBJECTS {
+		panduitIdentificationFamily,
+		panduitIdentificationVersion,
+		panduitIdentificationMAC,
+		panduitIdentificationHwId,
+		panduitIdentificationFwId,
+		panduitIdentificationLocation}
+        STATUS current
+        DESCRIPTION
+                "Identification Objects."
+        ::= { panduitCommonGroups 5 }
+
+panduitCommonNotification2Group NOTIFICATION-GROUP
+	NOTIFICATIONS { panduitTrapRecipientAdded,
+			panduitLocationChange 
+			}
+        STATUS current
+        DESCRIPTION	"Notification Objects."
+        ::= { panduitCommonGroups 6 }
+
+panduitCommonNotification3Group NOTIFICATION-GROUP
+	NOTIFICATIONS { panduitAgentCommunicationLost,
+			panduitSelfTestPass,
+			panduitSelfTestFail
+			}
+        STATUS current
+        DESCRIPTION	"Notification Objects."
+        ::= { panduitCommonGroups 7 }
+
+panduitCommonCompliance MODULE-COMPLIANCE
+	STATUS deprecated
+	DESCRIPTION "Compliance requirements for the MIB."
+	MODULE
+		MANDATORY-GROUPS {
+			panduitCommonIdentificationGroup,
+			panduitCommonNetworkGroup,
+			panduitCommonNotificationGroup }
+		GROUP  panduitCommonNotificationObjectGroup 
+			DESCRIPTION
+				"This group should be used when implementing Notifications
+				that have PortNumber in the varbind list."
+	::=	{ panduitCommonCompliances 1 }
+
+panduitCommonCompliance2 MODULE-COMPLIANCE
+	STATUS obsolete
+	DESCRIPTION "Compliance requirements for the MIB."
+	MODULE
+		MANDATORY-GROUPS {
+			panduitCommonIdentification2Group,
+			panduitCommonNetworkGroup,
+			panduitCommonNotificationGroup }
+		GROUP  panduitCommonNotificationObjectGroup 
+			DESCRIPTION
+				"This group should be used when implementing Notifications
+				that have PortNumber in the varbind list."
+	::=	{ panduitCommonCompliances 2 }
+
+panduitCommonCompliance3 MODULE-COMPLIANCE
+	STATUS deprecated
+	DESCRIPTION "Compliance requirements for the MIB."
+	MODULE
+		MANDATORY-GROUPS {
+			panduitCommonIdentification2Group,
+			panduitCommonNetworkGroup,
+			panduitCommonNotification2Group }
+		GROUP  panduitCommonNotificationObjectGroup 
+			DESCRIPTION
+				"This group should be used when implementing Notifications
+				that have PortNumber in the varbind list."
+	::=	{ panduitCommonCompliances 3 }
+
+panduitCommonCompliance4 MODULE-COMPLIANCE
+	STATUS current
+	DESCRIPTION "Compliance requirements for the MIB."
+	MODULE
+		MANDATORY-GROUPS {
+			panduitCommonIdentification2Group,
+			panduitCommonNetwork2Group,
+			panduitCommonNotification2Group }
+
+		GROUP panduitCommonNetworkACMGroup 
+			DESCRIPTION
+				"This group is mandatory for any agents that support SNMPv3."
+
+		GROUP  panduitCommonNotificationObjectGroup 
+			DESCRIPTION
+				"This group should be used when implementing Notifications
+				that have PortNumber in the varbind list."
+	::=	{ panduitCommonCompliances 4 }
+
+END

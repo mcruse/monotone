@@ -1,0 +1,31 @@
+@CHARSET "UTF-8";
+
+div.status {
+    width: 32px;
+    height: 32px;
+    margin: 15px;
+    overflow: hidden;
+    display: inline-block;
+}
+
+div.status img {
+    width: 32px;
+    height: 32px;
+    display: none;
+}
+
+div.error img.error-icon {
+    display: block;
+}
+
+div.warning img.warning-icon {
+    display: block;
+}
+
+div.success img.success-icon {
+    display: block;
+}
+
+div.information img.information-icon {
+    display: block;
+}

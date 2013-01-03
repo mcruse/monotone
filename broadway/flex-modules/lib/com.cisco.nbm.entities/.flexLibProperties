@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties includeAllClasses="false" version="1">
+  <includeClasses>
+    <classEntry path="com.cisco.nbm.entities.Entity"/>
+    <classEntry path="com.cisco.nbm.entities.EntityEvent"/>
+    <classEntry path="com.cisco.nbm.entities.EntityManager"/>
+    <classEntry path="com.cisco.nbm.entities.EntityProperty"/>
+    <classEntry path="com.cisco.nbm.entities.EntityPropertyChangeEvent"/>
+    <classEntry path="com.cisco.nbm.entities.EntityPropertyOverrideEvent"/>
+    <classEntry path="com.cisco.nbm.entities.EntityPropertyType"/>
+    <classEntry path="com.cisco.nbm.entities.EntityStatus"/>
+    <classEntry path="com.cisco.nbm.entities.Globals"/>
+    <classEntry path="com.cisco.nbm.entities.IEntity"/>
+    <classEntry path="com.cisco.nbm.entities.IEntityManager"/>
+    <classEntry path="com.cisco.nbm.entities.Version"/>
+    <classEntry path="com.cisco.nbm.entities.ui.CustomValueEditorPanel"/>
+    <classEntry path="com.cisco.nbm.entities.ui.EntityNavigator"/>
+    <classEntry path="com.cisco.nbm.entities.ui.EntityPropertySelectionEntry"/>
+    <classEntry path="com.cisco.nbm.entities.ui.IOverrideValueEditor"/>
+    <classEntry path="com.cisco.nbm.entities.ui.NumericValueEditor"/>
+    <classEntry path="com.cisco.nbm.entities.ui.OutputEditor"/>
+    <classEntry path="com.cisco.nbm.entities.ui.OutputEditorModel"/>
+    <classEntry path="com.cisco.nbm.entities.ui.OutputEditorModelEntry"/>
+    <classEntry path="com.cisco.nbm.entities.ui.OutputEditorPanel"/>
+    <classEntry path="com.cisco.nbm.entities.ui.OutputEditorValueEditor"/>
+    <classEntry path="com.cisco.nbm.entities.ui.PropertyCollectionWrapper"/>
+    <classEntry path="com.cisco.nbm.entities.ui.PropertyWrapper"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>

@@ -1,0 +1,180 @@
+<html>
+<head>
+<!-- Copyright (c) 2004 Richards-Zeta -->
+<!-- $Name: mediator_3_1_2_branch $ -->
+<!-- $Id: upload.psp 20101 2011-03-06 16:02:15Z bhagn $ -->
+<style>
+.normal{
+color:#555555;
+}
+
+.error{
+color:#FF0000;
+}
+
+</style>
+</head>
+<body>
+<%    
+import os
+import sys
+from mpx.lib.http import MultipartCollector
+from mpx import properties
+
+from mpx.lib import rzutils
+
+def sort_dirs(a,b):
+    if a > b:
+        return 1
+    if a < b:
+        return -1
+    if a == b:
+        return 0
+        
+def collectdirs(dirs,dirname,names):
+    for name in names:
+        dir = os.path.join(dirname,name)
+        if os.path.islink(dir):
+           os.path.walk(dir,collectdirs,dirs)
+        if os.path.isdir(dir):
+            d = os.path.join(dirname,name)[len(HTTP_ROOT):]           
+            dirs.append(d)                   
+
+            
+HTTP_ROOT = properties.HTTP_ROOT
+m = MultipartCollector(request)
+dir_list =[] 
+local_file = ''
+filename =''
+dir = ''
+web_dir_class = 'normal'
+local_file_class = 'normal'
+filename_class = 'normal'
+display_form = 0
+if m.keys() == []:
+    display_form =1
+else:
+    if m.has_key('dir'):
+        dir =  m['dir'].value
+        if dir == '':
+            web_dir_class = 'error'
+            display_form =1
+    if m.has_key('filename'):
+        filename =  m['filename'].value
+        if filename == '':
+            filename_class = 'error'
+            display_form = 1
+            
+    if m.has_key('uploadfile'):
+        if not m['uploadfile'].file:
+            local_file_class = 'error'
+            display_form = 1
+
+if display_form:
+    os.path.walk(HTTP_ROOT,collectdirs,dir_list)
+    dir_list.sort(sort_dirs)    
+    %>
+    <h1></h1>
+    <p>
+    <form method="post" name="files" action="/webapi/psp/upload.psp" enctype="multipart/form-data">
+    <table>
+    <tr>
+    <td align="right" class="<%=local_file_class%>">
+    Local File: 
+    </td>
+    <td>
+    <input type="file" size="25" name="uploadfile" id="uploadfile" onfocus="update_filename()">
+    </td>
+    </tr>
+    <tr>
+    <td align="right" class="<%=web_dir_class%>">
+    Web Directory: 
+    </td>
+    <td>
+    <select name="dir">
+    <option value="">Select a Directory</option>
+    <option value="/">/</option>        
+    <%
+    
+    for d in dir_list:
+        psp.write('<option value="%s">%s</option>\n' %(d,d))
+    %>
+    </select> 
+    </td>
+    </tr>
+    <tr>
+    <td align="right" class="<%=filename_class%>">
+    Filename: 
+    </td>
+    <td>
+    <input size="25" type="text" id="filename" name="filename" value="">
+    </td>
+    </tr>
+    </table>
+    <input type="reset" value="Reset">&nbsp;<input type="submit" value="Upload">
+    </form>   
+<%
+else:           
+    if m.has_key('uploadfile'):
+        fn = os.path.join(HTTP_ROOT,dir[1:],filename)        
+        psp.write('<b>Web Dir:</b>%s<br>' % dir)
+        psp.write('<b>FileName:</b>%s<br>' % filename)
+        psp.write('<b>Type:</b>%s<br>' % m['uploadfile'].type)
+        psp.write('<b>Full Path:</b>%s<br>' % fn)
+        if m['uploadfile'].file:           
+            try:
+                fileitem = m['uploadfile']                                                       
+                tmpFile = open(fn,'w')
+                tmpFile.write(fileitem.value)
+                tmpFile.close()
+                psp.write('<b>File uploaded!</b><br>')
+                rzutils.wefs_cache(fn)
+            except Exception,e:
+                print 'ERROR:%s' % e
+        else:
+            psp.write('No File')     #
+    else:
+        psp.write('Form did not have correct file element')
+
+%>
+
+<script type="text/javascript">
+
+function get_filename(path){
+  var f = '';
+  var len = path.length;
+  while (len != 0){
+    var c = path.substring(len-1,len);
+    if (c == '/' || c ==':'|| c=='\\\\'){
+       f = path.substring(len,path.length);       
+       len = 0     
+     }       
+     else{
+       len--;
+     }
+  }
+  return f
+}
+
+function update_filename(){
+  var uploadfile = document.getElementById("uploadfile").value;
+  if(uploadfile.length > 25){
+    document.getElementById("uploadfile").size = uploadfile.length;
+  }
+  else{
+    document.getElementById("uploadfile").size = 25;
+  }  
+  var fn = get_filename(uploadfile);
+  if(fn.length > 25){
+    document.getElementById("filename").size = fn.length;
+  }
+  else{
+    document.getElementById("filename").size = 25;
+  }
+  document.getElementById("filename").value = get_filename(uploadfile);  
+}
+
+</script>
+</body>
+</html>
+

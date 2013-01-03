@@ -1,0 +1,291 @@
+<!--
+Copyright (C) 2009 2011 Cisco Systems
+
+This program is free software; you can redistribute it and/or         
+modify it under the terms of the GNU General Public License         
+as published by the Free Software Foundation; either version 2         
+of the License, or (at your option) any later version.         
+    
+This program is distributed in the hope that it will be useful,         
+but WITHOUT ANY WARRANTY; without even the implied warranty of         
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
+GNU General Public License for more details.         
+    
+You should have received a copy of the GNU General Public License         
+along with this program; if not, write to:         
+The Free Software Foundation, Inc.         
+59 Temple Place - Suite 330         
+Boston, MA  02111-1307, USA.         
+    
+As a special exception, if other files instantiate classes, templates  
+or use macros or inline functions from this project, or you compile         
+this file and link it with other works to produce a work based         
+on this file, this file does not by itself cause the resulting         
+work to be covered by the GNU General Public License. However         
+the source code for this file must still be made available in         
+accordance with section (3) of the GNU General Public License.         
+    
+This exception does not invalidate any other reasons why a work         
+based on this file might be covered by the GNU General Public         
+License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<!-- $Name: mediator_3_1_2_branch $ -->
+<!-- $Id: editday.htm 20101 2011-03-06 16:02:15Z bhagn $ -->
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Edit Day</title>
+<script language="JavaScript" type="text/JavaScript">
+var myCmd = opener.DialogWin.cmd;
+var myDate = new Date(); //date object for formatting H:M:S
+//var myCmd = 'change';
+function initEditDay() {
+  var nhour = document.getElementById('hour');
+  var nminute = document.getElementById('minute');
+  var nsecond = document.getElementById('second');
+  var nsetpoint = document.getElementById('setpoint');
+  if(myCmd == 'change') {
+    //document.getElementsByTagName("title")[0].text = "Change Day";
+    document.title = "Change Schedule Entry";
+    var infoElem = opener.GetElement(opener.DialogWin.elem,'div','info');
+    var timeVal = infoElem.getAttribute('time');
+    var myTimeWords = timeVal.split(":");
+	nhour.value = myTimeWords[0];
+	nminute.value = myTimeWords[1];
+	nsecond.value = myTimeWords[2];
+	nsetpoint.value = infoElem.getAttribute('setpoint');
+  }
+  else { //cmd == add
+    //document.getElementsByTagName("title")[0].text = "Add Day";
+    document.title = "Add Schedule Entry";
+	nhour.value = '00';
+	nminute.value = '00';
+	nsecond.value = '00';
+	nsetpoint.value = '0';
+  }
+  setTimeout('focusElementById("hour")',250);
+}
+
+function focusElementById(id) {
+  var elem = document.getElementById(id);
+  elem.focus();
+  elem.select();
+}
+
+function checkTime(evt) {
+  evt = (evt) ? evt : event;
+  var charCode = (evt.charCode) ? evt.charCode :
+    ((evt.which) ? evt.which : evt.keyCode);
+  if(charCode == 13 || charCode == 3) {
+    if(myCmd == 'change') {
+      doChangeDay();
+	}
+	else {
+      doAddDay();
+	}
+	return false;
+  }
+  if(charCode > 31 && (charCode < 48 || charCode > 57)) {
+    alert("Enter numerals only in this field.");
+	return false;
+  }
+  return true;
+}
+
+function checkSetpoint(evt) {
+  evt = (evt) ? evt : event;
+  var charCode = (evt.charCode) ? evt.charCode :
+    ((evt.which) ? evt.which : evt.keyCode);
+  if(charCode == 13 || charCode == 3) {
+    if(myCmd == 'change') {
+      doChangeDay();
+	}
+	else {
+      doAddDay();
+	}
+	return false;
+  }
+  return true;
+}
+
+function isValidInput() {
+  var mySuccess = false;
+  var myNewHour = parseInt(document.getElementById('hour').value,10);
+  var myNewMinute = parseInt(document.getElementById('minute').value,10);
+  var myNewSecond = parseInt(document.getElementById('second').value,10);
+  if(isNaN(myNewHour) || (myNewHour < 0 || myNewHour > 23)) {
+    alert("Enter numerals only in the hour field.");
+    setTimeout('focusElementById("hour")',250);
+  }
+  else if(isNaN(myNewMinute) || (myNewMinute < 0 || myNewMinute > 59)) {
+    alert("Enter numerals only in the minute field.");
+    setTimeout('focusElementById("minute")',250);
+  }
+  else if(isNaN(myNewSecond) || (myNewSecond < 0 || myNewSecond > 59)) {
+    alert("Enter numerals only in the second field.");
+    setTimeout('focusElementById("second")',250);
+  }
+  else {
+    myDate.setHours(myNewHour,myNewMinute,myNewSecond);
+    opener.DialogWin.newTime = myNewHour+":"+myNewMinute+":"+myNewSecond;
+    opener.DialogWin.newSetpoint = document.getElementById('setpoint').value;
+    mySuccess = true;
+  }
+  //alert("newSetpoint=" + document.getElementById('setpoint').value + ", mySuccess=" + mySuccess);
+  return mySuccess;
+}
+
+function doAddDay() {
+  if(opener && !opener.closed && opener.DialogWin) {
+    if(isValidInput()) {
+	  opener.DialogWin.addDayFunc();
+	  window.close();
+	}
+	else {
+	  alert("Missing or incorrect input, please re-enter values.");
+      setTimeout('focusElementById("hour")',250);
+	}
+  }
+  else {
+    alert("Application window closed.\n\nClosing editDay window" +
+	  "without editDay.");
+	window.close();
+  }
+}
+
+function doChangeDay() {
+  if(opener && !opener.closed && opener.DialogWin) {
+    if(isValidInput()) {
+	  opener.DialogWin.changeDayFunc();
+	  window.close();
+	}
+	else {
+	  alert("Missing or incorrect input, please re-enter values.");
+      setTimeout('focusElementById("hour")',250);
+	}
+  }
+  else {
+    alert("Application window closed.\n\nClosing editDay window" +
+	  "without editDay.");
+	window.close();
+  }
+}
+
+function doOK() {
+  if(myCmd == 'add') {
+    doAddDay();
+  }
+  else {
+    doChangeDay();
+  }
+}
+
+function doCancel() {
+  window.close();
+}
+
+function doON() {
+  document.getElementById('setpoint').value = 'ON';
+}
+
+function doOFF() {
+  document.getElementById('setpoint').value = 'OFF';
+}
+
+function incHour(evt) {
+  evt = (evt) ? evt : event;
+  var myNewHour = (parseInt(document.getElementById('hour').value,10) + 1) % 24;
+  myDate.setHours(myNewHour);
+  document.getElementById('hour').value = myNewHour;
+}
+
+function incMinute(evt) {
+  evt = (evt) ? evt : event;
+  var myNewMinute = (parseInt(document.getElementById('minute').value,10) + 1) % 60;
+  myDate.setMinutes(myNewMinute);
+  document.getElementById('minute').value = myNewMinute;
+}
+
+function incSecond(evt) {
+  evt = (evt) ? evt : event;
+  var myNewSecond = (parseInt(document.getElementById('second').value,10) + 1) % 60;
+  myDate.setSeconds(myNewSecond);
+  document.getElementById('second').value = myNewSecond;
+}
+
+function decHour(evt) {
+  evt = (evt) ? evt : event;
+  var myNewHour = (parseInt(document.getElementById('hour').value,10) - 1) % 24;
+  myDate.setHours(myNewHour);
+  document.getElementById('hour').value = myNewHour;
+}
+
+function decMinute(evt) {
+  evt = (evt) ? evt : event;
+  var myNewMinute = (parseInt(document.getElementById('minute').value,10) - 1) % 60;
+  myDate.setMinutes(myNewMinute);
+  document.getElementById('minute').value = myNewMinute;
+}
+
+function decSecond(evt) {
+  evt = (evt) ? evt : event;
+  var myNewSecond = (parseInt(document.getElementById('second').value,10) - 1) % 60;
+  myDate.setSeconds(myNewSecond);
+  document.getElementById('second').value = myNewSecond;
+}
+
+</script>
+</head>
+
+<body topmargin="0" leftmargin="0" marginheight="0" marginwidth="0" bgcolor="#999999"
+  onload='javascript:initEditDay(); if(opener && opener.BlockEvents) opener.BlockEvents()'
+  onunload='if(opener && opener.UnblockEvents) opener.UnblockEvents()'>
+<table width="200" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td>
+      <fieldset>
+      <legend>Time</legend>
+      <table width="200" border="0">
+        <tr>
+          <td rowspan="2">H</td>
+          <td rowspan="2"><input id="hour" type="text" size="2" maxlength="2" onkeypress="return checkTime(event)" /></td>
+	  <td><img id="hourup" src="/webapi/images/uparrow.gif" width="16" height="16" onClick="incHour(event)"></td>
+          <td rowspan="2">M</td>
+          <td rowspan="2"><input id="minute" type="text" size="2" maxlength="2" onkeypress="return checkTime(event)" /></td>
+	  <td><img id="minuteup" src="/webapi/images/uparrow.gif" width="16" height="16" onClick="incMinute(event)"></td>
+          <td rowspan="2">S</td>
+          <td rowspan="2"><input id="second" type="text" size="2" maxlength="2" onkeypress="return checkTime(event)" /></td>
+	  <td><img id="secondup" src="/webapi/images/uparrow.gif" width="16" height="16" onClick="incSecond(event)"></td>
+        </tr>
+        <tr>
+	  <td><img id="hourdown" src="/webapi/images/downarrow.gif" width="16" height="16" onClick="decHour(event)"></td>
+	  <td><img id="minutedown" src="/webapi/images/downarrow.gif" width="16" height="16" onClick="decMinute(event)"></td>
+	  <td><img id="seconddown" src="/webapi/images/downarrow.gif" width="16" height="16" onClick="decSecond(event)"></td>
+        </tr>
+      </table>
+      </fieldset>
+	</td>
+  </tr>
+  <tr>
+    <td>
+      <fieldset>
+      <legend>Setpoint</legend>
+      <input id="setpoint" type="text" size="15" onkeypress="return checkSetpoint(event)" />
+      <input id="on_btn" type="button" value="ON" onClick="javascript:doON()"/>
+      <input id="off_btn" type="button" value="OFF" onClick="javascript:doOFF()"/>
+</fieldset>
+	</td>
+  </tr>
+  <tr>
+    <td>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <input id="ok_btn" type="button" value="OK" onClick="javascript:doOK()"/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <input id="cancel_btn" type="button" value="CANCEL" onClick="javascript:doCancel()"/>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

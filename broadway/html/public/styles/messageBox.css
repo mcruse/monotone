@@ -1,0 +1,56 @@
+@CHARSET "UTF-8";
+
+div#message-box {
+    width: 300px;
+    height: auto;
+}
+
+div#message-symbol {
+    float: left;
+    width: 32px;
+    height: 32px;
+    overflow: hidden;
+}
+
+img#symbol {
+    width: 32px;
+    height: 32px;
+    display: inline-block;
+}
+
+div#symbol-library {
+    display: none;
+}
+
+div#message-content {
+    float: left;
+    border: none;
+    font-size: 14px;
+    line-height: 32px;
+    padding: 0 0 5px 0;
+    margin: 0 0 0 8px;
+}
+
+div#message-actions {
+    float: right;
+    clear: left;
+    margin: 5px;
+}
+    
+div#message-box div.message-details {}
+
+div#message-box div.dijitTitlePane {
+    clear: both;
+    width: 100%;
+    border: none;
+    background: none;
+}    
+
+div#message-box div.dijitTitlePaneTitle {
+    background: none;
+    border: none;
+    cursor: default;
+    font-size: 10px;
+    padding-top: 0px;
+    text-decoration: none;
+}
